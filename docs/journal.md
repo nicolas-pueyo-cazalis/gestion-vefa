@@ -200,3 +200,54 @@ dupliquer de code.
 
 Continuer la version vanilla (ex: page TMA) ou passer à la migration React —
 à décider avec Nicolas.
+
+---
+
+## 2026-07-09 — Étape 1 (suite) : page TMA, cartes, et bandeau commun
+
+**Ce qui a été fait**
+
+- Ajout de `tma.html` / `data-tma.js` / `script-tma.js` : même exercice que la
+  page des lots, appliqué aux TMA (8 demandes fictives couvrant les 8 statuts
+  de la machine à états). `formatMontant` extrait dans `utils.js` pour être
+  partagé entre les deux pages plutôt que dupliqué.
+- Cartes de stats TMA ajustées sur demande de Nicolas : carte **"Validées"**
+  (regroupe `valide` + `travaux` + `termine`, volontairement sans `facture`),
+  **"En cours"** (`demande`/`etude`/`chiffre`), **"Refusées"** (`refuse`), et
+  **"Montant validé"** recalculé sur le même regroupement que "Validées".
+  Ordre des boutons de filtre ajusté (Validé/Refusé après Facturé).
+- Nicolas a lui-même réordonné les cartes dans le HTML généré (Total avant
+  Validées) — ajustement mineur, gardé tel quel.
+- Uniformisation du bandeau sur les deux pages : nom du programme (gras) +
+  adresse, désormais remplis dynamiquement via une fonction partagée
+  `afficherEntete()` (déplacée dans `utils.js`), avec les données du
+  programme extraites dans `data-programme.js` (évite la duplication entre
+  `data.js` et `data-tma.js`). Correction au passage : la page TMA affichait
+  par erreur le nom du programme à la place de l'adresse.
+- Ajout d'un vrai titre de page centré par page (balise `<h1>` sémantique,
+  distinct du bandeau qui n'est plus un `<h1>`) : "Tableau de bord des lots"
+  et "Travaux Modificatifs Acquéreurs". Discussion sur le vocabulaire
+  (bandeau/masthead vs titre de page) et sur la bonne pratique HTML d'un seul
+  vrai `<h1>` par page.
+- Nicolas gère ses propres commits via VSCode au fur et à mesure (voir
+  mémoire `feedback-git-workflow`) — je me contente de signaler les bons
+  points de commit sans exécuter Git moi-même.
+
+**Étape 2 amorcée puis mise en pause**
+
+Le lancement de `npm create vite@latest client` (démarrage de la migration
+React) a été annoncé mais interrompu par Nicolas pour d'abord corriger
+l'affichage du bandeau/titre ci-dessus. **La migration React n'a donc pas
+encore démarré** — c'est le point de reprise pour la prochaine session.
+
+**Remarque en attente**
+
+Nicolas a signalé que le bandeau devra accueillir des informations
+supplémentaires plus tard (nature non précisée) — à clarifier avec lui avant
+de le retravailler.
+
+**Prochaine étape (session suivante)**
+
+Démarrer réellement l'étape 2 : `npm create vite@latest client -- --template
+react` dans le dossier du projet (via WSL), puis mise en place de React
+Router et Sass, et portage des deux pages vanilla en composants React.

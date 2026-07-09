@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion VEFA — Suivi des lots</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1 id="programme-nom">Programme</h1>
+    <p id="programme-adresse">Adresse</p>
+  </header>
+
+  <main>
+    <section id="stats" class="stats"></section>
+
+    <div id="filtres" class="filtres">
+      <button data-statut="tous" class="actif">Tous</button>
+      <button data-statut="libre">Libre</button>
+      <button data-statut="option">Option</button>
+      <button data-statut="reserve">Réservé</button>
+      <button data-statut="acte">Acté</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Lot</th>
+          <th>Étage</th>
+          <th>Type</th>
+          <th>Orientation</th>
+          <th>Surface</th>
+          <th>Prix TTC</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody id="lots-corps"></tbody>
+    </table>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+:root {
+  --couleur-texte: #1f2933;
+  --couleur-fond: #f5f7fa;
+  --couleur-carte: #ffffff;
+  --couleur-bordure: #d9e1e8;
+
+  --couleur-libre: #6b7280;
+  --couleur-option: #2563eb;
+  --couleur-reserve: #d97706;
+  --couleur-acte: #16a34a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Arial, sans-serif;
+  color: var(--couleur-texte);
+  background: var(--couleur-fond);
+}
+
+header {
+  padding: 1.5rem 2rem;
+  background: var(--couleur-carte);
+  border-bottom: 1px solid var(--couleur-bordure);
+}
+
+header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+header p {
+  margin: 0;
+  color: #52606d;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stats .carte {
+  background: var(--couleur-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stats .carte .valeur {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.stats .carte .libelle {
+  font-size: 0.85rem;
+  color: #52606d;
+}
+
+.filtres {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filtres button {
+  border: 1px solid var(--couleur-bordure);
+  background: var(--couleur-carte);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.filtres button.actif {
+  background: var(--couleur-texte);
+  color: white;
+  border-color: var(--couleur-texte);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--couleur-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--couleur-bordure);
+  font-size: 0.9rem;
+}
+
+th {
+  background: #eef2f6;
+  font-weight: 600;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge.libre { background: var(--couleur-libre); }
+.badge.option { background: var(--couleur-option); }
+.badge.reserve { background: var(--couleur-reserve); }
+.badge.acte { background: var(--couleur-acte); }

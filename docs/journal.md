@@ -155,3 +155,48 @@ et librairies de validation").
 
 Démarrage du développement effectif, étape 1 de la feuille de route : version
 HTML/CSS/JS vanilla pour afficher des données avant de passer à React.
+
+---
+
+## 2026-07-09 — Étape 1 : première page HTML/CSS/JS vanilla
+
+**Ce qui a été fait**
+
+Création du dossier `vanilla/` (isolé du futur code React, pour ne rien avoir
+à nettoyer à l'étape 2) avec une première page fonctionnelle :
+
+- `data.js` : données fictives d'un programme (« Résidence Les Tilleuls ») et
+  de 8 lots, codées en dur (pas encore de backend).
+- `index.html` : structure de la page (en-tête, statistiques, filtres,
+  tableau des lots).
+- `style.css` : mise en forme, avec des couleurs de badge par statut.
+- `script.js` : affichage dynamique — calcul des statistiques (répartition
+  par statut, CA acté), rendu du tableau, filtrage par statut via délégation
+  d'événements.
+
+Notions pratiquées (expliquées en détail dans le chat au moment de l'écriture) :
+`document.querySelector`, `textContent` vs `innerHTML`, template literals,
+`Array.filter/map/reduce`, délégation d'événements, `Intl.NumberFormat` pour
+formater les montants en euros (première application concrète de la
+convention monétaire définie dans `schema-donnees.md`).
+
+Choix délibéré de ne pas utiliser `import`/`export` (modules ES) à ce stade,
+pour rester simple et éviter les soucis liés au chargement de fichiers en
+local — ce sera introduit proprement avec Vite à l'étape 2.
+
+**Test et ajustement**
+
+Page testée via un serveur local (`python3 -m http.server`, lancé dans WSL) —
+tous les fichiers se chargent correctement. Nicolas a ensuite modifié
+`style.css` lui-même : le montant "CA acté" débordait de sa carte à cause
+d'une espace insécable introduite par `Intl.NumberFormat('fr-FR', ...)`
+entre les milliers (`530␣000,00␣€`), qui empêche tout retour à la ligne à cet
+endroit. Solution retenue (plutôt qu'un retour à la ligne) : réduire
+`.stats .carte .valeur` de `1.75rem` à `1.30rem` — une seule règle CSS
+s'appliquant à toutes les cartes, donc la taille reste homogène partout sans
+dupliquer de code.
+
+**Prochaine étape**
+
+Continuer la version vanilla (ex: page TMA) ou passer à la migration React —
+à décider avec Nicolas.

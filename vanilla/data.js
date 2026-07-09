@@ -2,15 +2,7 @@
 // Étape 1 : pas de backend, donc les données sont codées en dur ici.
 // Ces variables sont globales (pas de import/export) car index.html
 // les charge avec de simples balises <script>, dans l'ordre.
-
-const PROGRAMME = {
-  nom: "Résidence Les Tilleuls",
-  maitreOuvrage: "Atlantide Promotion",
-  adresse: "8 rue des Tilleuls",
-  commune: "Bayonne (64100)",
-  nombreLogements: 8,
-  dateLivraison: "2027-06-30",
-};
+// PROGRAMME est défini dans data-programme.js (partagé avec tma.html).
 
 const LOTS = [
   { reference: "A01", etage: "RDC", type: "T2", orientation: "Sud", surfaceHabitable: 45, prixTTC: 210000, statut: "acte" },

@@ -4,3 +4,10 @@
 // en Number pur, et formatés avec "€" uniquement à l'affichage.
 const formatMontant = (nombre) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(nombre);
+
+// Remplit le bandeau (nom du programme + adresse), identique sur chaque page.
+function afficherEntete() {
+  document.querySelector("#programme-nom").textContent = PROGRAMME.nom;
+  document.querySelector("#programme-adresse").textContent =
+    `${PROGRAMME.adresse}, ${PROGRAMME.commune}`;
+}

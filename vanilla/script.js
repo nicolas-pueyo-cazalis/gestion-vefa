@@ -12,12 +12,6 @@ function lotsFiltres() {
   return LOTS.filter((lot) => lot.statut === statutActif);
 }
 
-function afficherEntete() {
-  document.querySelector("#programme-nom").textContent = PROGRAMME.nom;
-  document.querySelector("#programme-adresse").textContent =
-    `${PROGRAMME.adresse}, ${PROGRAMME.commune}`;
-}
-
 function afficherStats() {
   const total = LOTS.length;
   const parStatut = Object.keys(STATUTS).reduce((compte, statut) => {

@@ -82,6 +82,7 @@ function initFiltresTma() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  afficherEntete();
   afficherStatsTma();
   afficherTableauTma();
   initFiltresTma();

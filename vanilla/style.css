@@ -8,6 +8,15 @@
   --couleur-option: #2563eb;
   --couleur-reserve: #d97706;
   --couleur-acte: #16a34a;
+
+  --couleur-demande: #6b7280;
+  --couleur-etude: #2563eb;
+  --couleur-chiffre: #7c3aed;
+  --couleur-valide: #0d9488;
+  --couleur-refuse: #dc2626;
+  --couleur-facture: #d97706;
+  --couleur-travaux: #4f46e5;
+  --couleur-termine: #16a34a;
 }
 
 * {
@@ -35,6 +44,25 @@ header h1 {
 header p {
   margin: 0;
   color: #52606d;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.nav a {
+  color: #52606d;
+  text-decoration: none;
+  font-weight: 600;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid transparent;
+}
+
+.nav a.actif {
+  color: var(--couleur-texte);
+  border-bottom-color: var(--couleur-texte);
 }
 
 main {
@@ -129,3 +157,12 @@ tbody tr:last-child td {
 .badge.option { background: var(--couleur-option); }
 .badge.reserve { background: var(--couleur-reserve); }
 .badge.acte { background: var(--couleur-acte); }
+
+.badge.demande { background: var(--couleur-demande); }
+.badge.etude { background: var(--couleur-etude); }
+.badge.chiffre { background: var(--couleur-chiffre); }
+.badge.valide { background: var(--couleur-valide); }
+.badge.refuse { background: var(--couleur-refuse); }
+.badge.facture { background: var(--couleur-facture); }
+.badge.travaux { background: var(--couleur-travaux); }
+.badge.termine { background: var(--couleur-termine); }

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion VEFA — Suivi des TMA</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Travaux Modificatifs Acquéreurs</h1>
+    <p id="programme-adresse">Résidence Les Tilleuls</p>
+    <nav class="nav">
+      <a href="index.html">Lots</a>
+      <a href="tma.html" class="actif">TMA</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="stats" class="stats"></section>
+
+    <div id="filtres" class="filtres">
+      <button data-statut="tous" class="actif">Tous</button>
+      <button data-statut="demande">Demande</button>
+      <button data-statut="etude">Étude</button>
+      <button data-statut="chiffre">Chiffré</button>
+      <button data-statut="facture">Facturé</button>
+      <button data-statut="valide">Validé</button>
+      <button data-statut="refuse">Refusé</button>
+      <button data-statut="travaux">Travaux</button>
+      <button data-statut="termine">Terminé</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Lot</th>
+          <th>Client</th>
+          <th>Localisation</th>
+          <th>Description</th>
+          <th>Montant entreprises</th>
+          <th>Montant client</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody id="tma-corps"></tbody>
+    </table>
+  </main>
+
+  <script src="utils.js"></script>
+  <script src="data-tma.js"></script>
+  <script src="script-tma.js"></script>
+</body>
+</html>

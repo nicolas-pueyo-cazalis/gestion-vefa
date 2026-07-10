@@ -462,6 +462,41 @@ retrouvera côté formulaire React pour un retour immédiat à l'utilisateur.
 - Rôle "acquéreur" (accès lecture seule à ses propres données) évoqué dans le
   cadrage initial : pas modélisé pour l'instant, à ajouter si besoin confirmé.
 
+## Décisions du 10/07/2026 (fin de session étape 4) — travaux à venir
+
+Trois demandes de Nicolas, actées mais **pas encore codées** :
+
+1. **Référentiel `Entreprise`** (confirme le point ouvert ci-dessus, n'est
+   plus "non bloquant") : nouvelle collection avec `nom`, `corpsDeTravaux`,
+   et un sous-document `Contact` (même structure que `banque`/`courtier` sur
+   `Acquereur` : adresse, commune, codePostal, telephone, email) — utile
+   notamment pour un futur export des TMA envoyé directement aux
+   entreprises. `TmaEntreprise.entreprise` passera d'un `String` libre à une
+   référence `ObjectId → Entreprise` (liste déroulante côté formulaire).
+
+2. **Page "Paramètres"** : nouvelle route React `/parametres` (lien dans le
+   bandeau, à côté de Lots/TMA). Rassemble tout ce qui est aujourd'hui dans
+   `programme.parametres` mais non modifiable ailleurs que dans `seed.js` :
+   infos programme, barème des phases, entreprises (référentiel du point 1),
+   liste des étages, règles TMA (marge, montant négatif), tous les délais.
+   Nécessite une route `PATCH /api/programme` (aujourd'hui lecture seule) et
+   les routes CRUD `Entreprise`. **À réserver aux rôles
+   admin/gestionnaire** une fois l'authentification JWT en place (pas encore
+   faite) — pas de contrôle d'accès pour l'instant.
+
+3. **Deux nouvelles alertes**, dans le même esprit que l'alerte déjà prévue
+   le 09/07 (dates limites dépassées, prêt/notaire/appels de fonds) :
+   - **Entreprise qui n'a pas chiffré à temps** : le délai existe déjà
+     (`delaiRetourEntrepriseTmaJours`), mais `TmaEntreprise` n'a pas de date
+     de départ fiable — à ajouter : `dateEnvoi` (aujourd'hui seul `createdAt`
+     existe, pas modifiable).
+   - **Client qui n'a pas répondu à une facture TMA** : nouveau paramètre à
+     créer, `delaiReponseFactureTmaJours` (n'existe pas encore — on a
+     `delaiReglementAppelJours` pour les appels de fonds, mais rien
+     d'équivalent pour la réponse à une facture TMA). Alerte déclenchée si
+     `TMA.statut === 'facture'` et `dateEnvoiFactureClient + délai` dépassée
+     sans être passée à `valide` ou `refuse`.
+
 ---
 
 *Prochaine étape suggérée : commencer le développement effectif, étape 1 de

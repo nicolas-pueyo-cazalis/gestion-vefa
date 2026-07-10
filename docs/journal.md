@@ -667,3 +667,46 @@ discuter avec Nicolas.
 Logique des appels de fonds (barème, déclenchement sur attestation MOE +
 statut Acté), ou création de nouvelles TMA/lots depuis l'interface — à
 discuter avec Nicolas.
+
+---
+
+## 2026-07-10 — Point d'arrêt de session
+
+Nicolas a demandé une pause pour lister des points à clarifier/améliorer sur
+ce qui a été fait aujourd'hui (étapes 3 et 4 : back-end Express/MongoDB
+complet côté lecture, machine à états TMA, calcul automatique du statut,
+détail multi-entreprises). Rien d'identifié dans ce message précis — la
+liste sera donnée à la reprise. Pas de nouvelle étape commencée entre-temps.
+
+**Prochaine étape**
+
+Reprendre avec les points de clarification/amélioration de Nicolas, avant de
+continuer vers les appels de fonds ou de nouvelles routes d'écriture.
+
+---
+
+## 2026-07-10 — Trois points d'amélioration actés (non codés)
+
+Nicolas a listé trois besoins, consignés en détail dans
+`docs/schema-donnees.md` ("Décisions du 10/07/2026") pour ne pas les
+oublier, mais **pas encore implémentés** :
+
+1. **Référentiel `Entreprise`** : nouvelle collection (nom, corps de
+   travaux, coordonnées via le sous-document `Contact` déjà existant) —
+   remplace le texte libre actuel sur `TmaEntreprise.entreprise` par une
+   liste déroulante. Objectif cité : notamment un futur export des TMA
+   envoyé directement aux entreprises.
+2. **Page "Paramètres"** : nouvelle route React `/parametres`, pour éditer
+   tout ce qui est aujourd'hui dans `programme.parametres` sans interface
+   (barème, délais, marge, étages, entreprises...). Nécessite une route
+   `PATCH /api/programme` (actuellement lecture seule). À réserver aux
+   rôles admin/gestionnaire une fois l'authentification JWT posée.
+3. **Deux nouvelles alertes** : entreprise n'ayant pas chiffré à temps
+   (nécessite d'ajouter `TmaEntreprise.dateEnvoi`), et client n'ayant pas
+   répondu à une facture TMA (nécessite un nouveau paramètre
+   `delaiReponseFactureTmaJours`, absent pour l'instant).
+
+**Prochaine étape**
+
+À la reprise : choisir par quel point commencer (référentiel Entreprise,
+page Paramètres, ou les alertes), avec Nicolas.

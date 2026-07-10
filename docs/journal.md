@@ -436,3 +436,38 @@ les premières routes REST (`GET /api/lots`, `GET /api/tma`...).
 Écrire les premières routes REST (`GET /api/lots`, `GET /api/tma`...) pour
 que le front React puisse remplacer ses données fictives codées en dur par
 de vraies données servies par l'API.
+
+---
+
+## 2026-07-10 — Étape 3 (suite) : premières routes REST
+
+**Ce qui a été fait**
+
+- `server/routes/` créé, avec un `Router` Express par thème :
+  `programme.js` (`GET /api/programme`), `lots.js` (`GET /api/lots`),
+  `tma.js` (`GET /api/tma`, avec `.populate('lot', ...)` et
+  `.populate('acquereur', ...)` pour renvoyer les vraies données liées plutôt
+  que de simples identifiants). Branchés sur `index.js` via `app.use('/api/...', routeur)`.
+  Chaque route protégée par un `try/catch` (une erreur pendant un `await` ne
+  doit jamais laisser une requête sans réponse).
+- **Bug corrigé, même famille que le souci Vite/nodemon de tout à l'heure
+  mais différent** : `.populate('acquereur', ...)` échouait
+  ("Schema hasn't been registered for model Acquereur") car aucun fichier
+  du chemin de démarrage du serveur n'importait jamais `models/Acquereur.js`
+  (seul `seed.js`, qui ne tourne pas en même temps que le serveur, l'utilisait).
+  Corrigé en important **tous** les modèles une seule fois au démarrage de
+  `index.js`, plutôt que de dépendre de quel fichier de route importe quel
+  modèle — évite que le bug ne revienne à chaque nouvelle route utilisant
+  `.populate(...)`.
+- **Autre bug d'environnement corrigé** : `nodemon` ne redémarrait pas non
+  plus à la modification des fichiers (même cause que Vite : WSL ne reçoit
+  pas les notifications de modification faites côté Windows). Corrigé avec
+  le flag `--legacy-watch` dans le script `dev` de `package.json`.
+- Les trois routes testées avec succès dans le navigateur : `/api/lots`
+  (8 lots), `/api/tma` (8 TMA avec lot et acquéreur détaillés).
+
+**Prochaine étape**
+
+Brancher le front React sur cette API (remplacer les imports de
+`client/src/data/*.js` par des appels `fetch` dans les pages `Lots`/`Tma`),
+puis supprimer les données codées en dur une fois la bascule confirmée.

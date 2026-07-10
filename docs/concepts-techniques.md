@@ -156,7 +156,16 @@ ici c'est uniquement du vocabulaire **technique**.
 - **Référence (`{ type: mongoose.Schema.Types.ObjectId, ref: 'Lot' }`)** : un
   document stocke seulement l'identifiant (`_id`) d'un document d'une autre
   collection — pas ses données. Pour récupérer les vraies données liées, il
-  faut explicitement `.populate('champ')` (sinon on n'a que l'ID).
+  faut explicitement `.populate('champ', 'champsVoulus')` (sinon on n'a que
+  l'ID). Le second argument restreint quels champs du document lié sont
+  rapatriés.
+- **Piège `.populate()` + modèle jamais importé** : Mongoose doit avoir
+  chargé (importé) le fichier du modèle référencé par `ref: '...'` au moins
+  une fois pour pouvoir le résoudre, sinon erreur "Schema hasn't been
+  registered for model X" — même si ce modèle n'est utilisé nulle part
+  ailleurs dans les routes. Solution robuste : importer tous les modèles une
+  fois au démarrage du serveur (`index.js`), plutôt que de compter sur le
+  fait qu'un autre fichier de route l'importe par coïncidence.
 - **Sous-document embarqué** (ex: `parametres` dans `Programme`, `banque`
   dans `Acquereur`) : à l'inverse d'une référence, la donnée est stockée
   directement à l'intérieur du document parent, pas dans une collection
@@ -196,3 +205,20 @@ ici c'est uniquement du vocabulaire **technique**.
   reparcourir tout le tableau à chaque fois.
 - **`Model.insertMany([...])`** : insère plusieurs documents Mongoose en une
   fois, renvoie le tableau des documents créés (avec leur `_id` généré).
+
+## Routes REST (étape 3)
+
+- **`Router()`** (`import { Router } from 'express'`) : une "mini
+  application" Express dédiée à un groupe de routes, dans son propre fichier
+  — évite de tout écrire dans `index.js`.
+- **`app.use('/api/lots', lotsRouter)`** : "branche" un routeur à un préfixe
+  d'URL. Une route `router.get('/')` dans `lots.js` devient concrètement
+  `GET /api/lots`.
+- **`try/catch` dans une route `async`** : indispensable — si une erreur
+  survient pendant un `await` (ex: base injoignable) sans être attrapée, la
+  requête du client reste bloquée sans jamais recevoir de réponse.
+- **`res.status(500).json({...})`** : envoie un code d'erreur HTTP (500 =
+  erreur serveur) avec un message JSON, plutôt qu'une réponse "normale".
+- **`--legacy-watch`** (`nodemon --legacy-watch index.js`) : même souci que
+  `server.watch.usePolling` côté Vite — nécessaire pour que `nodemon`
+  détecte les modifications de fichiers faites côté Windows depuis WSL.

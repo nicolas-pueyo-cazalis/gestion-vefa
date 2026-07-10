@@ -3,6 +3,22 @@ import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 
+// Enregistre tous les modèles Mongoose au démarrage, même ceux non
+// utilisés directement dans une route — nécessaire pour que .populate(...)
+// puisse résoudre n'importe quelle référence (ref: '...') sans dépendre de
+// l'ordre d'import des fichiers de routes.
+import './models/Programme.js'
+import './models/Lot.js'
+import './models/Acquereur.js'
+import './models/AppelDeFonds.js'
+import './models/Tma.js'
+import './models/TmaEntreprise.js'
+import './models/Utilisateur.js'
+
+import programmeRouter from './routes/programme.js'
+import lotsRouter from './routes/lots.js'
+import tmaRouter from './routes/tma.js'
+
 const app = express()
 
 app.use(cors())
@@ -11,6 +27,10 @@ app.use(express.json())
 app.get('/', (req, res) => {
   res.json({ message: 'API Gestion VEFA en ligne' })
 })
+
+app.use('/api/programme', programmeRouter)
+app.use('/api/lots', lotsRouter)
+app.use('/api/tma', tmaRouter)
 
 mongoose
   .connect(process.env.MONGODB_URI)

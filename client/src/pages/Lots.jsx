@@ -43,10 +43,12 @@ function Lots() {
     return compte
   }, {})
 
-  const caActe = lots.filter((lot) => lot.statut === 'acte').reduce(
-    (somme, lot) => somme + lot.prixTTC,
-    0,
-  )
+  const caParStatut = Object.keys(STATUTS_LOT).reduce((compte, statut) => {
+    compte[statut] = lots
+      .filter((lot) => lot.statut === statut)
+      .reduce((somme, lot) => somme + lot.prixTTC, 0)
+    return compte
+  }, {})
 
   return (
     <>
@@ -56,8 +58,15 @@ function Lots() {
         <StatCard valeur={lots.length} libelle="Lots au total" />
         <StatCard valeur={parStatut.acte} libelle="Actés" />
         <StatCard valeur={parStatut.reserve} libelle="Réservés" />
+        <StatCard valeur={parStatut.option} libelle="Options" />
         <StatCard valeur={parStatut.libre} libelle="Libres" />
-        <StatCard valeur={formatMontant(caActe)} libelle="CA acté" />
+      </section>
+
+      <section className="stats">
+        <StatCard valeur={formatMontant(caParStatut.acte)} libelle="CA acté" />
+        <StatCard valeur={formatMontant(caParStatut.reserve)} libelle="CA réservé" />
+        <StatCard valeur={formatMontant(caParStatut.option)} libelle="CA options" />
+        <StatCard valeur={formatMontant(caParStatut.libre)} libelle="CA libre" />
       </section>
 
       <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />

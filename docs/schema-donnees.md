@@ -43,6 +43,21 @@ donne directement `150 000,00 €`. Ce sera une petite fonction utilitaire
 partagée (ex: `formatMontant()`), appelée partout où un montant s'affiche,
 pour être sûr que le formatage est identique dans toute l'application.
 
+### TTC / HT et TVA (décision du 10/07/2026)
+
+Tous les montants stockés (`Lot.prixTTC`, `TMA.montantEntreprises`,
+`TMA.montantClient`, `AppelDeFonds.montant`, `TmaEntreprise.montantDevis`)
+sont en **TTC** — c'est la référence unique en base. Le montant **HT** n'est
+jamais stocké : il se calcule à la volée (`TTC / (1 + tauxTva)`), sur le
+même principe que les échéances de paiement (calculées, pas stockées — voir
+plus haut). Le taux de TVA est un nouveau paramètre du programme,
+`programme.parametres.tauxTva` (défaut **20%**, modifiable — même logique de
+paramétrage que le reste, voir `decisions.md`).
+
+Le HT n'est pas encore affiché nulle part dans l'application (v1) — prévu
+pour plus tard, notamment dans les exports et au moment de la saisie des
+devis entreprises (souvent exprimés en HT à la base).
+
 ---
 
 ## Vue d'ensemble des collections
@@ -83,6 +98,7 @@ sous-document embarqué (pas une collection séparée).
 | `delaiReglementAppelJours` | Number | **30** | Nouveau (n'existait pas dans Excel) — valeur retenue le 09/07/2026 |
 | `delaiRetourEntrepriseTmaJours` | Number | 15 | `TMA_Entreprises` (date envoi + 15j) |
 | `tauxMargeTma` | Number | 1.3 | `Suivi_TMA` (montant × 1.3) |
+| `tauxTva` | Number | **0.20** | Nouveau (10/07/2026) : sert à calculer le HT à la volée (`TTC / (1 + tauxTva)`), jamais stocké — voir "TTC / HT et TVA" plus haut |
 | `regleMontantNegatifTma` | enum `'montant_zero' \| 'avoir_sans_marge'` | `'montant_zero'` | Règle demandée le 09/07 (`montant_zero`) ; `avoir_sans_marge` correspond à l'ancien comportement Excel, gardé en option puisque vous avez dit que ça pouvait varier par client |
 | `listeEtages` | `[String]` | `['R-1','RDJ','RDC','R+1','R+2','R+3','R+4','R+5','R+6','R+7','R+8']` | Remarque du 09/07 : liste déroulante des étages, modifiable par programme (chaque bâtiment a un nombre d'étages différent) |
 
@@ -336,6 +352,7 @@ const parametresSchema = new mongoose.Schema({
   delaiReglementAppelJours: { type: Number, default: 30 },
   delaiRetourEntrepriseTmaJours: { type: Number, default: 15 },
   tauxMargeTma: { type: Number, default: 1.3 },
+  tauxTva: { type: Number, default: 0.20 },
   regleMontantNegatifTma: {
     type: String,
     enum: ['montant_zero', 'avoir_sans_marge'],

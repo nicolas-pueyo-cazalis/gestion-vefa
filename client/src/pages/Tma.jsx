@@ -45,9 +45,10 @@ function Tma() {
   const validees = tmaList.filter((t) => STATUTS_VALIDE.includes(t.statut)).length
   const enCours = tmaList.filter((t) => STATUTS_EN_COURS.includes(t.statut)).length
   const refusees = tmaList.filter((t) => t.statut === 'refuse').length
-  const montantValide = tmaList
-    .filter((t) => STATUTS_VALIDE.includes(t.statut))
-    .reduce((somme, t) => somme + t.montantClient, 0)
+  const tmaValidees = tmaList.filter((t) => STATUTS_VALIDE.includes(t.statut))
+  const montantValideEntreprises = tmaValidees.reduce((somme, t) => somme + t.montantEntreprises, 0)
+  const montantValideClient = tmaValidees.reduce((somme, t) => somme + t.montantClient, 0)
+  const marge = montantValideClient - montantValideEntreprises
 
   return (
     <>
@@ -58,7 +59,12 @@ function Tma() {
         <StatCard valeur={validees} libelle="Validées" />
         <StatCard valeur={enCours} libelle="En cours" />
         <StatCard valeur={refusees} libelle="Refusées" />
-        <StatCard valeur={formatMontant(montantValide)} libelle="Montant validé" />
+      </section>
+
+      <section className="stats">
+        <StatCard valeur={formatMontant(montantValideEntreprises)} libelle="Montant validé (entreprises)" />
+        <StatCard valeur={formatMontant(montantValideClient)} libelle="Montant validé (clients)" />
+        <StatCard valeur={formatMontant(marge)} libelle="Marge" />
       </section>
 
       <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />

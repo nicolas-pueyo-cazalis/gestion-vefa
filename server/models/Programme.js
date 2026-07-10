@@ -23,6 +23,10 @@ const parametresSchema = new mongoose.Schema({
   delaiReglementAppelJours: { type: Number, default: 30 },
   delaiRetourEntrepriseTmaJours: { type: Number, default: 15 },
   tauxMargeTma: { type: Number, default: 1.3 },
+  // Tous les montants stockés (prixTTC, montantEntreprises, montantClient...)
+  // sont en TTC ; le HT se calcule à la volée (TTC / (1 + tauxTva)) quand
+  // besoin, jamais stocké — voir "Convention monétaire" dans schema-donnees.md.
+  tauxTva: { type: Number, default: 0.20 },
   regleMontantNegatifTma: {
     type: String,
     enum: ['montant_zero', 'avoir_sans_marge'],

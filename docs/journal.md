@@ -519,3 +519,33 @@ constantes d'affichage.
 Étape 4 (logique métier avancée) ou routes d'écriture (POST/PUT) pour
 pouvoir créer/modifier des lots et TMA depuis l'interface plutôt que
 seulement les lire — à discuter avec Nicolas.
+
+---
+
+## 2026-07-10 — Étape 3 (suite) : TVA/HT, et refonte des cartes de stats
+
+**Ce qui a été fait**
+
+- **TTC/HT clarifié** (jusqu'ici jamais tranché) : tous les montants stockés
+  restent en TTC (référence unique), un nouveau paramètre
+  `programme.parametres.tauxTva` (défaut 20%, modifiable) permettra de
+  calculer le HT à la volée plus tard (exports, saisie de devis entreprises)
+  — jamais stocké, même principe que les échéances. Documenté dans
+  `docs/schema-donnees.md` ("TTC / HT et TVA").
+- **Page TMA** : la carte "Montant validé" unique était trompeuse (mélangeait
+  le coût entreprises et le prix client, deux montants différents) → séparée
+  en "Montant validé (entreprises)" / "Montant validé (clients)", plus une
+  nouvelle carte "Marge" (= client − entreprises). Cartes réorganisées en
+  deux lignes distinctes (comptages / montants), via deux sections `.stats`
+  plutôt qu'une seule grille à retour à la ligne automatique — plus robuste
+  quelle que soit la largeur d'écran.
+- **Page Lots** : bug repéré par Nicolas — la carte "Options" manquait
+  (total 8 mais seulement 6 en additionnant Actés+Réservés+Libres). Ajoutée,
+  et la même réorganisation en deux lignes appliquée : comptages (Total,
+  Actés, Réservés, Options, Libres) puis CA par statut (Acté, Réservé,
+  Options, Libre) — plus seulement "CA acté" isolé.
+
+**Prochaine étape**
+
+Étape 4 (logique métier avancée) ou routes d'écriture (POST/PUT) — à
+discuter avec Nicolas.

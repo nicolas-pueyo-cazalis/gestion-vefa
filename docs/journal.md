@@ -627,3 +627,43 @@ d'Excel) ou logique des appels de fonds — à discuter avec Nicolas.
 Logique des appels de fonds (barème, déclenchement sur attestation MOE +
 statut Acté), ou création de nouvelles TMA/lots depuis l'interface — à
 discuter avec Nicolas.
+
+---
+
+## 2026-07-10 — Étape 4 (suite) : détail par entreprise pour une TMA
+
+**Ce qui a été fait**
+
+- Nouvelle route `server/routes/tmaEntreprises.js` (`GET
+  /api/tma-entreprises?tma=<id>`, `POST`, `DELETE /:id`) : gère les lignes
+  `TmaEntreprise` (corps de métier + entreprise + devis), déjà modélisées
+  mais jamais branchées jusqu'ici (répond au manque identifié par Nicolas :
+  "il reste à intégrer la notion de plusieurs entreprises pour une même
+  TMA").
+- **Règle métier ajoutée par Nicolas en cours de route** : le passage au
+  statut "Chiffré" (et le remplissage de `montantEntreprises`) n'a lieu que
+  si **toutes** les entreprises sollicitées ont répondu — une seule encore
+  en attente doit garder la TMA à "Étude", même si les autres ont déjà
+  répondu. Testé en ligne de commande : 2 réponses sur 3 → reste "Étude" et
+  montant à `null` ; la 3ᵉ réponse arrivée → passage à "Chiffré" avec la
+  somme complète.
+- **Bug latent découvert et corrigé** : les données de seed fixaient un
+  statut "en dur" (ex: `etude`) sans les dates qui auraient dû
+  logiquement l'accompagner. Dès qu'un recalcul automatique intervenait
+  (ex: ajout d'une ligne entreprise), la TMA "reculait" vers `demande`
+  faute de dates cohérentes. Corrigé en ajoutant des dates réalistes à
+  chaque TMA du seed, cohérentes avec le statut visé.
+- Composant React `DetailEntreprisesTma.jsx` : liste des lignes d'une TMA
+  (avec bouton "Retirer" par ligne) + petit formulaire d'ajout, sur le même
+  principe de ligne de tableau dépliable que `FormulaireDatesTma.jsx`.
+  Notifie le parent (`onChangement`) pour rafraîchir toute la liste après
+  chaque ajout/suppression, puisque le montant/statut de la TMA parente
+  change côté serveur.
+- Testé avec succès dans le navigateur : ajout de plusieurs entreprises,
+  recalcul automatique du montant total et du statut visibles en direct.
+
+**Prochaine étape**
+
+Logique des appels de fonds (barème, déclenchement sur attestation MOE +
+statut Acté), ou création de nouvelles TMA/lots depuis l'interface — à
+discuter avec Nicolas.

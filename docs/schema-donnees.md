@@ -299,6 +299,14 @@ n'est possible qu'avant validation).
 > `termine`) et pour `refuse`, il n'y a pas de date correspondante dans le
 > modèle actuel — ça reste une action manuelle via `PATCH /api/tma/:id/statut`.
 
+> **Passage à "chiffre" conditionné à TOUTES les réponses entreprises
+> (10/07/2026)** — quand une TMA a plusieurs lignes `TmaEntreprise` (voir
+> plus bas), `montantEntreprises` ne se remplit (et le statut ne passe à
+> `chiffre`) que si **toutes** les entreprises sollicitées ont répondu
+> (`montantDevis` renseigné sur chaque ligne) — une seule entreprise encore
+> en attente doit garder la TMA à `etude`. Logique dans `recalculerTma()`
+> (`server/routes/tmaEntreprises.js`).
+
 > **Date limite de retour entreprise** (`dateEnvoiEntreprises +
 > programme.parametres.delaiRetourEntrepriseTmaJours`) : calculée à la volée,
 > même logique que pour les échéances de `Lot`.

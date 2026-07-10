@@ -18,6 +18,7 @@ import './models/Utilisateur.js'
 import programmeRouter from './routes/programme.js'
 import lotsRouter from './routes/lots.js'
 import tmaRouter from './routes/tma.js'
+import tmaEntreprisesRouter from './routes/tmaEntreprises.js'
 
 const app = express()
 
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 app.use('/api/programme', programmeRouter)
 app.use('/api/lots', lotsRouter)
 app.use('/api/tma', tmaRouter)
+app.use('/api/tma-entreprises', tmaEntreprisesRouter)
 
 mongoose
   .connect(process.env.MONGODB_URI)

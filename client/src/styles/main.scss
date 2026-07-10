@@ -148,11 +148,13 @@ table {
     }
   }
 
-  .formulaire-dates td {
+  .formulaire-dates td,
+  .detail-entreprises td {
     background: #f5f7fa;
   }
 
-  .formulaire-dates form {
+  .formulaire-dates form,
+  .detail-entreprises form {
     display: flex;
     flex-wrap: wrap;
     align-items: end;
@@ -186,6 +188,31 @@ table {
       background: $couleur-texte;
       color: white;
       border-color: $couleur-texte;
+    }
+  }
+
+  .detail-entreprises ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .detail-entreprises li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+
+    button {
+      border: 1px solid $couleur-bordure;
+      background: $couleur-carte;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.75rem;
     }
   }
 }

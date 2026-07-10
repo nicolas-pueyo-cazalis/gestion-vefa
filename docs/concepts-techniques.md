@@ -276,3 +276,25 @@ ici c'est uniquement du vocabulaire **technique**.
 - **`<td colSpan={n}>`** : fusionne une cellule sur `n` colonnes — utile pour
   insérer un contenu (formulaire, message) qui doit occuper toute la largeur
   d'un tableau sans respecter sa grille de colonnes habituelle.
+- **Ajouter/retirer un élément du `state`** : ajouter →
+  `setListe((liste) => [...liste, nouvelElement])` (éclate l'ancienne liste,
+  ajoute à la suite) ; retirer →
+  `setListe((liste) => liste.filter((x) => x._id !== id))` (garde tout sauf
+  celui visé). Alternative à remplacer tout le state par une nouvelle
+  requête réseau, plus rapide à l'affichage.
+- **Extraire une fonction de chargement hors du `useEffect`** : pour pouvoir
+  la rappeler ailleurs (ex: après qu'un composant enfant ait modifié des
+  données liées), déclarer la fonction `async` dans le corps du composant et
+  l'appeler à la fois dans `useEffect(() => { fonction() }, [])` et depuis un
+  gestionnaire d'événement/callback.
+
+## Règles métier avec agrégation (étape 4)
+
+- **`tableau.every(condition)`** : renvoie `true` seulement si **tous** les
+  éléments respectent la condition (contraste avec `.some()`, qui suffit
+  qu'un seul la respecte). Utilisé pour "toutes les entreprises ont-elles
+  répondu ?" avant d'autoriser un calcul agrégé.
+- **Ne finaliser un calcul agrégé (somme, statut) que si les données sont
+  complètes** : mieux vaut laisser un champ à `null` ("pas encore prêt") que
+  d'afficher un total partiel qui pourrait être pris pour un chiffre
+  définitif.

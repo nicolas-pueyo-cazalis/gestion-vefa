@@ -41,15 +41,48 @@ const ACQUEREURS_DATA = [
   { cle: 'etchegoin', civilite: 'Mme', prenom: 'Anne', nom: 'Etchegoin', lots: ['B02'] },
 ]
 
+// Les dates sont volontairement cohérentes avec le statut de chaque TMA
+// (docs/schema-donnees.md : demande → etude → chiffre → facture → valide se
+// déduit des dates, voir calculerStatutAutomatique dans models/Tma.js) —
+// sinon un recalcul futur (ex: ajout d'une ligne TmaEntreprise) ferait
+// "reculer" une TMA dont le statut avait été fixé en dur sans ses dates.
 const TMA_DATA = [
-  { lot: 'A01', acquereur: 'duprat', localisation: 'Cuisine', description: "Ajout d'une prise électrique", montantEntreprises: 85, statut: 'valide' },
-  { lot: 'A01', acquereur: 'duprat', localisation: 'Séjour', description: 'Suppression du parquet (remplacé par du carrelage)', montantEntreprises: -320, statut: 'facture' },
-  { lot: 'B01', acquereur: 'lopez', localisation: 'Salle de bain', description: 'Remplacement de la baignoire par une douche', montantEntreprises: 650, statut: 'chiffre' },
-  { lot: 'C01', acquereur: 'ferreira', localisation: 'Chambre 1', description: 'Ouverture entre chambre et dressing', montantEntreprises: null, statut: 'etude' },
-  { lot: 'D01', acquereur: 'aldana', localisation: 'Garage', description: "Ajout d'une motorisation de portail", montantEntreprises: null, statut: 'demande' },
-  { lot: 'B02', acquereur: 'etchegoin', localisation: 'Séjour', description: 'Suppression de la cheminée', montantEntreprises: 400, statut: 'refuse' },
-  { lot: 'A01', acquereur: 'duprat', localisation: 'Terrasse', description: 'Pose de stores extérieurs', montantEntreprises: 900, statut: 'travaux' },
-  { lot: 'C01', acquereur: 'ferreira', localisation: 'Cuisine', description: "Ajout d'un îlot central", montantEntreprises: 2100, statut: 'termine' },
+  {
+    lot: 'A01', acquereur: 'duprat', localisation: 'Cuisine',
+    description: "Ajout d'une prise électrique", montantEntreprises: 85, statut: 'valide',
+    dateEnvoiEntreprises: '2026-06-20', dateEnvoiFactureClient: '2026-06-25', dateRetourClient: '2026-06-28',
+  },
+  {
+    lot: 'A01', acquereur: 'duprat', localisation: 'Séjour',
+    description: 'Suppression du parquet (remplacé par du carrelage)', montantEntreprises: -320, statut: 'facture',
+    dateEnvoiEntreprises: '2026-06-22', dateEnvoiFactureClient: '2026-06-27',
+  },
+  {
+    lot: 'B01', acquereur: 'lopez', localisation: 'Salle de bain',
+    description: 'Remplacement de la baignoire par une douche', montantEntreprises: 650, statut: 'chiffre',
+    dateEnvoiEntreprises: '2026-06-24',
+  },
+  {
+    lot: 'C01', acquereur: 'ferreira', localisation: 'Chambre 1',
+    description: 'Ouverture entre chambre et dressing', montantEntreprises: null, statut: 'etude',
+    dateEnvoiEntreprises: '2026-07-01',
+  },
+  {
+    lot: 'D01', acquereur: 'aldana', localisation: 'Garage',
+    description: "Ajout d'une motorisation de portail", montantEntreprises: null, statut: 'demande',
+  },
+  {
+    lot: 'B02', acquereur: 'etchegoin', localisation: 'Séjour',
+    description: 'Suppression de la cheminée', montantEntreprises: 400, statut: 'refuse',
+  },
+  {
+    lot: 'A01', acquereur: 'duprat', localisation: 'Terrasse',
+    description: 'Pose de stores extérieurs', montantEntreprises: 900, statut: 'travaux',
+  },
+  {
+    lot: 'C01', acquereur: 'ferreira', localisation: 'Cuisine',
+    description: "Ajout d'un îlot central", montantEntreprises: 2100, statut: 'termine',
+  },
 ]
 
 async function seed() {
@@ -95,6 +128,9 @@ async function seed() {
       montantEntreprises: tma.montantEntreprises,
       montantClient: calculerMontantClient(tma.montantEntreprises),
       statut: tma.statut,
+      dateEnvoiEntreprises: tma.dateEnvoiEntreprises,
+      dateEnvoiFactureClient: tma.dateEnvoiFactureClient,
+      dateRetourClient: tma.dateRetourClient,
     })),
   )
   console.log(`${tmas.length} TMA créées`)

@@ -12,6 +12,7 @@ import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireDatesTma from '../components/FormulaireDatesTma.jsx'
+import DetailEntreprisesTma from '../components/DetailEntreprisesTma.jsx'
 
 const NB_COLONNES = 8
 
@@ -30,19 +31,21 @@ function Tma() {
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
   const [idEnEdition, setIdEnEdition] = useState(null)
+  const [idEntreprisesOuvert, setIdEntreprisesOuvert] = useState(null)
+
+  async function chargerTma() {
+    try {
+      const reponse = await fetch(`${API_URL}/api/tma`)
+      const donnees = await reponse.json()
+      setTmaList(donnees)
+    } catch (e) {
+      setErreur(e.message)
+    } finally {
+      setChargement(false)
+    }
+  }
 
   useEffect(() => {
-    async function chargerTma() {
-      try {
-        const reponse = await fetch(`${API_URL}/api/tma`)
-        const donnees = await reponse.json()
-        setTmaList(donnees)
-      } catch (e) {
-        setErreur(e.message)
-      } finally {
-        setChargement(false)
-      }
-    }
     chargerTma()
   }, [])
 
@@ -173,6 +176,7 @@ function Tma() {
                   {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && (
                     <button onClick={() => setIdEnEdition(tma._id)}>Modifier les dates</button>
                   )}
+                  <button onClick={() => setIdEntreprisesOuvert(tma._id)}>Entreprises</button>
                   {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
                     <button onClick={() => changerStatut(tma._id, 'refuse')}>Refuser</button>
                   )}
@@ -187,6 +191,14 @@ function Tma() {
                   colonnes={NB_COLONNES}
                   onEnregistrer={enregistrerDates}
                   onFermer={() => setIdEnEdition(null)}
+                />
+              )}
+              {idEntreprisesOuvert === tma._id && (
+                <DetailEntreprisesTma
+                  tma={tma}
+                  colonnes={NB_COLONNES}
+                  onChangement={chargerTma}
+                  onFermer={() => setIdEntreprisesOuvert(null)}
                 />
               )}
             </Fragment>

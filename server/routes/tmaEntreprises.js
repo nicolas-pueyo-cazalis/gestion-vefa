@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
 // POST /api/tma-entreprises — ajoute une ligne, recalcule la TMA parente
 router.post('/', async (req, res) => {
   try {
-    const { tma, entreprise, montantDevis } = req.body
+    const { tma, entreprise, montantDevis, dateRetour } = req.body
     if (!tma || !entreprise) {
       return res.status(400).json({ message: 'Les champs "tma" et "entreprise" sont requis' })
     }
@@ -68,6 +68,7 @@ router.post('/', async (req, res) => {
       entreprise,
       corpsDeTravaux: entrepriseDoc.corpsDeTravaux, // figé au moment de l'ajout
       montantDevis,
+      dateRetour: dateRetour || null,
       statut,
     })
     await recalculerTma(tma)

@@ -782,3 +782,204 @@ sur `TmaEntreprise` :
 **Prochaine étape**
 
 Reprendre la page "Paramètres" (point 2), interrompue par cette pause.
+
+---
+
+## 2026-07-10 — Petits réglages visuels du bandeau
+
+- Lien "Paramètres" poussé à droite du bandeau (`margin-left: auto` sur un
+  conteneur flex), séparé de "Lots"/"TMA".
+- Effet de survol ajouté sur les liens de navigation (transition douce de
+  couleur/bordure).
+- Espacement augmenté entre les cartes de stats et les filtres sur les pages
+  Lots/TMA — **piège rencontré** : un premier essai avec `margin-top` sur
+  `.filtres` n'a eu aucun effet visible à cause de la fusion des marges
+  verticales (CSS ne garde que la plus grande des deux marges voisines,
+  ne les additionne pas). Corrigé en utilisant `padding-top` à la place, qui
+  ne fusionne jamais avec les marges des éléments voisins.
+
+**Prochaine étape**
+
+Reprendre la construction des sections de la page "Paramètres".
+
+---
+
+## 2026-07-10 — Retours PDF, bug code postal, et relation Lot ↔ Acquereur
+
+**Ce qui a été fait**
+
+- Deux documents PDF de remarques ("Remarques sur le paramétrage des
+  programmes et interfaces", version étendue avec `Synthese programme.pdf`
+  en référence visuelle) transmis par Nicolas, couvrant Paramètres, Lots,
+  TMA et une nouvelle interface Clients. Liste consignée en tâches, à
+  traiter point par point.
+- **Décision actée** : la colonne "Nom client" (texte libre) de la future
+  page Lots devient un petit champ civilité + nom, qui crée ou lie un vrai
+  `Acquereur` plutôt que de rester du texte libre déconnecté des données.
+- **Bug "Code postal" résolu** : un attribut `pattern` HTML
+  (`pattern="\\d{5}"`) semblait ne jamais accepter une saisie corrigée. Un
+  script de diagnostic (lecture directe du fichier + test de la regex
+  réellement produite) a confirmé que l'échappement était correct — la
+  cause exacte côté navigateur n'a pas été identifiée, mais plutôt que
+  continuer à la chercher, la validation `pattern` HTML a été remplacée par
+  une validation JavaScript explicite (regex + `alert()`, puis affinée en
+  message inline sous le champ, voir plus bas). Bug et raisonnement
+  consignés dans le nouveau fichier `docs/bugs.md`.
+- **Nouveau fichier `docs/bugs.md`** créé : journal dédié aux bugs
+  rencontrés (symptôme / cause / correction / leçon), distinct du journal
+  chronologique — pensé pour être relu facilement en entretien.
+- **UX formulaire Entreprises** : les `alert()` de validation (téléphone,
+  commune, code postal, email) remplacés par des messages d'erreur inline
+  sous chaque champ (état React `erreurs`), avec la même classe `.invalide`
+  (bordure rouge) que le champ téléphone — cohérence visuelle.
+- **Modèle `Lot`** : ajout de `acquereur` (ObjectId → `Acquereur`, relation
+  inverse de `Acquereur.lots`) et `commentaire` (String libre). Le cas rare
+  d'indivision (plusieurs acquéreurs pour un lot) reste couvert par
+  `Acquereur.lots` mais n'aura pas d'interface dédiée pour l'instant.
+  `seed.js` mis à jour pour renseigner cette relation inverse sur les
+  données fictives existantes.
+- **Modèle `Acquereur`** : `prenom` n'est plus `required` — la création
+  rapide d'un acquéreur depuis la page Lots (civilité + nom seulement) ne
+  fournit pas de prénom, complété plus tard depuis la page Clients.
+- **Nouvelles routes `server/routes/acquereurs.js`** : `GET /api/acquereurs`
+  (liste triée), `POST` (création), `PATCH /:id` (modification partielle).
+- **Routes `lots.js` complétées** : `POST /api/lots` (création technique
+  d'un lot, toujours "libre" et sans acquéreur au départ — servira à la
+  future section Paramètres > Lots) et `PATCH /api/lots/:id` (modification
+  partielle : caractéristiques techniques, statut, dates, commentaire, et
+  liaison acquéreur via `acquereur` (ID existant) ou `acquereurNouveau`
+  (`{civilite, nom}`, création à la volée) — les deux mettent à jour
+  `Acquereur.lots` en retour pour garder la relation cohérente dans les
+  deux sens). `GET /api/lots` peuple désormais `acquereur`. Toutes les
+  routes testées en ligne de commande (liaison, création à la volée,
+  déliaison, synchronisation vérifiée dans les deux sens).
+- **Petites corrections TMA > Entreprises** (remontées par Nicolas en cours
+  de route) : le champ "Date de réception" du devis n'était disponible
+  qu'en modifiant une ligne déjà créée, jamais dès l'ajout — ajouté au
+  formulaire d'ajout (front + route `POST /api/tma-entreprises`). Le
+  `<select>` "Entreprise" n'était pas stylé du tout (contrairement aux
+  `input`), ce qui le faisait paraître plus petit que "Montant devis" —
+  corrigé (style commun + largeur minimale).
+- **Fausse alerte clarifiée** : Nicolas a signalé des entreprises supprimées
+  qui "revenaient" après navigation — cause identifiée : deux exécutions de
+  `node seed.js` faites en parallèle pour tester `Lot.acquereur`, qui
+  réinitialisent toute la base pendant que Nicolas testait manuellement en
+  parallèle. Pas un bug de l'application ; retenu comme point de vigilance
+  (ne plus relancer `seed.js` sans prévenir pendant une session de test).
+
+**Prochaine étape**
+
+Section Paramètres > Lots (création/édition des caractéristiques
+techniques d'un lot), puis restructuration de la page Lots elle-même.
+
+---
+
+## 2026-07-10 — Section Paramètres > Lots, et affinage suite à deux PDF
+
+**Ce qui a été fait**
+
+- Nouvelle section **Paramètres > Lots** (`SectionLots.jsx`/`LigneLot.jsx`,
+  sur le même principe édition-en-ligne que `SectionEntreprises.jsx`) :
+  création et modification des caractéristiques techniques d'un lot
+  (étage, type, orientation, surfaces, prix). Nouvelles routes
+  `POST`/`PATCH /api/lots/:id`.
+- **Décision de modélisation notable** : la colonne "Nom client" (texte
+  libre) devient un petit champ civilité + nom qui crée ou lie un vrai
+  `Acquereur`. Ajout de `Lot.acquereur` (référence directe, relation
+  inverse de `Acquereur.lots`) et `Lot.commentaire`. `Acquereur.prenom`
+  n'est plus `required` (la création rapide ne fournit que civilité +
+  nom). Nouvelles routes `server/routes/acquereurs.js`
+  (`GET`/`POST`/`PATCH`). La route `PATCH /api/lots/:id` gère la liaison
+  (`acquereur` existant ou `acquereurNouveau: {civilite, nom}`) et
+  synchronise `Acquereur.lots` dans les deux sens. Toutes les routes
+  testées en ligne de commande (liaison, création à la volée, déliaison).
+- Premier PDF de remarques sur les lots (4 points) puis un second complété
+  (5 points de plus) :
+  - "Référence" → "N° du logement", "Caves" → "Caves / Celliers".
+  - Plafond : impossible de créer plus de logements que
+    `programme.nombreLogements`, vérifié côté serveur (pas seulement dans
+    le formulaire).
+  - Récapitulatif des lots corrigé pour afficher tous les champs remplis
+    (terrasse, jardin, parkings, caves), pas seulement une partie.
+  - Suppression d'un lot ajoutée (`DELETE /api/lots/:id`), avec nettoyage
+    de la relation inverse `Acquereur.lots` si un acquéreur était lié.
+  - **Changement de modélisation** : `parkings`/`caves` ne sont plus un
+    compte (`Number`) mais des **numéros identifiants** (`[Number]`) —
+    une place de parking précise, pas juste "combien". Nouveau composant
+    réutilisable `ListeNumeros.jsx` (saisie en tags, même principe que la
+    liste des étages). Règle métier ajoutée : un numéro de parking ou de
+    cave/cellier ne peut jamais être utilisé par deux lots du même
+    programme — validation côté serveur (`validerNumerosUniques`),
+    testée en ligne de commande (doublon local rejeté, doublon avec un
+    autre lot rejeté, numéro libre accepté).
+  - Le message "nombre maximum de logements atteint" (`erreur` React) ne
+    s'effaçait pas après coup quand on relevait `nombreLogements` — corrigé
+    avec un `useEffect` qui vide l'erreur dès que la condition n'est plus
+    vraie.
+  - Nouveau message d'avertissement si moins de logements créés que le
+    nombre annoncé pour le programme.
+- **Nouveau fichier `docs/demandes.md`** : liste chronologique de toutes
+  les demandes de Nicolas depuis le début du projet (hors détails
+  d'implémentation), demandée explicitement pour garder une trace
+  complète et pouvoir la reparcourir.
+- Point de vigilance confirmé une seconde fois : ne pas relancer
+  `node seed.js` pendant que Nicolas teste manuellement dans le
+  navigateur (un lot de test "A03" créé par Nicolas a été repéré avant
+  d'être nettoyé par un reseed annoncé).
+
+**Prochaine étape**
+
+Restructuration de la page Lots elle-même (colonnes façon "Synthèse
+programme", édition en ligne du statut/client/dates), puis création de
+TMA depuis l'interface et nouvelle page Clients.
+
+---
+
+## 2026-07-10 — Dernières remarques sur Paramètres > Lots avant pause
+
+**Ce qui a été fait**
+
+- Message "il manque X logement(s)..." mis en rouge (`.total-erreur`),
+  pour la même cohérence visuelle que le message de plafond atteint.
+- **Erreurs de doublon parking/cave affinées** : au lieu d'un message
+  générique en haut de page (ou d'un `alert()` en édition), le backend
+  renvoie désormais `{ champ: 'parkings' | 'caves', message }` plutôt
+  qu'un message unique — ça permet au front d'afficher l'erreur en petit,
+  directement sous le champ concerné (même style `.erreur-champ` que les
+  autres validations inline), sans bloquer toute la page. `LigneLot.jsx`
+  (mode édition) reçoit désormais le résultat de `onEnregistrer` en retour
+  (au lieu d'un `alert()` déclenché par le parent) pour afficher l'erreur
+  au bon endroit sans quitter le mode édition.
+- **Alignement des champs "N° de parking"/"N° de cave/cellier" corrigé
+  après plusieurs essais** — le vrai problème : ces champs sont plus hauts
+  que les champs simples (tags + bouton en plus), et le formulaire
+  utilisait `align-items: end` (aligner tous les champs par le bas). Un
+  champ plus haut que ses voisins de ligne les forçait donc à descendre
+  pour caler leur bas sur le sien, créant un désalignement visible
+  (labels décalés, `Prix TTC` qui semblait flotter). Corrigé à la racine
+  en passant `.section-parametres form` (et `.ligne-lot-edition`) en
+  `align-items: start` : tous les champs démarrent désormais à la même
+  hauteur (labels alignés), et seul le contenu en plus (bouton, tags,
+  message d'erreur) s'étend vers le bas sans perturber les champs
+  voisins — un bénéfice qui profite aussi aux messages d'erreur inline
+  ailleurs dans Paramètres (ils ne décalent plus les champs voisins).
+  Deux essais intermédiaires (`align-self: flex-start` seul, puis
+  `flex-basis: 100%` forçant une ligne dédiée mais gaspillant l'espace)
+  n'ont pas suffi avant d'identifier la bonne cause.
+- **Incident "entreprises revenues" (3ᵉ occurrence)** : même cause que la
+  fois précédente (`node seed.js` relancé pendant que Nicolas testait en
+  parallèle), cette fois malgré une annonce préalable — l'annonce et
+  l'exécution s'étant enchaînées sans laisser de fenêtre pour réagir.
+  **Nouvelle règle retenue** : désormais, toujours **demander confirmation
+  et attendre la réponse** avant de relancer `node seed.js`, plutôt que
+  d'annoncer puis d'exécuter dans la foulée. Confirmé explicitement par
+  Nicolas via un choix ("Relancer le seed maintenant"), puis base
+  réinitialisée proprement.
+- `README.md` mis à jour (8 collections, routes complètes, page
+  Paramètres, `docs/bugs.md` et `docs/demandes.md` référencés).
+
+**Prochaine étape**
+
+Restructuration de la page Lots elle-même (colonnes façon "Synthèse
+programme", édition en ligne du statut/client/dates), puis création de
+TMA depuis l'interface et nouvelle page Clients.

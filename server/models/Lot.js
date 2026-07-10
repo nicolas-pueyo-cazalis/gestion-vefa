@@ -12,8 +12,11 @@ const lotSchema = new mongoose.Schema({
   surfaceHabitable: Number,
   surfaceTerrasse: Number,
   surfaceJardin: Number,
-  parkings: Number,
-  caves: Number,
+  // Numéros identifiants (ex: place n°10), pas un simple compte — chaque
+  // numéro doit être unique sur l'ensemble du programme (remarque du
+  // 10/07/2026), donc on garde la liste plutôt qu'un total.
+  parkings: [Number],
+  caves: [Number],
   prixTTC: Number,
   statut: {
     type: String,
@@ -23,6 +26,8 @@ const lotSchema = new mongoose.Schema({
   dateOption: Date,
   dateReservation: Date,
   dateActe: Date,
+  acquereur: { type: mongoose.Schema.Types.ObjectId, ref: 'Acquereur' },
+  commentaire: String,
 }, { timestamps: true })
 
 export default mongoose.model('Lot', lotSchema)

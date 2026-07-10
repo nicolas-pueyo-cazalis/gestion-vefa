@@ -25,13 +25,20 @@ développeur web, en remplacement d'outils Excel/VBA existants.
   - [`analyse-excel.md`](docs/analyse-excel.md) — analyse des fichiers Excel de référence
   - [`schema-donnees.md`](docs/schema-donnees.md) — conception du modèle de données
   - [`concepts-techniques.md`](docs/concepts-techniques.md) — fiche de révision des notions de code vues (vanilla, React...)
+  - [`bugs.md`](docs/bugs.md) — bugs rencontrés (symptôme / cause / correction / leçon)
+  - [`demandes.md`](docs/demandes.md) — liste chronologique de toutes les demandes de Nicolas
 - [`vanilla/`](vanilla/) — étape 1 : version HTML/CSS/JS sans framework
-- [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass
+- [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass.
+  Pages Lots, TMA et **Paramètres** (infos programme, délais/taux, barème,
+  étages, lots, entreprises — édition complète de `programme.parametres`
+  et du référentiel des lots/entreprises)
 - [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose. Modèles
-  des 7 collections, script de seed (`npm run seed`), routes de lecture
-  (`/api/programme`, `/api/lots`, `/api/tma`) et d'écriture (changement de
-  statut TMA avec machine à états, calcul automatique du statut depuis les
-  dates)
+  des 8 collections (Programme, Lot, Acquereur, AppelDeFonds, TMA,
+  TmaEntreprise, Entreprise, Utilisateur), script de seed (`npm run seed`),
+  routes de lecture/écriture complètes sur programme/lots/acquereurs/tma/
+  tma-entreprises/entreprises (changement de statut TMA avec machine à
+  états, calcul automatique du statut depuis les dates, liaison
+  lot ↔ acquéreur, unicité des numéros de parking/cave sur un programme)
 - [`références/`](références/) — fichiers Excel de référence (usage interne, non déployés)
 
 ## Avancement

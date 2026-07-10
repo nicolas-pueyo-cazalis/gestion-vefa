@@ -20,14 +20,16 @@ const PROGRAMME_DATA = {
   dateLivraison: new Date('2027-06-30'),
 }
 
+// parkings/caves : numéros identifiants (pas un compte), uniques sur tout
+// le programme — voir la remarque du 10/07/2026.
 const LOTS_DATA = [
-  { reference: 'A01', etage: 'RDC', type: 'T2', orientation: 'Sud', surfaceHabitable: 45, prixTTC: 210000, statut: 'acte' },
+  { reference: 'A01', etage: 'RDC', type: 'T2', orientation: 'Sud', surfaceHabitable: 45, prixTTC: 210000, statut: 'acte', parkings: [1], caves: [1] },
   { reference: 'A02', etage: 'RDC', type: 'T1', orientation: 'Nord', surfaceHabitable: 32, prixTTC: 150000, statut: 'libre' },
-  { reference: 'B01', etage: 'R+1', type: 'T3', orientation: 'Sud-Est', surfaceHabitable: 68, prixTTC: 265000, statut: 'reserve' },
+  { reference: 'B01', etage: 'R+1', type: 'T3', orientation: 'Sud-Est', surfaceHabitable: 68, prixTTC: 265000, statut: 'reserve', parkings: [2, 3], caves: [2] },
   { reference: 'B02', etage: 'R+1', type: 'T2', orientation: 'Est', surfaceHabitable: 48, prixTTC: 198000, statut: 'option' },
-  { reference: 'C01', etage: 'R+2', type: 'T4', orientation: 'Sud-Ouest', surfaceHabitable: 92, prixTTC: 320000, statut: 'acte' },
+  { reference: 'C01', etage: 'R+2', type: 'T4', orientation: 'Sud-Ouest', surfaceHabitable: 92, prixTTC: 320000, statut: 'acte', parkings: [4], caves: [3] },
   { reference: 'C02', etage: 'R+2', type: 'T1bis', orientation: 'Ouest', surfaceHabitable: 34, prixTTC: 158000, statut: 'libre' },
-  { reference: 'D01', etage: 'R+3', type: 'T3bis', orientation: 'Sud', surfaceHabitable: 72, prixTTC: 275000, statut: 'reserve' },
+  { reference: 'D01', etage: 'R+3', type: 'T3bis', orientation: 'Sud', surfaceHabitable: 72, prixTTC: 275000, statut: 'reserve', parkings: [5] },
   { reference: 'D02', etage: 'R+3', type: 'T2bis', orientation: 'Nord-Est', surfaceHabitable: 50, prixTTC: 205000, statut: 'option' },
 ]
 
@@ -135,6 +137,17 @@ async function seed() {
   const acquereurParCle = Object.fromEntries(
     ACQUEREURS_DATA.map((a, index) => [a.cle, acquereurs[index]]),
   )
+
+  // Relation inverse : chaque lot référence directement son acquéreur
+  // principal (voir décision du 10/07/2026 dans schema-donnees.md).
+  await Promise.all(
+    ACQUEREURS_DATA.flatMap((a, index) =>
+      a.lots.map((reference) =>
+        Lot.findByIdAndUpdate(lotParReference[reference]._id, { acquereur: acquereurs[index]._id }),
+      ),
+    ),
+  )
+  console.log('Références acquéreur mises à jour sur les lots')
 
   const tmas = await Tma.insertMany(
     TMA_DATA.map((tma) => ({

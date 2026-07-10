@@ -16,3 +16,10 @@ export const STATUTS_LOT = {
   reserve: "Réservé",
   acte: "Acté",
 };
+
+// Liste fixe (enum Mongoose côté serveur, server/models/Lot.js) : les 8
+// orientations n'ont pas de raison de varier d'un programme à l'autre,
+// contrairement aux étages (programme.parametres.listeEtages).
+export const ORIENTATIONS = [
+  "Nord", "Nord-Est", "Est", "Sud-Est", "Sud", "Sud-Ouest", "Ouest", "Nord-Ouest",
+];

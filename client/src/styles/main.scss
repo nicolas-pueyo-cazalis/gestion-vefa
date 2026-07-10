@@ -180,11 +180,16 @@ table {
       color: #52606d;
     }
 
-    input {
+    input,
+    select {
       border: 1px solid $couleur-bordure;
       border-radius: 4px;
       padding: 0.3rem 0.5rem;
       font-size: 0.85rem;
+    }
+
+    select {
+      min-width: 12rem;
     }
 
     button {
@@ -267,5 +272,186 @@ table {
 @each $statut, $couleur in $couleurs-statut {
   .badge.#{$statut} {
     background: $couleur;
+  }
+}
+
+.section-parametres {
+  background: $couleur-carte;
+  border: 1px solid $couleur-bordure;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+  }
+
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    // "start" plutôt que "end" : avec "end", un champ plus haut que les
+    // autres (ex: liste de tags + bouton) pousse tous les champs voisins
+    // de sa ligne vers le bas pour caler leur bas sur le sien — visible
+    // dès qu'un message d'erreur apparaît sous un champ, ou avec
+    // ListeNumeros. Avec "start", tous les champs démarrent à la même
+    // hauteur (labels alignés) et seul le contenu en plus (bouton, tags,
+    // erreur) s'étend vers le bas sans perturber ses voisins.
+    align-items: start;
+    gap: 1rem;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: #52606d;
+  }
+
+  input,
+  select {
+    border: 1px solid $couleur-bordure;
+    border-radius: 4px;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.9rem;
+
+    &.invalide {
+      border-color: #dc2626;
+    }
+  }
+
+  .erreur-champ {
+    color: #dc2626;
+    font-size: 0.75rem;
+  }
+
+  button {
+    border: 1px solid $couleur-bordure;
+    background: $couleur-carte;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  button[type='submit'] {
+    background: $couleur-texte;
+    color: white;
+    border-color: $couleur-texte;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  ul li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .groupe-numeros {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .liste-numeros {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 0.25rem;
+
+    label {
+      margin: 0;
+    }
+
+    input {
+      width: 5rem;
+    }
+
+    ul {
+      margin: 0.25rem 0 0;
+    }
+  }
+
+  .liste-tags {
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    li {
+      background: $couleur-fond;
+      border: 1px solid $couleur-bordure;
+      border-radius: 999px;
+      padding: 0.2rem 0.4rem 0.2rem 0.8rem;
+
+      button {
+        border: none;
+        background: none;
+        padding: 0 0.3rem;
+        font-size: 1rem;
+        line-height: 1;
+      }
+    }
+  }
+
+  .ligne-lot-edition {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    gap: 0.6rem;
+    width: 100%;
+
+    label {
+      font-size: 0.75rem;
+    }
+  }
+
+  .ligne-phase {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+
+    input:first-child {
+      flex: 1;
+    }
+
+    input:last-of-type {
+      width: 5rem;
+    }
+  }
+
+  .total-ok {
+    color: #16a34a; // même vert que .badge.acte (voir $couleurs-statut)
+    font-weight: 600;
+  }
+
+  .total-erreur {
+    color: #dc2626; // même rouge que .badge.refuse (voir $couleurs-statut)
+    font-weight: 600;
+  }
+}
+
+.telephone-input {
+  display: flex;
+  gap: 0.4rem;
+
+  select,
+  input {
+    border: 1px solid $couleur-bordure;
+    border-radius: 4px;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  input.invalide {
+    border-color: #dc2626;
   }
 }

@@ -124,10 +124,12 @@ sous-document embarqué (pas une collection séparée).
 | `type` | String | ex: T1, T2, T3bis... |
 | `orientation` | enum `'Nord' \| 'Nord-Est' \| 'Est' \| 'Sud-Est' \| 'Sud' \| 'Sud-Ouest' \| 'Ouest' \| 'Nord-Ouest'` | liste fixe (les 8 orientations n'ont pas de raison de varier d'un programme à l'autre) |
 | `surfaceHabitable`, `surfaceTerrasse`, `surfaceJardin` | Number | m² |
-| `parkings`, `caves` | Number | |
+| `parkings`, `caves` | `[Number]` | modifié le 10/07/2026 : ce ne sont pas des compteurs mais des **numéros identifiants** (ex: place de parking n°10) — un lot peut en avoir plusieurs, d'où la liste. Chaque numéro doit être **unique sur tout le programme** (deux lots ne peuvent pas revendiquer le même numéro de parking ou de cave/cellier), vérifié côté serveur à la création/modification d'un lot |
 | `prixTTC` | Number | montant — voir la convention monétaire en début de document (affiché avec "€", stocké en `Number` pur) |
 | `statut` | enum `'libre' \| 'option' \| 'reserve' \| 'acte'` | défaut `'libre'` |
 | `dateOption`, `dateReservation`, `dateActe` | Date | rempli au fil du cycle de vente |
+| `acquereur` | ObjectId → `Acquereur` | ajouté le 10/07/2026 : référence directe vers l'acquéreur principal du lot (relation inverse de `Acquereur.lots`), nécessaire pour afficher/éditer le client directement dans le tableau des lots. Le cas rare d'indivision (plusieurs acquéreurs pour un même lot) reste couvert par `Acquereur.lots` mais n'a pas d'interface dédiée pour l'instant |
+| `commentaire` | String | ajouté le 10/07/2026, libre, optionnel |
 
 > **Pourquoi des valeurs d'enum sans accent (`reserve`, `acte`) ?** Les
 > valeurs d'enum sont lues par le code (comparaisons, URLs d'API, filtres) —
@@ -161,7 +163,8 @@ sous-document embarqué (pas une collection séparée).
 |---|---|---|
 | `lots` | `[ObjectId → Lot]` | tableau plutôt qu'un seul, pour couvrir le cas rare d'un acquéreur multi-lots (prévu dans le cadrage initial) |
 | `civilite` | enum `'M.' \| 'Mme' \| 'M. et Mme'` | ajouté le 10/07/2026 : distinct du prénom (ex: "M. et Mme Duprat" n'est pas un prénom, c'est une civilité + un nom) |
-| `nom`, `prenom` | String | |
+| `nom` | String | requis |
+| `prenom` | String | optionnel depuis le 10/07/2026 : la création rapide d'un acquéreur depuis la page Lots (voir `Lot.acquereur`) ne saisit que civilité + nom, le prénom se complète plus tard via la page Clients |
 | `adresse`, `commune`, `codePostal` | String | |
 | `telephone` | String | format **international** (voir remarque) |
 | `email` | String | validé par un format email (regex) |

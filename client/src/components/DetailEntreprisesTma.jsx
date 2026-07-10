@@ -8,6 +8,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   const [chargement, setChargement] = useState(true)
   const [entrepriseChoisie, setEntrepriseChoisie] = useState('')
   const [montantDevis, setMontantDevis] = useState('')
+  const [dateRetour, setDateRetour] = useState('')
 
   useEffect(() => {
     async function chargerDonnees() {
@@ -31,6 +32,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
         tma: tma._id,
         entreprise: entrepriseChoisie,
         montantDevis: montantDevis === '' ? null : Number(montantDevis),
+        dateRetour: dateRetour || null,
       }),
     })
     const nouvelleLigne = await reponse.json()
@@ -38,6 +40,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
     setLignes((liste) => [...liste, { ...nouvelleLigne, entreprise: entrepriseDetail }])
     setEntrepriseChoisie('')
     setMontantDevis('')
+    setDateRetour('')
     onChangement()
   }
 
@@ -101,6 +104,10 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
               value={montantDevis}
               onChange={(e) => setMontantDevis(e.target.value)}
             />
+          </label>
+          <label>
+            Date de réception
+            <input type="date" value={dateRetour} onChange={(e) => setDateRetour(e.target.value)} />
           </label>
           <button type="submit">Ajouter</button>
           <button type="button" onClick={onFermer}>Fermer</button>

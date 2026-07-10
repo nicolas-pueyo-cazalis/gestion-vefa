@@ -315,3 +315,13 @@ ici c'est uniquement du vocabulaire **technique**.
   export par défaut du schéma lui-même (pas d'un modèle), importé dans
   plusieurs fichiers de modèles — évite de dupliquer une définition
   identique (ici entre `Acquereur.banque`/`courtier` et `Entreprise.contact`).
+- **Composant "affichage ou édition" selon son propre `state`** : un booléen
+  local (`enEdition`) détermine si le composant retourne une simple ligne
+  d'info avec des boutons, ou un petit formulaire — permet une édition "en
+  ligne" sans changer de page ni de composant parent.
+- **Erreur d'import "Failed to resolve" = page blanche totale** : si un
+  fichier importé n'existe pas (ex: une route ajoutée dans `App.jsx` avant
+  d'avoir créé la page correspondante), Vite ne peut compiler aucun module
+  qui en dépend — toute l'application reste blanche, pas seulement la
+  fonctionnalité concernée. Toujours vérifier les logs du serveur de dev en
+  cas d'écran blanc inattendu.

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique, calculerMontantClient } from '../models/Tma.js'
+import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique } from '../models/Tma.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
@@ -50,14 +50,16 @@ router.patch('/:id/statut', async (req, res) => {
   }
 })
 
-// PATCH /api/tma/:id/dates — met à jour les dates/montant d'une TMA et
-// recalcule automatiquement son statut à partir de ces valeurs (comme
-// Excel), sauf si elle est déjà en travaux/terminée/refusée : dans ce cas,
-// on garde les dates modifiables (correction) mais sans faire reculer le
-// statut malgré elles.
+// PATCH /api/tma/:id/dates — met à jour les dates d'une TMA et recalcule
+// automatiquement son statut à partir de ces valeurs (comme Excel), sauf si
+// elle est déjà en travaux/terminée/refusée : dans ce cas, on garde les
+// dates modifiables (correction) mais sans faire reculer le statut malgré
+// elles. Ne touche plus à montantEntreprises/montantClient : ces champs
+// sont désormais entièrement pilotés par les lignes TmaEntreprise (voir
+// recalculerTma dans routes/tmaEntreprises.js).
 router.patch('/:id/dates', async (req, res) => {
   try {
-    const { dateEnvoiEntreprises, montantEntreprises, dateEnvoiFactureClient, dateRetourClient } = req.body
+    const { dateEnvoiEntreprises, dateEnvoiFactureClient, dateRetourClient } = req.body
     const tma = await Tma.findById(req.params.id)
 
     if (!tma) {
@@ -65,10 +67,6 @@ router.patch('/:id/dates', async (req, res) => {
     }
 
     if (dateEnvoiEntreprises !== undefined) tma.dateEnvoiEntreprises = dateEnvoiEntreprises
-    if (montantEntreprises !== undefined) {
-      tma.montantEntreprises = montantEntreprises
-      tma.montantClient = calculerMontantClient(montantEntreprises)
-    }
     if (dateEnvoiFactureClient !== undefined) tma.dateEnvoiFactureClient = dateEnvoiFactureClient
     if (dateRetourClient !== undefined) tma.dateRetourClient = dateRetourClient
 

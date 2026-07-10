@@ -13,4 +13,26 @@ router.get('/', async (req, res) => {
   }
 })
 
+// PATCH /api/programme — modifie les infos du programme et/ou ses paramètres
+router.patch('/', async (req, res) => {
+  try {
+    const { parametres, ...champsProgramme } = req.body
+    const programme = await Programme.findOne()
+
+    if (!programme) {
+      return res.status(404).json({ message: 'Programme introuvable' })
+    }
+
+    Object.assign(programme, champsProgramme)
+    if (parametres) {
+      Object.assign(programme.parametres, parametres)
+    }
+
+    await programme.save()
+    res.json(programme)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
 export default router

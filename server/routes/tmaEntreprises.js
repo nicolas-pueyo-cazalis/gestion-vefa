@@ -77,6 +77,35 @@ router.post('/', async (req, res) => {
   }
 })
 
+// PATCH /api/tma-entreprises/:id — modifie le devis et/ou la date de retour
+// d'une ligne existante (ex: une entreprise en attente qui répond enfin),
+// recalcule la TMA parente. Aucun champ n'est déduit automatiquement : les
+// deux se renseignent explicitement, comme les autres dates de l'appli.
+router.patch('/:id', async (req, res) => {
+  try {
+    const { montantDevis, dateRetour } = req.body
+    const ligne = await TmaEntreprise.findById(req.params.id)
+
+    if (!ligne) {
+      return res.status(404).json({ message: 'Ligne introuvable' })
+    }
+
+    if (montantDevis !== undefined) {
+      ligne.montantDevis = montantDevis
+      ligne.statut = montantDevis !== null ? 'recu' : 'a_chiffrer'
+    }
+    if (dateRetour !== undefined) {
+      ligne.dateRetour = dateRetour
+    }
+
+    await ligne.save()
+    await recalculerTma(ligne.tma)
+    res.json(ligne)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
 // DELETE /api/tma-entreprises/:id — retire une ligne, recalcule la TMA parente
 router.delete('/:id', async (req, res) => {
   try {

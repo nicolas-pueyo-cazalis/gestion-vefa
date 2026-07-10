@@ -250,7 +250,7 @@ Un document par (lot × phase du barème) — créé au moment où la phase est
 | `dateDemande` | Date | |
 | `dateEnvoiEntreprises` | Date | |
 | `priorite` | enum `'basse' \| 'moyenne' \| 'haute'` | optionnel |
-| `montantEntreprises` | Number | somme des `TmaEntreprise.montantDevis` liées ; montant → convention "€" |
+| `montantEntreprises` | Number | somme des `TmaEntreprise.montantDevis` liées ; montant → convention "€". **Non modifiable directement** (retiré de `PATCH /api/tma/:id/dates` le 10/07/2026) — uniquement recalculé via les routes `TmaEntreprise` |
 | `montantClient` | Number | calculé selon `tauxMargeTma` / `regleMontantNegatifTma` du programme, **figé** une fois validé (même logique de snapshot que pour `AppelDeFonds`) ; montant → convention "€" |
 | `dateEnvoiFactureClient`, `dateRetourClient` | Date | |
 | `statut` | enum (voir machine à états ci-dessous) | |
@@ -324,9 +324,15 @@ entreprises (ex: un percement de mur = maçon + électricien).
 | `tma` | ObjectId → `TMA` | |
 | `entreprise` | ObjectId → `Entreprise` | référence (10/07/2026 : remplace l'ancien texte libre) |
 | `corpsDeTravaux` | String | **copie figée** du corps de métier de l'entreprise au moment de l'ajout — même principe que `AppelDeFonds.phase` : si le référentiel change plus tard, une ligne déjà créée ne doit pas changer rétroactivement |
-| `dateEnvoi` | Date | ajouté le 10/07/2026, défaut à la création — sert de point de départ à l'alerte "entreprise n'a pas répondu à temps" |
+| `dateEnvoi` | Date | défaut à la création — sert de point de départ à l'alerte "entreprise n'a pas répondu à temps" |
+| `dateRetour` | Date | ajouté le 10/07/2026, **saisie manuelle** (pas déduite automatiquement, contrairement à d'autres dates de l'appli) — demandé par Nicolas pour le suivi, pas encore exploité dans un calcul |
 | `montantDevis` | Number | montant → convention "€" en début de document |
-| `statut` | enum `'a_chiffrer' \| 'recu' \| 'valide' \| 'refuse' \| 'travaux' \| 'termine'` | |
+| `statut` | enum `'a_chiffrer' \| 'recu' \| 'valide' \| 'refuse' \| 'travaux' \| 'termine'` | passe à `recu` automatiquement dès qu'un `montantDevis` est renseigné (création ou modification) |
+
+> **`PATCH /api/tma-entreprises/:id`** permet de modifier une ligne
+> existante (montant et/ou date de retour) — nécessaire pour le cas d'une
+> entreprise en attente qui répond après coup, sans avoir à supprimer/recréer
+> la ligne.
 
 ---
 

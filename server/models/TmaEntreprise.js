@@ -9,6 +9,10 @@ const tmaEntrepriseSchema = new mongoose.Schema({
   // rétroactivement une ligne déjà créée.
   corpsDeTravaux: String,
   dateEnvoi: { type: Date, default: Date.now },
+  // Date à laquelle l'entreprise a effectivement répondu (devis reçu) —
+  // distincte de dateEnvoi. Pas encore exploitée dans un calcul, gardée
+  // pour le suivi/historique (remarque de Nicolas du 10/07/2026).
+  dateRetour: Date,
   montantDevis: Number,
   statut: {
     type: String,

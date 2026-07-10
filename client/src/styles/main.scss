@@ -215,6 +215,29 @@ table {
       font-size: 0.75rem;
     }
   }
+
+  .ligne-entreprise-edition {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.6rem;
+    width: 100%;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.75rem;
+      color: #52606d;
+    }
+
+    input {
+      border: 1px solid $couleur-bordure;
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
+      font-size: 0.8rem;
+    }
+  }
 }
 
 .badge {

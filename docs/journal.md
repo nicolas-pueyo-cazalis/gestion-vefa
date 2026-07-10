@@ -746,3 +746,39 @@ page Paramètres, ou les alertes), avec Nicolas.
 Page "Paramètres" (point 2) ou les deux nouvelles alertes (point 3) — à
 discuter avec Nicolas. Le terrain du point 3 (côté entreprise) est déjà
 posé avec `TmaEntreprise.dateEnvoi`.
+
+---
+
+## 2026-07-10 — Pause sur `TmaEntreprise` : `dateRetour` + édition de ligne
+
+**Ce qui a été fait**
+
+Nicolas a demandé une pause sur "Paramètres" pour ajouter un champ de suivi
+sur `TmaEntreprise` :
+
+- `dateRetour` ajoutée au modèle — **saisie manuelle**, pas déduite
+  automatiquement (contrairement à d'autres dates de l'appli) : décision
+  explicite de Nicolas.
+- Ça a révélé un manque : aucune route ne permettait de **modifier** une
+  ligne `TmaEntreprise` existante (seulement créer/supprimer) — impossible
+  de renseigner le devis d'une entreprise en attente sans supprimer/recréer
+  la ligne. Ajout de `PATCH /api/tma-entreprises/:id`, qui passe aussi le
+  statut de la ligne à `recu` dès qu'un montant est renseigné.
+- Nouveau composant React `LigneEntreprise.jsx` : bascule entre affichage et
+  mode édition selon son propre `state` (`enEdition`), permet de saisir
+  montant + date de retour a posteriori sur une ligne déjà créée.
+- **Bug rencontré et corrigé** : `App.jsx` importait déjà `./pages/Parametres.jsx`
+  (ajouté juste avant la pause) mais le fichier n'avait jamais été créé —
+  page blanche sur toute l'application (erreur de build Vite, pas un bug
+  d'exécution). Corrigé avec une version minimale du fichier en attendant de
+  vraiment construire cette page.
+- **Nettoyage demandé par Nicolas** : le champ "Montant entreprises" dans
+  "Modifier les dates" n'avait plus lieu d'être, devenu redondant/conflictuel
+  avec le calcul automatique via les lignes `TmaEntreprise`. Retiré du
+  formulaire ET de la route `PATCH /api/tma/:id/dates` (qui ne touche plus du
+  tout à `montantEntreprises`/`montantClient`, entièrement pilotés par
+  `routes/tmaEntreprises.js` désormais).
+
+**Prochaine étape**
+
+Reprendre la page "Paramètres" (point 2), interrompue par cette pause.

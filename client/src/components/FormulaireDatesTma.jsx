@@ -8,7 +8,6 @@ function versDateInput(valeur) {
 
 function FormulaireDatesTma({ tma, colonnes, onEnregistrer, onFermer }) {
   const [dateEnvoiEntreprises, setDateEnvoiEntreprises] = useState(versDateInput(tma.dateEnvoiEntreprises))
-  const [montantEntreprises, setMontantEntreprises] = useState(tma.montantEntreprises ?? '')
   const [dateEnvoiFactureClient, setDateEnvoiFactureClient] = useState(versDateInput(tma.dateEnvoiFactureClient))
   const [dateRetourClient, setDateRetourClient] = useState(versDateInput(tma.dateRetourClient))
 
@@ -16,7 +15,6 @@ function FormulaireDatesTma({ tma, colonnes, onEnregistrer, onFermer }) {
     evenement.preventDefault()
     onEnregistrer(tma._id, {
       dateEnvoiEntreprises: dateEnvoiEntreprises || null,
-      montantEntreprises: montantEntreprises === '' ? null : Number(montantEntreprises),
       dateEnvoiFactureClient: dateEnvoiFactureClient || null,
       dateRetourClient: dateRetourClient || null,
     })
@@ -32,15 +30,6 @@ function FormulaireDatesTma({ tma, colonnes, onEnregistrer, onFermer }) {
               type="date"
               value={dateEnvoiEntreprises}
               onChange={(e) => setDateEnvoiEntreprises(e.target.value)}
-            />
-          </label>
-          <label>
-            Montant entreprises (€)
-            <input
-              type="number"
-              step="0.01"
-              value={montantEntreprises}
-              onChange={(e) => setMontantEntreprises(e.target.value)}
             />
           </label>
           <label>

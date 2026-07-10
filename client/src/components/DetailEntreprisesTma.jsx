@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
-import { formatMontant } from '../utils/formatMontant.js'
+import LigneEntreprise from './LigneEntreprise.jsx'
 
 function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   const [lignes, setLignes] = useState([])
@@ -47,6 +47,23 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
     onChangement()
   }
 
+  async function modifierLigne(id, donnees) {
+    const reponse = await fetch(`${API_URL}/api/tma-entreprises/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees),
+    })
+    const ligneMiseAJour = await reponse.json()
+    setLignes((liste) =>
+      liste.map((ligne) =>
+        ligne._id === id
+          ? { ...ligne, montantDevis: ligneMiseAJour.montantDevis, dateRetour: ligneMiseAJour.dateRetour, statut: ligneMiseAJour.statut }
+          : ligne,
+      ),
+    )
+    onChangement()
+  }
+
   return (
     <tr className="detail-entreprises">
       <td colSpan={colonnes}>
@@ -56,11 +73,12 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
           <ul>
             {lignes.length === 0 && <li>Aucune entreprise pour l'instant.</li>}
             {lignes.map((ligne) => (
-              <li key={ligne._id}>
-                {ligne.corpsDeTravaux} — {ligne.entreprise.nom} —{' '}
-                {ligne.montantDevis === null ? 'en attente de devis' : formatMontant(ligne.montantDevis)}
-                <button type="button" onClick={() => supprimerLigne(ligne._id)}>Retirer</button>
-              </li>
+              <LigneEntreprise
+                key={ligne._id}
+                ligne={ligne}
+                onEnregistrer={modifierLigne}
+                onSupprimer={supprimerLigne}
+              />
             ))}
           </ul>
         )}

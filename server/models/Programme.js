@@ -22,6 +22,7 @@ const parametresSchema = new mongoose.Schema({
   delaiSignatureNotaireMois: { type: Number, default: 3 },
   delaiReglementAppelJours: { type: Number, default: 30 },
   delaiRetourEntrepriseTmaJours: { type: Number, default: 15 },
+  delaiReponseFactureTmaJours: { type: Number, default: 15 }, // délai client pour valider/refuser une facture TMA
   tauxMargeTma: { type: Number, default: 1.3 },
   // Tous les montants stockés (prixTTC, montantEntreprises, montantClient...)
   // sont en TTC ; le HT se calcule à la volée (TTC / (1 + tauxTva)) quand

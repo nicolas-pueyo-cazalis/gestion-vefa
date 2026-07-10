@@ -25,4 +25,17 @@ router.post('/', async (req, res) => {
   }
 })
 
+// DELETE /api/entreprises/:id — retire une entreprise du référentiel
+router.delete('/:id', async (req, res) => {
+  try {
+    const entreprise = await Entreprise.findByIdAndDelete(req.params.id)
+    if (!entreprise) {
+      return res.status(404).json({ message: 'Entreprise introuvable' })
+    }
+    res.status(204).end()
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
 export default router

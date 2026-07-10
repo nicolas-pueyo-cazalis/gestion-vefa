@@ -251,3 +251,88 @@ de le retravailler.
 Démarrer réellement l'étape 2 : `npm create vite@latest client -- --template
 react` dans le dossier du projet (via WSL), puis mise en place de React
 Router et Sass, et portage des deux pages vanilla en composants React.
+
+---
+
+## 2026-07-10 — Étape 2 : démarrage de la migration React
+
+**Ce qui a été fait**
+
+- Scaffold du projet React avec Vite dans `client/` (`npm create vite@latest
+  client -- --template react`), installation de `react-router-dom` et `sass`.
+- Correctif d'environnement : le serveur de dev Vite (lancé dans WSL) ne
+  détectait pas les modifications de fichiers faites côté Windows (`/mnt/c/...`).
+  Ajout de `server.watch.usePolling: true` dans `vite.config.js` — nécessaire
+  tant que le projet reste sur le disque Windows et le serveur dans WSL.
+- **Apprentissage progressif de React**, avec un fichier de démo temporaire
+  dans `App.jsx` (composant, JSX, props, `useState`, listes avec `.map()` +
+  `key`), avant de toucher au vrai code du projet. Un exercice pratique
+  (composant `ListeCouleurs` réutilisable via une prop) et un petit quiz de
+  révision ont été faits en cours de route.
+- Nouvelle fiche de révision technique créée : `docs/concepts-techniques.md`
+  (résumés courts de chaque notion de code vue, vanilla + React), tenue à jour
+  au fil des sessions — pendant du glossaire métier mais pour le code.
+- **Mise en place de Sass** : `client/src/styles/_variables.scss` (variables
+  de couleur + une map `$couleurs-statut`) et `main.scss` (reprise du CSS de
+  `vanilla/style.css`, avec imbrication des règles et une boucle `@each` pour
+  générer les classes `.badge.xxx` au lieu de les écrire à la main).
+- **Mise en place de React Router** : `BrowserRouter` dans `main.jsx`, routes
+  définies dans `App.jsx` (`/` → page Lots, `/tma` → page TMA), composant
+  partagé `Layout.jsx` (bandeau + `<Outlet />`), `Bandeau.jsx` avec des
+  `NavLink` (classe `active` automatique, remplace la gestion manuelle de la
+  classe `actif` en JS qu'on avait en vanilla). Testé et fonctionnel : la
+  navigation entre les deux pages ne recharge plus la page.
+- Composants réutilisables créés : `Badge.jsx`, `StatCard.jsx`,
+  `FiltreStatuts.jsx` (ce dernier introduit le principe de **composant
+  contrôlé** : il ne possède pas la donnée `actif`, il la reçoit en prop et
+  délègue les changements à son parent via `onChange`).
+
+**Décision de méthode de travail**
+
+Nicolas a demandé à être guidé avec des explications systématiques et
+détaillées à chaque fichier/concept nouveau (pas d'enchaînement de plusieurs
+fichiers sans pause), et des exercices pratiques à certains points d'étape.
+Il a aussi rappelé que les points de commit Git et les mises à jour de
+documentation doivent être signalés/faits **sans qu'il ait à le demander** —
+voir mémoire `feedback-git-workflow` et `feedback-documentation-pedagogique`.
+
+**Prochaine étape**
+
+Finaliser `pages/Lots.jsx` (assemblage des composants + données + filtre),
+puis faire de même pour `pages/Tma.jsx`.
+
+---
+
+## 2026-07-10 — Étape 2 : pages Lots et TMA finalisées (parité avec vanilla)
+
+**Ce qui a été fait**
+
+- `pages/Lots.jsx` assemblé et testé : cartes de stats, filtre par statut
+  (composant contrôlé), tableau des lots — réutilise `StatCard`, `Badge`,
+  `FiltreStatuts`. Construction de la liste des boutons de filtre à partir de
+  `STATUTS_LOT` via `Object.entries(...).map(...)` + spread (`...`), plutôt
+  que recopiée à la main.
+- `pages/Tma.jsx` assemblé sur le même principe (réutilisation directe des
+  mêmes composants — bénéfice concret de les avoir extraits). Point notable :
+  la `key` des lignes ne peut pas être `tma.lot` seul (plusieurs TMA peuvent
+  partager le même lot) → combinaison `` `${tma.lot}-${index}` `` en
+  attendant un vrai identifiant unique (`_id` Mongo) à l'étape 3.
+- Les deux pages testées dans le navigateur : affichage, filtres, et
+  navigation Lots ↔ TMA sans rechargement, conformes à la version vanilla.
+- Nettoyage des fichiers de démo Vite non utilisés (`assets/react.svg`,
+  `vite.svg`, `hero.png`, `public/icons.svg`), et correction du titre d'onglet
+  ("client" → "Gestion VEFA") et de la langue HTML (`en` → `fr`), restés au
+  défaut du template Vite.
+
+**Résultat**
+
+L'étape 2 atteint la parité fonctionnelle avec la version vanilla de l'étape
+1 (mêmes deux pages, mêmes données fictives, même logique d'affichage), cette
+fois avec une vraie architecture en composants réutilisables et un routage
+sans rechargement de page.
+
+**Prochaine étape**
+
+À discuter avec Nicolas : poursuivre/enrichir la version React (ex: pages
+supplémentaires, animations, etc.) ou enchaîner sur l'étape 3 (back-end
+Express + MongoDB).

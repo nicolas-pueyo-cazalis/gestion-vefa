@@ -59,6 +59,51 @@ ici c'est uniquement du vocabulaire **technique**.
   importable sans accolades (`import App from './App.jsx'`), contrairement à
   un export nommé (`export const PROGRAMME = ...` → `import { PROGRAMME }
   from ...`).
+- **Composant contrôlé** : un composant qui ne possède pas sa propre donnée,
+  mais la reçoit en prop (ex: `actif`) et délègue tout changement à son
+  parent via une prop-fonction (ex: `onChange`). Le parent reste la seule
+  "source de vérité". Utilisé pour `FiltreStatuts`.
+
+## React Router (étape 2)
+
+- **`<BrowserRouter>`** : active le système de routage pour toute
+  l'application. Se place une seule fois, en haut (`main.jsx`).
+- **`<Routes>` / `<Route>`** : la liste des correspondances "URL → composant à
+  afficher". `<Route path="tma" element={<Tma />} />` affiche `Tma` sur
+  `/tma`.
+- **Route "index"** (`<Route index element={<Lots />} />`) : la route par
+  défaut d'un parent, affichée quand l'URL correspond exactement au chemin du
+  parent (ici `/`).
+- **`<Outlet />`** : emplacement, dans un composant partagé (`Layout`), où
+  React Router insère la page active — évite de dupliquer le bandeau dans
+  chaque page.
+- **`<NavLink>`** : comme un `<a>`, mais ajoute automatiquement une classe
+  CSS `active` sur le lien correspondant à la page actuelle. La prop `end`
+  évite qu'un lien vers `/` reste actif sur toutes les autres pages (qui
+  commencent aussi par `/`).
+- **SPA (Single Page Application)** : un seul vrai fichier HTML ; changer de
+  "page" ne recharge pas le navigateur, seul le contenu concerné est
+  redessiné par React.
+
+## Sass (étape 2)
+
+- **Variables (`$nom: valeur`)** : équivalent des `--nom` en CSS, mais
+  remplacées directement par leur valeur au moment de la compilation (pas de
+  variable qui persiste jusque dans le navigateur comme en CSS).
+- **Partiel (`_variables.scss`)** : un fichier préfixé par `_`, fait pour être
+  importé par un autre via `@use`, ne produit pas de CSS seul.
+- **`@use 'fichier' as *;`** : importe un partiel ; `as *` évite d'avoir à
+  préfixer chaque variable par un espace de noms.
+- **Imbrication (nesting)** : écrire les styles d'un élément enfant à
+  l'intérieur de la règle de son parent — la structure du CSS suit celle du
+  HTML, plus lisible qu'en CSS classique.
+- **`&`** : représente le sélecteur parent collé sans espace (`&.active` →
+  `a.active`, pas `a .active`).
+- **Map (`$couleurs-statut: (cle: valeur, ...)`)** : équivalent Sass d'un
+  objet JS ; combinée à `@each`, permet de générer plusieurs règles CSS par
+  une boucle plutôt qu'en les recopiant à la main.
+- **Interpolation (`#{...}`)** : insère la valeur d'une variable dans le
+  texte d'un sélecteur ou d'une propriété (ex: `.badge.#{$statut}`).
 
 ## Outillage
 

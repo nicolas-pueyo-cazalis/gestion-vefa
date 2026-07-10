@@ -21,7 +21,7 @@ function Bandeau() {
       <nav className="nav">
         <NavLink to="/" end>Lots</NavLink>
         <NavLink to="/tma">TMA</NavLink>
-        <NavLink to="/parametres">Paramètres</NavLink>
+        <NavLink to="/parametres" className="nav-parametres">Paramètres</NavLink>
       </nav>
     </header>
   )

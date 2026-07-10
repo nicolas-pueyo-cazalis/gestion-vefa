@@ -325,3 +325,22 @@ ici c'est uniquement du vocabulaire **technique**.
   qui en dépend — toute l'application reste blanche, pas seulement la
   fonctionnalité concernée. Toujours vérifier les logs du serveur de dev en
   cas d'écran blanc inattendu.
+
+## Petits réglages CSS (étape 4)
+
+- **`margin-left: auto` dans un conteneur flex** : pousse l'élément (et tout
+  ce qui suit) vers la droite, en absorbant tout l'espace disponible à sa
+  gauche — astuce classique pour séparer un élément du reste d'une barre de
+  navigation sans dupliquer la structure en deux groupes.
+- **`NavLink` avec un `className` texte simple** : React Router ajoute quand
+  même automatiquement `active`/`pending` à la suite de la classe fournie
+  (uniquement si `className` n'est pas une fonction) — on peut donc combiner
+  une classe personnalisée (ex: pour le positionnement) et le style actif
+  automatique sans rien perdre.
+- **Piège : fusion des marges verticales ("margin collapsing")** : entre
+  deux éléments de bloc voisins, `margin-bottom` du premier et `margin-top`
+  du second ne s'additionnent pas — CSS garde seulement la plus grande des
+  deux. Un `margin-top` ajouté sur le second peut donc n'avoir **aucun
+  effet visible** si le `margin-bottom` du premier est déjà supérieur.
+  Solutions : soit augmenter la marge qui compte réellement, soit utiliser
+  `padding` à la place (qui ne fusionne jamais avec les marges voisines).

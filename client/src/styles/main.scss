@@ -39,11 +39,21 @@ header {
     font-weight: 600;
     padding-bottom: 0.25rem;
     border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      color: $couleur-texte;
+      border-bottom-color: $couleur-bordure;
+    }
 
     &.active {
       color: $couleur-texte;
       border-bottom-color: $couleur-texte;
     }
+  }
+
+  .nav-parametres {
+    margin-left: auto;
   }
 }
 
@@ -89,6 +99,8 @@ main {
 .filtres {
   display: flex;
   gap: 0.5rem;
+  padding-top: 1rem; // "padding" plutôt que "margin" : ne fusionne pas avec
+                      // la marge du bloc .stats juste au-dessus
   margin-bottom: 1rem;
   flex-wrap: wrap;
 

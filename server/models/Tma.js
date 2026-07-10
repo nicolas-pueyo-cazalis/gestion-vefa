@@ -14,7 +14,7 @@ const tmaSchema = new mongoose.Schema({
   dateRetourClient: Date,
   statut: {
     type: String,
-    enum: ['demande', 'etude', 'chiffre', 'valide', 'refuse', 'facture', 'travaux', 'termine'],
+    enum: ['demande', 'etude', 'chiffre', 'facture', 'valide', 'refuse', 'travaux', 'termine'],
     default: 'demande',
   },
 }, { timestamps: true })

@@ -1,11 +1,23 @@
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { PROGRAMME } from '../data/programme.js'
+import { API_URL } from '../config.js'
 
 function Bandeau() {
+  const [programme, setProgramme] = useState(null)
+
+  useEffect(() => {
+    async function chargerProgramme() {
+      const reponse = await fetch(`${API_URL}/api/programme`)
+      const donnees = await reponse.json()
+      setProgramme(donnees)
+    }
+    chargerProgramme()
+  }, [])
+
   return (
     <header>
-      <p className="bandeau-nom">{PROGRAMME.nom}</p>
-      <p className="bandeau-adresse">{PROGRAMME.adresse}, {PROGRAMME.commune}</p>
+      <p className="bandeau-nom">{programme?.nom}</p>
+      <p className="bandeau-adresse">{programme?.adresse}, {programme?.commune}</p>
       <nav className="nav">
         <NavLink to="/" end>Lots</NavLink>
         <NavLink to="/tma">TMA</NavLink>

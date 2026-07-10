@@ -27,7 +27,9 @@ développeur web, en remplacement d'outils Excel/VBA existants.
   - [`concepts-techniques.md`](docs/concepts-techniques.md) — fiche de révision des notions de code vues (vanilla, React...)
 - [`vanilla/`](vanilla/) — étape 1 : version HTML/CSS/JS sans framework
 - [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass
-- [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose (en cours)
+- [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose (en cours).
+  Modèles des 7 collections, script de seed (`npm run seed`), premières
+  routes de lecture (`/api/programme`, `/api/lots`, `/api/tma`)
 - [`références/`](références/) — fichiers Excel de référence (usage interne, non déployés)
 
 ## Avancement

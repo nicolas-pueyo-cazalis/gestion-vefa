@@ -471,3 +471,51 @@ de vraies données servies par l'API.
 Brancher le front React sur cette API (remplacer les imports de
 `client/src/data/*.js` par des appels `fetch` dans les pages `Lots`/`Tma`),
 puis supprimer les données codées en dur une fois la bascule confirmée.
+
+---
+
+## 2026-07-10 — Étape 3 (suite) : React branché sur l'API
+
+**Ce qui a été fait**
+
+- Introduction de `useEffect` (exécuter du code à l'apparition d'un
+  composant, avec le tableau de dépendances `[]` pour ne le faire qu'une
+  fois) combiné à `fetch` pour aller chercher les données côté serveur.
+- `client/.env` (`VITE_API_URL`) + `src/config.js` : adresse de l'API
+  centralisée, pas codée en dur dans chaque fichier. Rappel de la règle Vite
+  : seules les variables préfixées `VITE_` sont exposées au code du
+  navigateur.
+- `pages/Lots.jsx` et `pages/Tma.jsx` branchés sur `/api/lots` et `/api/tma`
+  (états `chargement`/`erreur` gérés, retours anticipés pendant le
+  chargement). `Bandeau.jsx` branché sur `/api/programme`.
+- Simplification permise par l'API : `montantClient` est déjà calculé côté
+  serveur (plus besoin de `calculerMontantClient` côté front), et chaque
+  document a un vrai `_id` MongoDB (le compromis de `key` combinant
+  `lot`+`index` en TMA n'est plus nécessaire). `client/src/data/lots.js` et
+  `tma.js` ne gardent plus que les constantes d'affichage (libellés,
+  regroupements de statuts) ; `data/programme.js` n'est plus utilisé
+  (à supprimer une fois totalement confirmé).
+- **Décision métier révisée** : le statut `facture` est reclassé dans "En
+  cours" (pas "Validées") — le client n'a pas encore donné son accord final
+  au moment de la facturation. Ça a révélé une incohérence dans la machine à
+  états documentée (`valide` était placé avant `facture`, ce qui n'avait pas
+  de sens : la facture/devis est envoyée **avant** le retour signé du
+  client). Ordre corrigé partout : `chiffre → facture → valide → travaux`
+  (`docs/schema-donnees.md`, `server/models/Tma.js`).
+
+**Prochaine étape**
+
+Supprimer les données codées en dur devenues inutiles dans
+`client/src/data/` (`LOTS`, `PROGRAMME`), une fois la bascule sur l'API
+définitivement confirmée dans le navigateur.
+
+**Confirmé et nettoyé** : les trois pages (bandeau, Lots, TMA) testées avec
+succès sur les vraies données de l'API. `client/src/data/programme.js`
+supprimé (plus aucune référence). `lots.js`/`tma.js` ne gardent que les
+constantes d'affichage.
+
+**Prochaine étape**
+
+Étape 4 (logique métier avancée) ou routes d'écriture (POST/PUT) pour
+pouvoir créer/modifier des lots et TMA depuis l'interface plutôt que
+seulement les lire — à discuter avec Nicolas.

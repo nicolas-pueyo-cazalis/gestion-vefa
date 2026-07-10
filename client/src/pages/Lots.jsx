@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { LOTS, STATUTS_LOT } from '../data/lots.js'
+import { useEffect, useState } from 'react'
+import { STATUTS_LOT } from '../data/lots.js'
+import { API_URL } from '../config.js'
 import { formatMontant } from '../utils/formatMontant.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
@@ -11,17 +12,38 @@ const STATUTS_FILTRE = [
 ]
 
 function Lots() {
+  const [lots, setLots] = useState([])
+  const [chargement, setChargement] = useState(true)
+  const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
 
+  useEffect(() => {
+    async function chargerLots() {
+      try {
+        const reponse = await fetch(`${API_URL}/api/lots`)
+        const donnees = await reponse.json()
+        setLots(donnees)
+      } catch (e) {
+        setErreur(e.message)
+      } finally {
+        setChargement(false)
+      }
+    }
+    chargerLots()
+  }, [])
+
+  if (chargement) return <p>Chargement des lots...</p>
+  if (erreur) return <p>Erreur : {erreur}</p>
+
   const lotsFiltres =
-    statutActif === 'tous' ? LOTS : LOTS.filter((lot) => lot.statut === statutActif)
+    statutActif === 'tous' ? lots : lots.filter((lot) => lot.statut === statutActif)
 
   const parStatut = Object.keys(STATUTS_LOT).reduce((compte, statut) => {
-    compte[statut] = LOTS.filter((lot) => lot.statut === statut).length
+    compte[statut] = lots.filter((lot) => lot.statut === statut).length
     return compte
   }, {})
 
-  const caActe = LOTS.filter((lot) => lot.statut === 'acte').reduce(
+  const caActe = lots.filter((lot) => lot.statut === 'acte').reduce(
     (somme, lot) => somme + lot.prixTTC,
     0,
   )
@@ -31,7 +53,7 @@ function Lots() {
       <h1 className="titre-page">Tableau de bord des lots</h1>
 
       <section className="stats">
-        <StatCard valeur={LOTS.length} libelle="Lots au total" />
+        <StatCard valeur={lots.length} libelle="Lots au total" />
         <StatCard valeur={parStatut.acte} libelle="Actés" />
         <StatCard valeur={parStatut.reserve} libelle="Réservés" />
         <StatCard valeur={parStatut.libre} libelle="Libres" />
@@ -54,7 +76,7 @@ function Lots() {
         </thead>
         <tbody>
           {lotsFiltres.map((lot) => (
-            <tr key={lot.reference}>
+            <tr key={lot._id}>
               <td>{lot.reference}</td>
               <td>{lot.etage}</td>
               <td>{lot.type}</td>

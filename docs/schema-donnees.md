@@ -244,14 +244,23 @@ Reprend le cycle réel observé dans Excel, complété par les étapes
 post-validation identifiées comme piste d'amélioration :
 
 ```
-demande → etude → chiffre → valide → facture → travaux → termine
+demande → etude → chiffre → facture → valide → travaux → termine
                                  ↘
                                 refuse   (possible depuis demande, etude ou chiffre)
 ```
 
+> **Correction du 10/07/2026** — l'ordre initial (`valide` avant `facture`)
+> était incohérent avec le sens métier : `facture` correspond à l'envoi du
+> devis/facture au client pour accord (`dateEnvoiFactureClient`), et `valide`
+> à son retour signé (`dateRetourClient`) — la facture est donc envoyée
+> **avant** que le client ne valide, pas après. D'où le nouvel ordre :
+> `chiffre → facture → valide → travaux`. Les cartes de statistiques du
+> front (« En cours » / « Validées ») suivent ce nouvel ordre : `facture`
+> est compté dans « En cours », pas dans « Validées ».
+
 Règle explicite (déjà dans le cadrage initial, à coder en dur dans le
-back-end, pas seulement côté front) : **on ne peut pas passer à `facture` si
-le statut n'est pas déjà `valide`** — et plus généralement, on ne peut pas
+back-end, pas seulement côté front) : **on ne peut pas passer à `valide` si
+le statut n'est pas déjà `facture`** — et plus généralement, on ne peut pas
 sauter une étape ni revenir en arrière une fois `valide` (sauf `refuse`, qui
 n'est possible qu'avant validation).
 

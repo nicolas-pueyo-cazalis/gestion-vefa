@@ -1,0 +1,152 @@
+@use 'variables' as *;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Arial, sans-serif;
+  color: $couleur-texte;
+  background: $couleur-fond;
+}
+
+header {
+  padding: 1.5rem 2rem;
+  background: $couleur-carte;
+  border-bottom: 1px solid $couleur-bordure;
+
+  .bandeau-nom {
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .bandeau-adresse {
+    margin: 0;
+    color: #52606d;
+  }
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+
+  a {
+    color: #52606d;
+    text-decoration: none;
+    font-weight: 600;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid transparent;
+
+    &.active {
+      color: $couleur-texte;
+      border-bottom-color: $couleur-texte;
+    }
+  }
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+.titre-page {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  .carte {
+    background: $couleur-carte;
+    border: 1px solid $couleur-bordure;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+
+    .valeur {
+      display: block;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .libelle {
+      font-size: 0.85rem;
+      color: #52606d;
+    }
+  }
+}
+
+.filtres {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $couleur-bordure;
+    background: $couleur-carte;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.9rem;
+
+    &.actif {
+      background: $couleur-texte;
+      color: white;
+      border-color: $couleur-texte;
+    }
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: $couleur-carte;
+  border: 1px solid $couleur-bordure;
+  border-radius: 8px;
+  overflow: hidden;
+
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid $couleur-bordure;
+    font-size: 0.9rem;
+  }
+
+  th {
+    background: #eef2f6;
+    font-weight: 600;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+// Génère .badge.libre, .badge.option, .badge.demande, etc. à partir de la
+// map $couleurs-statut définie dans _variables.scss — 4 lignes remplacent
+// les 12 règles écrites à la main en vanilla.
+@each $statut, $couleur in $couleurs-statut {
+  .badge.#{$statut} {
+    background: $couleur;
+  }
+}

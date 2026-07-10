@@ -1,0 +1,26 @@
+// Le "_" au début du nom de fichier signifie "partiel" en Sass : ce fichier
+// ne produit pas de CSS tout seul, il est fait pour être importé par un autre
+// fichier Sass (main.scss) via @use.
+
+$couleur-texte: #1f2933;
+$couleur-fond: #f5f7fa;
+$couleur-carte: #ffffff;
+$couleur-bordure: #d9e1e8;
+
+// Une "map" Sass : un ensemble de paires clé/valeur, comme un objet JS.
+// Sert à générer les classes .badge.xxx par une boucle dans main.scss,
+// au lieu d'écrire 12 règles CSS presque identiques à la main.
+$couleurs-statut: (
+  libre: #6b7280,
+  option: #2563eb,
+  reserve: #d97706,
+  acte: #16a34a,
+  demande: #6b7280,
+  etude: #2563eb,
+  chiffre: #7c3aed,
+  valide: #0d9488,
+  refuse: #dc2626,
+  facture: #d97706,
+  travaux: #4f46e5,
+  termine: #16a34a,
+);

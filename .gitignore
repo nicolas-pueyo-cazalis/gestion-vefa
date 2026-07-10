@@ -1,0 +1,13 @@
+# Dépendances
+node_modules/
+
+# Variables d'environnement (mots de passe, clés secrètes) — ne jamais commiter
+.env
+.env.local
+
+# Logs
+*.log
+
+# Système
+.DS_Store
+Thumbs.db

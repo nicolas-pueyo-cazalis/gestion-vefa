@@ -29,16 +29,25 @@ développeur web, en remplacement d'outils Excel/VBA existants.
   - [`demandes.md`](docs/demandes.md) — liste chronologique de toutes les demandes de Nicolas
 - [`vanilla/`](vanilla/) — étape 1 : version HTML/CSS/JS sans framework
 - [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass.
-  Pages Lots, TMA et **Paramètres** (infos programme, délais/taux, barème,
-  étages, lots, entreprises — édition complète de `programme.parametres`
-  et du référentiel des lots/entreprises)
+  - Page **Lots** : tableau complet (caractéristiques, prix/m², statut,
+    client, dates, commentaire) avec édition en ligne, création/liaison
+    d'acquéreur à la volée, et totaux TTC/TVA/HT + prix moyen au m².
+  - Page **TMA** : création de demandes depuis l'interface, machine à
+    états pilotée par les dates, détail multi-entreprises par TMA.
+  - Page **Paramètres** : infos programme, délais/taux, barème, étages,
+    lots (caractéristiques techniques), entreprises — édition complète de
+    `programme.parametres` et des référentiels lots/entreprises.
 - [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose. Modèles
   des 8 collections (Programme, Lot, Acquereur, AppelDeFonds, TMA,
-  TmaEntreprise, Entreprise, Utilisateur), script de seed (`npm run seed`),
+  TmaEntreprise, Entreprise, Utilisateur), script de seed (`npm run seed`
+  — ne génère que Programme/Lot/Acquereur/TMA ; le référentiel Entreprise
+  reste propre à chaque environnement, jamais réinitialisé par le seed),
   routes de lecture/écriture complètes sur programme/lots/acquereurs/tma/
   tma-entreprises/entreprises (changement de statut TMA avec machine à
-  états, calcul automatique du statut depuis les dates, liaison
-  lot ↔ acquéreur, unicité des numéros de parking/cave sur un programme)
+  états, calcul automatique du statut depuis les dates, cohérence
+  dates/statut sur les lots, liaison lot ↔ acquéreur, unicité des numéros
+  de parking/cave sur un programme, garde-fou contre la suppression d'un
+  lot encore référencé)
 - [`références/`](références/) — fichiers Excel de référence (usage interne, non déployés)
 
 ## Avancement

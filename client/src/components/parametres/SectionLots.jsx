@@ -96,7 +96,12 @@ function SectionLots({ programme, lots, onChangement }) {
   }
 
   async function supprimer(id) {
-    await fetch(`${API_URL}/api/lots/${id}`, { method: 'DELETE' })
+    const reponse = await fetch(`${API_URL}/api/lots/${id}`, { method: 'DELETE' })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
     onChangement()
   }
 

@@ -13,6 +13,7 @@ import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireDatesTma from '../components/FormulaireDatesTma.jsx'
 import DetailEntreprisesTma from '../components/DetailEntreprisesTma.jsx'
+import FormulaireCreationTma from '../components/FormulaireCreationTma.jsx'
 
 const NB_COLONNES = 8
 
@@ -27,27 +28,48 @@ function nomAcquereur(acquereur) {
 
 function Tma() {
   const [tmaList, setTmaList] = useState([])
+  const [lots, setLots] = useState([])
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
   const [idEnEdition, setIdEnEdition] = useState(null)
   const [idEntreprisesOuvert, setIdEntreprisesOuvert] = useState(null)
+  const [creationOuverte, setCreationOuverte] = useState(false)
 
   async function chargerTma() {
-    try {
-      const reponse = await fetch(`${API_URL}/api/tma`)
-      const donnees = await reponse.json()
-      setTmaList(donnees)
-    } catch (e) {
-      setErreur(e.message)
-    } finally {
-      setChargement(false)
-    }
+    const reponse = await fetch(`${API_URL}/api/tma`)
+    setTmaList(await reponse.json())
   }
 
   useEffect(() => {
-    chargerTma()
+    async function chargerTout() {
+      try {
+        const reponseLots = await fetch(`${API_URL}/api/lots`)
+        setLots(await reponseLots.json())
+        await chargerTma()
+      } catch (e) {
+        setErreur(e.message)
+      } finally {
+        setChargement(false)
+      }
+    }
+    chargerTout()
   }, [])
+
+  async function creerTma(donnees) {
+    const reponse = await fetch(`${API_URL}/api/tma`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees),
+    })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+    await chargerTma()
+    setCreationOuverte(false)
+  }
 
   if (chargement) return <p>Chargement des TMA...</p>
   if (erreur) return <p>Erreur : {erreur}</p>
@@ -148,6 +170,16 @@ function Tma() {
 
       <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
 
+      {creationOuverte ? (
+        <FormulaireCreationTma
+          lots={lots}
+          onCreer={creerTma}
+          onFermer={() => setCreationOuverte(false)}
+        />
+      ) : (
+        <button type="button" onClick={() => setCreationOuverte(true)}>Ajouter une TMA</button>
+      )}
+
       <table>
         <thead>
           <tr>
@@ -165,12 +197,16 @@ function Tma() {
           {tmaFiltrees.map((tma) => (
             <Fragment key={tma._id}>
               <tr>
-                <td>{tma.lot.reference}</td>
+                <td>{tma.lot?.reference ?? '—'}</td>
                 <td>{nomAcquereur(tma.acquereur)}</td>
                 <td>{tma.localisation}</td>
                 <td>{tma.description}</td>
-                <td>{tma.montantEntreprises === null ? '—' : formatMontant(tma.montantEntreprises)}</td>
-                <td>{tma.montantClient === null ? '—' : formatMontant(tma.montantClient)}</td>
+                {/* "==" (pas "===") : capture aussi bien `null` que
+                    `undefined` — un montant absent du document (jamais
+                    renseigné) n'est pas forcément `null` à la lettre, et
+                    formatMontant(undefined) affiche "NaN €". */}
+                <td>{tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises)}</td>
+                <td>{tma.montantClient == null ? '—' : formatMontant(tma.montantClient)}</td>
                 <td><Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} /></td>
                 <td className="actions">
                   {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && (

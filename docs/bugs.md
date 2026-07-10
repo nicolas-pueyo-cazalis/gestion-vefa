@@ -201,3 +201,122 @@ la même classe `.invalide` (bordure rouge) déjà utilisée pour le téléphone
 **Leçon** : `alert()` est pratique pour un test rapide pendant le
 développement, mais rarement acceptable dans une vraie interface — préférer
 un affichage inline dès que le formulaire a une identité visuelle propre.
+
+---
+
+## Champ téléphone toujours affiché en rouge, même vide
+
+**Symptôme** : dans le formulaire d'ajout d'une entreprise, le champ
+téléphone (`TelephoneInput`) s'affichait avec sa bordure rouge "invalide"
+dès l'ouverture du formulaire, avant même toute saisie.
+
+**Cause** : l'état initial `complet` était calculé avec
+`Boolean(numeroExistant?.isValid())`. Pour un champ neuf sans valeur,
+`numeroExistant` vaut `undefined`, donc l'expression retombe à
+`Boolean(undefined)` = `false` — traitant "vide" comme "invalide", alors
+que le téléphone est un champ optionnel (un champ vide doit être valide).
+
+**Correction** : initialisation changée en
+`numeroExistant ? numeroExistant.isValid() : true` — un champ sans valeur
+existante démarre à "valide" (pas de bordure rouge), cohérent avec la
+logique déjà utilisée ailleurs dans le composant (`estValide = valide ||
+formate === ''`).
+
+**Leçon** : sur un champ optionnel, bien distinguer "état initial vide"
+(valide) de "en cours de correction, incomplet" (invalide) — un
+`Boolean(x?.method())` sur une valeur `undefined` retombe silencieusement
+sur `false`, un piège facile à manquer en relisant le code vite.
+
+---
+
+## Page TMA en page blanche : référence `lot` cassée après suppression d'un lot
+
+**Symptôme** : la page TMA (et par ricochet toute l'application, React
+démonte tout l'arbre en cas d'erreur non rattrapée) s'affichait
+totalement blanche. Console navigateur : `Uncaught TypeError: Cannot read
+properties of null (reading 'reference') at Tma.jsx:168`.
+
+**Cause** : le lot "D01" avait été supprimé via le nouveau bouton
+"Retirer" de Paramètres > Lots, alors qu'une TMA le référençait encore.
+`DELETE /api/lots/:id` ne vérifiait aucune dépendance avant de supprimer
+— une fois le lot supprimé, `.populate('lot')` renvoyait `null` pour la
+TMA concernée, et `tma.lot.reference` plantait sans garde-fou (`?.`).
+
+**Correction** : deux niveaux.
+1. **Prévention** : `DELETE /api/lots/:id` vérifie désormais qu'aucune
+   `TMA` ni `AppelDeFonds` ne référence le lot avant de le supprimer,
+   sinon renvoie une erreur 400 explicite (nombre de TMA/appels
+   concernés). `SectionLots.jsx` affiche ce message au lieu de l'ignorer.
+2. **Résilience** : `tma.lot?.reference ?? '—'` dans `Tma.jsx`, en filet
+   de sécurité même si la prévention ci-dessus devrait suffire.
+3. **Réparation des données** : la TMA déjà orpheline au moment du bug a
+   été corrigée par un reseed complet (confirmé par Nicolas).
+
+**Leçon** : dès qu'une suppression peut casser une référence ailleurs
+dans la base (relation `ObjectId` sans cascade), il faut soit
+**empêcher** la suppression si des dépendances existent, soit la
+**cascader** explicitement — jamais la laisser silencieuse. Et côté
+React, `donnee.relation.champ` sans `?.` sur une donnée peuplée
+(`.populate()`) qui *peut* légitimement être `null` (référence supprimée,
+jamais liée...) est un risque de faire planter toute la page, pas
+seulement la ligne concernée.
+
+---
+
+## Un lot "Réservé" pouvait avoir une date de signature d'acte
+
+**Symptôme** : rien n'empêchait de renseigner `dateActe` sur un lot dont
+le statut était `reserve` (ou `option`, ou `libre`) — repéré par Nicolas
+sur un lot réel déjà en base (B01 : statut "Réservé" mais une `dateActe`
+affichée), résidu d'un test antérieur.
+
+**Cause** : les trois dates du cycle de vente (`dateOption`,
+`dateReservation`, `dateActe`) et le `statut` étaient deux informations
+indépendantes dans le formulaire d'édition — rien ne les reliait, on
+pouvait cocher n'importe quel statut et remplir n'importe quelle date
+sans rapport logique entre les deux.
+
+**Correction** : une règle d'ordre (`libre < option < reserve < acte`)
+appliquée à deux endroits — `FormulaireEditionLot.jsx` désactive et vide
+automatiquement les dates d'étapes non atteintes dès qu'on change le
+statut, et `PATCH /api/lots/:id` (`validerDatesCoherentesAvecStatut`)
+refuse toute combinaison incohérente côté serveur, seule source de vérité
+réelle. La donnée déjà incohérente en base (B01) a été corrigée
+manuellement une fois la règle en place.
+
+**Leçon** : deux champs qui représentent la même réalité métier sous deux
+formes différentes (ici : "où en est la vente" via `statut`, et "quand"
+via les dates) doivent être **validés ensemble**, pas indépendamment —
+sinon rien n'empêche des combinaisons absurdes de coexister silencieusement
+en base jusqu'à ce que quelqu'un les remarque par hasard.
+
+---
+
+## "NaN €" affiché sur les montants d'une TMA fraîchement créée
+
+**Symptôme** : une TMA créée depuis le nouveau formulaire affichait
+"NaN €" dans les colonnes "Montant entreprises" et "Montant client",
+plutôt qu'un simple tiret comme pour les autres TMA sans montant connu.
+
+**Cause** : la route `POST /api/tma` ne renseignait pas
+`montantEntreprises`/`montantClient` à la création — ces champs
+n'ayant pas de valeur par défaut dans le schéma, ils valaient `undefined`
+(absents du document), pas `null`. Le tableau React ne testait que
+`tma.montantEntreprises === null` pour afficher un tiret ; `undefined` ne
+correspondant pas à `null` à l'identique (`===`), le code tombait dans la
+branche `formatMontant(undefined)`, qui produit "NaN €".
+
+**Correction** : le serveur initialise désormais explicitement ces deux
+champs à `null` à la création. Et par robustesse, le test d'affichage
+est passé de `=== null` à `== null` (égalité "faible", qui traite `null`
+et `undefined` comme équivalents) — ça a aussi corrigé instantanément les
+TMA de test déjà en base, sans avoir besoin de les recréer ni de
+retoucher la donnée.
+
+**Leçon** : `null` et `undefined` sont différents pour `===` mais pas
+pour `==` — un champ "pas encore renseigné" peut être l'un ou l'autre
+selon qu'il a été explicitement mis à `null` quelque part ou simplement
+jamais touché. Tester avec `== null` (au lieu de `=== null` ou
+`=== undefined`) est un moyen simple de couvrir les deux cas à la fois,
+plutôt que de devoir se souvenir laquelle des deux valeurs s'applique
+précisément à tel champ.

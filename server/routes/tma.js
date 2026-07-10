@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique } from '../models/Tma.js'
+import Lot from '../models/Lot.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
@@ -13,6 +14,44 @@ router.get('/', async (req, res) => {
       .populate('acquereur', 'civilite prenom nom')
       .sort({ createdAt: 1 })
     res.json(tmaList)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// POST /api/tma — crée une nouvelle TMA (demande d'un acquéreur pour son
+// lot). L'acquéreur n'est pas choisi séparément : il est déduit du lot
+// sélectionné (lot.acquereur), snapshotté sur la TMA au moment de la
+// création — même principe que les autres références "figées" du projet
+// (ex: TmaEntreprise.corpsDeTravaux). Un lot sans acquéreur ne peut pas
+// avoir de TMA (personne pour la demander). Statut de départ "demande" par
+// défaut (voir le schéma), sans dates — elles se renseignent ensuite au
+// fil de l'eau et font avancer le statut automatiquement.
+router.post('/', async (req, res) => {
+  try {
+    const { lot, localisation, description, dateDemande } = req.body
+
+    const lotDoc = await Lot.findById(lot)
+    if (!lotDoc) {
+      return res.status(404).json({ message: 'Lot introuvable' })
+    }
+    if (!lotDoc.acquereur) {
+      return res.status(400).json({ message: 'Ce lot n\'a pas encore d\'acquéreur — impossible de créer une TMA.' })
+    }
+
+    // montantEntreprises/montantClient explicitement à `null` (pas juste
+    // absents) : "pas encore chiffré", cohérent avec le reste de l'appli
+    // (ex: seed.js) — un champ `undefined` fait planter le formatage côté
+    // React (`formatMontant(undefined)` → "NaN €").
+    const tma = await Tma.create({
+      lot, acquereur: lotDoc.acquereur, localisation, description, dateDemande,
+      montantEntreprises: null, montantClient: null,
+    })
+    const tmaPeuplee = await tma.populate([
+      { path: 'lot', select: 'reference' },
+      { path: 'acquereur', select: 'civilite prenom nom' },
+    ])
+    res.status(201).json(tmaPeuplee)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
   }

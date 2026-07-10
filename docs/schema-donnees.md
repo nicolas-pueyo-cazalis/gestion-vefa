@@ -349,6 +349,7 @@ export des TMA envoyé directement aux entreprises.
 |---|---|---|
 | `nom` | String | |
 | `corpsDeTravaux` | String | ex: "GROS OEUVRE", "MENUISERIES INTERIEURES" |
+| `numeroLot` | String | ajouté le 10/07/2026 : n° du lot de travaux (ex: "01", "02"), saisi à la main — numérotation propre aux marchés de travaux, distincte des `Lot` (logements) du programme |
 | `contact` | sous-document `Contact` | même sous-schéma que `banque`/`courtier` sur `Acquereur` (extrait dans `server/models/contactSchema.js`, réutilisé plutôt que dupliqué) |
 
 ---

@@ -4,7 +4,6 @@ import Programme from './models/Programme.js'
 import Lot from './models/Lot.js'
 import Acquereur from './models/Acquereur.js'
 import Tma, { calculerMontantClient } from './models/Tma.js'
-import Entreprise from './models/Entreprise.js'
 
 // Données fictives (aucune donnée réelle) — reprises de client/src/data/.
 // Une fois les routes de lecture en place, client/src/data/ sera supprimé :
@@ -42,18 +41,6 @@ const ACQUEREURS_DATA = [
   { cle: 'ferreira', civilite: 'M.', prenom: 'Carlos', nom: 'Ferreira', lots: ['C01'] },
   { cle: 'aldana', civilite: 'M. et Mme', prenom: 'Pierre et Sophie', nom: 'Aldana', lots: ['D01'] },
   { cle: 'etchegoin', civilite: 'Mme', prenom: 'Anne', nom: 'Etchegoin', lots: ['B02'] },
-]
-
-// Corps de métier repérés dans l'analyse du fichier Excel de référence
-// (docs/analyse-excel.md, onglet LOTS_ENTREPRISES) — noms d'entreprises
-// fictifs.
-const ENTREPRISES_DATA = [
-  { nom: 'Lapix', corpsDeTravaux: 'GROS OEUVRE', contact: { telephone: '+33559000001', email: 'contact@lapix.fr', commune: 'Bayonne', codePostal: '64100' } },
-  { nom: 'Itoiz', corpsDeTravaux: 'CHARPENTE - COUVERTURE', contact: { telephone: '+33559000002', email: 'contact@itoiz.fr', commune: 'Anglet', codePostal: '64600' } },
-  { nom: 'Lopepe', corpsDeTravaux: 'ZINGUERIE', contact: { telephone: '+33559000003', email: 'contact@lopepe.fr', commune: 'Biarritz', codePostal: '64200' } },
-  { nom: 'Solutec', corpsDeTravaux: 'MENUISERIES EXTERIEURES', contact: { telephone: '+33559000004', email: 'contact@solutec.fr', commune: 'Bayonne', codePostal: '64100' } },
-  { nom: 'Ema', corpsDeTravaux: 'MENUISERIES INTERIEURES', contact: { telephone: '+33559000005', email: 'contact@ema.fr', commune: 'Boucau', codePostal: '64340' } },
-  { nom: 'Spark', corpsDeTravaux: 'ELECTRICITE', contact: { telephone: '+33559000006', email: 'contact@spark.fr', commune: 'Bayonne', codePostal: '64100' } },
 ]
 
 // Les dates sont volontairement cohérentes avec le statut de chaque TMA
@@ -104,17 +91,16 @@ async function seed() {
   await mongoose.connect(process.env.MONGODB_URI)
   console.log('Connecté à MongoDB')
 
+  // La collection Entreprise n'est plus touchée par le seed (décision du
+  // 10/07/2026) : Nicolas y saisit ses propres entreprises et ne veut plus
+  // les voir réapparaître à chaque reseed lié à d'autres collections.
   await Promise.all([
     Programme.deleteMany({}),
     Lot.deleteMany({}),
     Acquereur.deleteMany({}),
     Tma.deleteMany({}),
-    Entreprise.deleteMany({}),
   ])
-  console.log('Anciennes données supprimées')
-
-  const entreprises = await Entreprise.insertMany(ENTREPRISES_DATA)
-  console.log(`${entreprises.length} entreprises créées`)
+  console.log('Anciennes données supprimées (hors entreprises, plus gérées par le seed)')
 
   const programme = await Programme.create(PROGRAMME_DATA)
   console.log(`Programme créé : ${programme.nom}`)

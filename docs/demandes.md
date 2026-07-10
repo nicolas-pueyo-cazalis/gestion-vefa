@@ -240,6 +240,101 @@ qui ont persisté dans la version finale.
 
 ---
 
+## Reprise (10/07/2026, plus tard)
+
+53. **Entreprises** : ajouter un "n° de lot" (ex: 01, 02...) par
+    entreprise, saisi à la main — numérotation des lots de travaux du
+    marché, distincte des `Lot` (logements) déjà existants dans l'appli.
+54. Signalement : le champ "n° de téléphone" restait encadré en rouge en
+    permanence (bug, voir `bugs.md`).
+55. Après la restructuration de la page Lots : "ce n'est pas présenté
+    convenable, et les dates n'apparaissent pas dans les lignes" — les
+    dates étaient éditables mais jamais affichées dans le tableau, et
+    l'espacement client/bouton + les totaux étaient mal mis en forme.
+56. Signalement : page blanche générale — remonté jusqu'à un lot supprimé
+    (D01) alors qu'une TMA le référençait encore (bug, voir `bugs.md`).
+    A mené à une règle de robustesse : un lot référencé par une TMA/un
+    appel de fonds ne doit plus pouvoir être supprimé.
+
+---
+
+## Remarques PDF — "Nouvelles remarques sur les interfaces" (10/07/2026)
+
+57. **Interface Lots** : colonnes manquantes dans les lignes — Terrasses,
+    Jardins, Parkings, Caves/Celliers (existaient dans Paramètres > Lots
+    mais jamais affichées dans le tableau principal).
+58. **Bug dates/statut** : *"si un logement est réservé, je peux quand
+    même mettre une date de signature d'acte. Il faut que la date
+    affichée corresponde au statut du lot"* (bug, voir `bugs.md`).
+59. Colonne "Client" trop de retours à la ligne — impossibilité
+    d'agrandir la largeur des lignes évoquée comme piste.
+60. Colonne "Commentaire" manquante.
+61. Boutons "Modifier" des lots libres non alignés avec les autres
+    boutons "Modifier".
+62. Présentation des totaux à revoir : Total TTC, TVA, Total HT les uns
+    en dessous des autres plutôt que côte à côte.
+63. **Interface Paramètres** : *"il faut que les entreprises qui sont
+    écrites disparaissent définitivement, je veux repartir de 0... cela
+    fait plusieurs fois qu'on en discute et elles réapparaissent de temps
+    en temps"* — a mené à retirer complètement les entreprises fictives
+    du script de seed (cause racine du problème récurrent), plutôt qu'à
+    un simple nettoyage ponctuel de plus.
+
+---
+
+## Remarques PDF — "Remarques sur les interfaces - bis" + capture d'écran (10/07/2026)
+
+64. *"Je n'aime pas le fait que tout ne soit pas visible au premier coup
+    d'œil... réduire les marges sur le côté (uniquement pour les lignes
+    de lots)"*.
+65. *"Les € des totaux alignés avec les € des prix TTC des logements...
+    décaler les textes Prix TTC/TVA/Prix HT vers la gauche, alignés par
+    la gauche, quitte à créer un espace entre les textes et les
+    montants"*.
+66. *"Colonne Clients trop grande, j'accepte 1 seul retour à la ligne"*.
+67. *"Les boutons Modifier sont en fait à la suite du nom, il faudrait
+    créer une colonne Action, comme pour les TMA... et mettre cette
+    colonne en dernier"*.
+68. *"J'aimerais aussi que dans les totaux, il y ait un prix moyen au m²
+    total, c'est-à-dire la moyenne de tous les prix moyen/m²"* — précisé
+    comme une moyenne des prix/m² de chaque lot, pas le total divisé par
+    la surface totale.
+
+## Retours successifs sur l'alignement (10/07/2026, mêmes échanges)
+
+69. *"Pour les cartes je garderais les marges que l'on avait
+    initialement, élargi à partir des lots"* — a fait revenir sur le
+    premier essai (`main` élargi entièrement), remplacé par une
+    technique n'élargissant que le tableau.
+70. *"Prix TTC, TVA, etc. décale encore vers la droite, mets les entre
+    parking et cave à peu près"*.
+71. *"Rapproche 'Prix TTC, TVA, prix HT' des montants totaux, ils sont
+    trop loin"* / *"l'affichage est un peu trop zoomé... agrandir la
+    colonne Client, tu es repassé 4-5 fois à la ligne, une fois à la
+    ligne maximum"* / *"chaque info dans les colonnes soit centrée et
+    non alignée à gauche"*.
+72. *"Décale entre Prix TTC etc., aligne sous la colonne Cave"* /
+    *"réduis un peu la colonne client... pour agrandir un peu la colonne
+    Commentaire, qui me paraît trop peu large"*.
+
+---
+
+## Création de TMA depuis l'interface (10/07/2026)
+
+73. Demande de base (déjà listée au point 29) : bouton "Ajouter une TMA"
+    avec formulaire de création — réalisé (route `POST /api/tma`,
+    composant `FormulaireCreationTma.jsx`).
+74. *"Rajoute dans le cadre de création d'une TMA, la date de la
+    demande"* — a révélé que `TMA.dateDemande` existait dans le schéma
+    depuis le début du projet sans jamais avoir été branché nulle part.
+75. *"Agrandis la case description, il y a de la place sur la droite"* /
+    *"aligne les boutons Créer et Annuler avec la case, pas le titre de
+    la case, et décale-les un peu vers la droite"*.
+76. Signalement : "NaN €" affiché sur les montants d'une TMA fraîchement
+    créée (bug, voir `bugs.md`).
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

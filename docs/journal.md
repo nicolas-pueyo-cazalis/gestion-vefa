@@ -983,3 +983,205 @@ TMA depuis l'interface et nouvelle page Clients.
 Restructuration de la page Lots elle-même (colonnes façon "Synthèse
 programme", édition en ligne du statut/client/dates), puis création de
 TMA depuis l'interface et nouvelle page Clients.
+
+---
+
+## 2026-07-10 (suite) — Reprise : n° de lot Entreprises, bug téléphone
+
+**Ce qui a été fait**
+
+- **Modèle `Entreprise`** : ajout de `numeroLot` (String, saisi à la main,
+  ex: "01", "02") — numérotation des lots de travaux du marché, à ne pas
+  confondre avec les `Lot` (logements) du programme. Champ ajouté au
+  formulaire d'ajout de `SectionEntreprises.jsx` et à l'affichage de la
+  liste (`Lot 01 — GROS OEUVRE — Lapix`). Route `POST /api/entreprises`
+  mise à jour pour l'accepter.
+- **Bug corrigé** : le champ téléphone (`TelephoneInput.jsx`) s'affichait
+  systématiquement avec sa bordure rouge "invalide", même sur un
+  formulaire vide n'ayant reçu aucune saisie. Cause : l'état initial
+  `complet` valait `Boolean(numeroExistant?.isValid())`, qui retombe à
+  `false` quand `numeroExistant` est `undefined` (champ neuf) — traitant
+  à tort "vide" comme "invalide". Corrigé en initialisant `complet` à
+  `true` quand il n'y a pas de valeur existante. Détail dans `docs/bugs.md`.
+- Serveur backend non démarré au moment de la reprise (arrêté depuis la
+  pause précédente) — changements non re-testés en ligne de commande
+  cette fois, à valider par Nicolas une fois les serveurs relancés.
+- Serveurs (front + back) relancés en arrière-plan à la demande de
+  Nicolas ("comment je fais pour accéder au serveur ?").
+
+**Prochaine étape**
+
+Restructuration de la page Lots elle-même (colonnes façon "Synthèse
+programme", édition en ligne du statut/client/dates), puis création de
+TMA depuis l'interface et nouvelle page Clients.
+
+---
+
+## 2026-07-10 (suite) — Restructuration de la page Lots
+
+**Ce qui a été fait**
+
+- **Page `Lots.jsx` restructurée** : nouvelle colonne **Prix/m²** (calculé
+  à la volée, `prixTTC / surfaceHabitable`, jamais stocké — même principe
+  que les autres valeurs dérivées de l'appli), nouvelle colonne **Date**
+  (affiche la date la plus avancée déjà atteinte : acte > réservation >
+  option), colonne **Client** avec bouton "Modifier" ouvrant une ligne
+  d'édition dépliable (même pattern que les TMA) pour changer le statut,
+  lier un acquéreur existant **ou en créer un à la volée** (civilité +
+  nom, décision du point 7 des remarques), saisir les trois dates et un
+  commentaire. Nouveau composant `FormulaireEditionLot.jsx`. Ligne de
+  **totaux TTC/TVA/HT** en pied de tableau, recalculée selon le filtre de
+  statut actif et le taux de TVA du programme.
+- **Ajustements visuels** après premier retour de Nicolas ("ce n'est pas
+  présenté convenable, dates n'apparaissent pas") : la colonne Date
+  manquait entièrement (dates seulement éditables, jamais affichées) —
+  ajoutée. Le nom du client et le bouton "Modifier" étaient collés sans
+  espace (`.cellule-client` en flex avec `gap` pour corriger). La ligne
+  de totaux débordait sur deux lignes (texte combiné trop long dans une
+  cellule à `colSpan`) — répartie en une valeur par colonne (TTC sous
+  "Prix TTC", TVA sous "Statut", HT sous "Client") pour ne plus forcer de
+  retour à la ligne.
+- **Bug sérieux découvert et corrigé** : page TMA totalement blanche
+  (`tma.lot.reference` sur un `lot` devenu `null`). Cause : le lot "D01"
+  avait été supprimé via le nouveau bouton "Retirer" de Paramètres > Lots
+  alors qu'une TMA le référençait encore — `DELETE /api/lots/:id` ne
+  vérifiait aucune dépendance. Corrigé à deux niveaux : la suppression
+  d'un lot est désormais refusée s'il reste référencé par une TMA ou un
+  appel de fonds (message explicite), et `Tma.jsx` protégé par un `?.`
+  en filet de sécurité. Détail complet dans `docs/bugs.md`. Donnée
+  orpheline réparée par un reseed, **confirmé par Nicolas au préalable**
+  (choix explicite parmi trois options de réparation proposées).
+
+**Prochaine étape**
+
+Nicolas fait une pause et va transmettre une nouvelle liste de remarques.
+Après ça : création de TMA depuis l'interface (bouton "Ajouter une TMA")
+et nouvelle page Clients.
+
+---
+
+## 2026-07-10 (suite) — "Nouvelles remarques sur les interfaces" : colonnes manquantes, cohérence dates/statut, reset définitif des entreprises
+
+**Ce qui a été fait**
+
+- **Colonnes manquantes ajoutées** à la page Lots : Terrasse, Jardin,
+  Parkings, Caves/Celliers (existaient dans le modèle et dans Paramètres >
+  Lots, mais jamais affichées dans le tableau principal), et Commentaire.
+- **Bug de cohérence dates/statut corrigé** — signalé par Nicolas : *"si
+  un logement est réservé, je peux quand même mettre une date de
+  signature d'acte"*. Ajout d'une règle (`ORDRE_STATUTS` : libre < option
+  < reserve < acte) empêchant qu'une date d'étape non atteinte soit
+  renseignée (ex: pas de `dateActe` si `statut` n'est pas `acte`) — côté
+  serveur (`validerDatesCoherentesAvecStatut` dans `routes/lots.js`, seule
+  source de vérité) **et** côté formulaire (`FormulaireEditionLot.jsx` :
+  champs des étapes non atteintes désactivés, vidés automatiquement si on
+  repasse à un statut antérieur). En testant, la validation a détecté une
+  vraie incohérence déjà présente en base (le lot B01 avait une
+  `dateActe` alors que son statut était `reserve`, résidu d'un test
+  antérieur) — corrigée manuellement. Bug détaillé dans `docs/bugs.md`.
+- **Colonne Client illisible** ("les textes sont trop à la ligne") :
+  premier correctif — tableau en largeur libre avec défilement horizontal
+  (`.tableau-scroll`) plutôt que de forcer le texte à la ligne pour tenir
+  dans la largeur de l'écran (affiné ensuite, voir plus bas).
+- **Paramètres > Entreprises, reset définitif** : Nicolas a signalé (déjà
+  évoqué plusieurs fois) que les entreprises supprimées manuellement
+  réapparaissaient de temps en temps. Cause racine identifiée cette fois :
+  `seed.js` recréait systématiquement les 6 entreprises fictives à chaque
+  exécution, y compris pour des reseeds motivés par d'autres collections
+  (lots, TMA...) — sans lien avec un vrai bug de concurrence. Corrigé à la
+  racine : `seed.js` ne touche plus du tout à la collection `Entreprise`
+  (aucune dépendance trouvée : les `TmaEntreprise` du seed n'existent pas,
+  seules les TMA "brutes" avec un `montantEntreprises` numérique direct
+  sont seedées). Les 6 entreprises fictives existantes ont été supprimées
+  une bonne fois via l'API, confirmé par Nicolas.
+
+**Prochaine étape**
+
+Nouveau PDF de remarques ("bis") sur l'alignement et la présentation de la
+page Lots — à traiter avant de reprendre le fil (création de TMA, page
+Clients).
+
+---
+
+## 2026-07-10 (suite) — Remarques "bis" : alignement et présentation de la page Lots
+
+**Ce qui a été fait** (plusieurs allers-retours avec Nicolas, capture
+d'écran à l'appui à chaque étape)
+
+- **Largeur de la page Lots** : élargie *uniquement* pour le tableau, pas
+  pour le reste de la page (cartes de stats, filtres) — Nicolas a
+  explicitement demandé de garder les marges d'origine pour les cartes.
+  Premier essai avec `main:has(.page-large)` (élargit tout `<main>`)
+  abandonné car il élargissait aussi les cartes ; remplacé par la
+  technique CSS dite de "pleine largeur" (`.tableau-scroll` sort du
+  conteneur centré via `left: 50%` + `transform: translateX(-50%)`),
+  appliquée seulement au tableau.
+- **Totaux repensés en 3 lignes séparées** (Prix TTC / TVA / Prix HT) au
+  lieu d'une cellule combinée, avec la valeur de chacune exactement dans
+  la colonne "Prix TTC" — pour qu'elle s'aligne visuellement avec les prix
+  de chaque lot au-dessus, demande explicite de Nicolas ("les € des
+  totaux alignés avec les € des prix TTC"). Position du libellé ("Prix
+  TTC", "TVA (20%)"...) affinée en plusieurs passes suite aux retours
+  successifs : d'abord étalé sur toute la largeur (trop loin des
+  montants), puis resserré entre les colonnes Parkings et Caves, puis
+  finalement positionné exactement dans la colonne "Caves/Celliers" (une
+  seule cellule, pas de `colSpan`), avec centrage par défaut.
+- **Prix moyen au m²** ajouté aux totaux, dans la colonne "Prix/m²" —
+  moyenne des prix/m² de chaque lot (pas le total TTC divisé par la
+  surface totale, précision explicite de Nicolas).
+- **Colonne "Action" créée** (comme sur la page TMA), en dernière
+  position : le bouton "Modifier" était auparavant collé au nom du client
+  dans la même cellule, jamais bien aligné d'une ligne à l'autre. Extraire
+  le bouton dans sa propre colonne règle le problème définitivement.
+- **Réglages de densité** : police et padding du tableau réduits (moins
+  "zoomé"), cellules centrées plutôt qu'alignées à gauche (sauf ajustement
+  ponctuel du libellé des totaux, voir plus haut). Colonne Client limitée
+  en largeur (un seul retour à la ligne accepté, pas plus) ; largeur
+  affinée à plusieurs reprises (11rem → 18rem → 13rem) au fil des retours
+  sur le rendu réel. Colonne Commentaire élargie en retour (14rem minimum)
+  car elle paraissait trop étroite une fois le reste resserré.
+
+**Prochaine étape**
+
+Reprendre la feuille de route : création de TMA depuis l'interface, puis
+nouvelle page Clients.
+
+---
+
+## 2026-07-10 (suite) — Création de TMA depuis l'interface
+
+**Ce qui a été fait**
+
+- **Nouvelle route `POST /api/tma`** : crée une TMA à partir d'un lot
+  sélectionné. L'acquéreur n'est pas choisi séparément — déduit du lot
+  (`lot.acquereur`) et snapshotté sur la TMA à la création, même principe
+  que les autres références figées du projet. Un lot sans acquéreur ne
+  peut pas recevoir de TMA (rejeté avec un message clair : personne pour
+  la demander). Statut de départ "demande" (valeur par défaut du schéma),
+  sans dates.
+- **Nouveau composant `FormulaireCreationTma.jsx`** : liste déroulante
+  limitée aux lots ayant déjà un acquéreur, champs Localisation et
+  Description. Bouton "Ajouter une TMA" au-dessus du tableau, sur le même
+  principe toggle qu'ailleurs dans l'appli.
+- **Champ "Date de la demande" ajouté** à la demande de Nicolas —
+  `TMA.dateDemande` existait déjà dans le schéma depuis le tout début du
+  projet mais n'avait jamais été branché nulle part (relevé comme "champ
+  mort" en cours de route). Ajouté au formulaire de création et à la
+  route `POST /api/tma`.
+- **Mise en forme du formulaire** : champ Description élargi (`flex: 2`,
+  de la place disponible inutilisée signalée par Nicolas), boutons
+  "Créer"/"Annuler" sortis dans leur propre conteneur avec `align-self:
+  end` (pour s'aligner sur la ligne des champs, pas sur celle des
+  libellés au-dessus — piège déjà rencontré et documenté pour
+  `ListeNumeros`) et `margin-left: auto` (poussés à droite).
+- **Bug corrigé** : les nouvelles TMA affichaient "NaN €" dans les
+  colonnes de montants. Cause : `montantEntreprises`/`montantClient`
+  n'étaient pas renseignés à la création (`undefined`, pas `null`), et
+  l'affichage ne testait que `=== null`. Corrigé des deux côtés : le
+  serveur les initialise explicitement à `null`, et l'affichage teste
+  `== null` (capture aussi `undefined`) — corrige au passage les deux TMA
+  de test déjà en base sans avoir à les recréer. Détail dans `docs/bugs.md`.
+
+**Prochaine étape**
+
+Nouvelle page "Clients" (coordonnées complètes des acquéreurs).

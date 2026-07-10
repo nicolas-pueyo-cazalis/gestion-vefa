@@ -2,8 +2,29 @@ import { Router } from 'express'
 import Lot from '../models/Lot.js'
 import Acquereur from '../models/Acquereur.js'
 import Programme from '../models/Programme.js'
+import Tma from '../models/Tma.js'
+import AppelDeFonds from '../models/AppelDeFonds.js'
 
 const router = Router()
+
+// Ordre du cycle de vente : une date d'étape ne peut être renseignée que
+// si le statut a atteint (ou dépassé) cette étape — remarque du
+// 10/07/2026, "il faut que la date affichée corresponde au statut".
+const ORDRE_STATUTS = ['libre', 'option', 'reserve', 'acte']
+
+function validerDatesCoherentesAvecStatut(lot) {
+  const index = ORDRE_STATUTS.indexOf(lot.statut)
+  if (index < 1 && lot.dateOption) {
+    return 'La date d\'option ne peut être renseignée que si le statut est au moins "Option".'
+  }
+  if (index < 2 && lot.dateReservation) {
+    return 'La date de réservation ne peut être renseignée que si le statut est au moins "Réservé".'
+  }
+  if (index < 3 && lot.dateActe) {
+    return 'La date d\'acte ne peut être renseignée que si le statut est "Acté".'
+  }
+  return null
+}
 
 // `parkings`/`caves` sont des numéros identifiants (ex: place n°10), pas un
 // simple compte — remarque du 10/07/2026 : deux lots ne peuvent jamais
@@ -127,6 +148,12 @@ router.patch('/:id', async (req, res) => {
     }
 
     Object.assign(lot, champs)
+
+    const erreurDates = validerDatesCoherentesAvecStatut(lot)
+    if (erreurDates) {
+      return res.status(400).json({ message: erreurDates })
+    }
+
     await lot.save()
 
     if (nouvelAcquereurId !== ancienAcquereurId) {
@@ -145,10 +172,23 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
-// DELETE /api/lots/:id — supprime un lot (page Paramètres > Lots). Nettoie
-// au passage la relation inverse si un acquéreur y était lié.
+// DELETE /api/lots/:id — supprime un lot (page Paramètres > Lots). Refuse
+// si des TMA ou appels de fonds y font encore référence (sinon ces
+// documents se retrouvent avec une référence cassée, ex: `tma.lot` qui
+// devient `null` après `.populate()` et fait planter la page TMA). Nettoie
+// aussi la relation inverse si un acquéreur y était lié.
 router.delete('/:id', async (req, res) => {
   try {
+    const [nombreTma, nombreAppels] = await Promise.all([
+      Tma.countDocuments({ lot: req.params.id }),
+      AppelDeFonds.countDocuments({ lot: req.params.id }),
+    ])
+    if (nombreTma > 0 || nombreAppels > 0) {
+      return res.status(400).json({
+        message: `Impossible de supprimer ce lot : ${nombreTma} TMA et ${nombreAppels} appel(s) de fonds y font encore référence.`,
+      })
+    }
+
     const lot = await Lot.findByIdAndDelete(req.params.id)
     if (!lot) {
       return res.status(404).json({ message: 'Lot introuvable' })

@@ -11,6 +11,7 @@ const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 function SectionEntreprises({ entreprises, onChangement }) {
   const [nom, setNom] = useState('')
   const [corpsDeTravaux, setCorpsDeTravaux] = useState('')
+  const [numeroLot, setNumeroLot] = useState('')
   const [adresse, setAdresse] = useState('')
   const [commune, setCommune] = useState('')
   const [codePostal, setCodePostal] = useState('')
@@ -49,11 +50,13 @@ function SectionEntreprises({ entreprises, onChangement }) {
       body: JSON.stringify({
         nom,
         corpsDeTravaux,
+        numeroLot,
         contact: { adresse, commune, codePostal, telephone, email },
       }),
     })
     setNom('')
     setCorpsDeTravaux('')
+    setNumeroLot('')
     setAdresse('')
     setCommune('')
     setCodePostal('')
@@ -76,7 +79,7 @@ function SectionEntreprises({ entreprises, onChangement }) {
         {entreprises.length === 0 && <li>Aucune entreprise pour l'instant.</li>}
         {entreprises.map((e) => (
           <li key={e._id}>
-            {e.corpsDeTravaux} — {e.nom}
+            {e.numeroLot && `Lot ${e.numeroLot} — `}{e.corpsDeTravaux} — {e.nom}
             {e.contact?.adresse && ` — ${e.contact.adresse}`}
             {e.contact?.codePostal && ` ${e.contact.codePostal}`}
             {e.contact?.commune && ` ${e.contact.commune}`}
@@ -94,6 +97,10 @@ function SectionEntreprises({ entreprises, onChangement }) {
         <label>
           Corps de travaux
           <input value={corpsDeTravaux} onChange={(e) => setCorpsDeTravaux(e.target.value)} required />
+        </label>
+        <label>
+          N° de lot
+          <input value={numeroLot} onChange={(e) => setNumeroLot(e.target.value)} placeholder="ex: 01" />
         </label>
         <label>
           Adresse

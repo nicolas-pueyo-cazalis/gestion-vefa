@@ -27,7 +27,11 @@ function TelephoneInput({ value, onChange }) {
 
   const [pays, setPays] = useState(numeroExistant?.country ?? 'FR')
   const [saisie, setSaisie] = useState(numeroExistant ? numeroExistant.formatNational() : '')
-  const [complet, setComplet] = useState(Boolean(numeroExistant?.isValid()))
+  // Un champ vide est valide (téléphone optionnel) — seule une saisie
+  // commencée mais incomplète doit déclencher la bordure rouge. Sans ce
+  // cas particulier, un champ neuf (sans numéro existant) démarrait à
+  // "false" et s'affichait en rouge avant même toute saisie.
+  const [complet, setComplet] = useState(numeroExistant ? numeroExistant.isValid() : true)
 
   function appliquerSaisie(texte, paysActuel) {
     const formateur = new AsYouType(paysActuel)

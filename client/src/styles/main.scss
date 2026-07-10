@@ -144,6 +144,32 @@ table {
     border-bottom: none;
   }
 
+  tfoot td {
+    background: #eef2f6;
+    font-weight: 600;
+    border-bottom: none;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  // La colonne Client garde tout de même une largeur raisonnable : le nom
+  // peut revenir à la ligne (une seule fois en général), contrairement au
+  // reste du tableau qui est en "nowrap".
+  .nom-client {
+    display: inline-block;
+    max-width: 13rem;
+    white-space: normal;
+  }
+
+  // Commentaire : texte libre, potentiellement long — autorisé à revenir
+  // à la ligne dans une largeur confortable plutôt que d'être compressé
+  // au minimum comme les autres colonnes courtes.
+  .commentaire-cellule {
+    display: inline-block;
+    min-width: 14rem;
+    white-space: normal;
+  }
+
   td.actions {
     button {
       border: 1px solid $couleur-bordure;
@@ -257,6 +283,37 @@ table {
   }
 }
 
+// Tableau large (page Lots) : plutôt que de forcer le texte à la ligne
+// pour tenir dans la largeur de l'écran, le tableau prend sa largeur
+// naturelle et ce conteneur défile horizontalement si besoin.
+.tableau-scroll {
+  overflow-x: auto;
+  // "Pleine largeur" : sort du conteneur centré à 960px (<main>) pour
+  // utiliser tout l'écran, sans élargir le reste de la page (cartes de
+  // stats, filtres...) qui garde ses marges d'origine. Fonctionne parce
+  // que <main> est lui-même centré (margin: 0 auto) : "left: 50%" +
+  // "translateX(-50%)" recentre cet élément sur le milieu de l'écran.
+  width: 100vw;
+  max-width: 1600px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 1rem;
+}
+
+table.tableau-lots {
+  width: auto;
+  min-width: 100%;
+  font-size: 0.8rem;
+
+  th, td {
+    white-space: nowrap;
+    text-align: center;
+    padding: 0.4rem 0.5rem;
+  }
+
+}
+
 .badge {
   display: inline-block;
   padding: 0.15rem 0.6rem;
@@ -307,6 +364,26 @@ table {
     gap: 0.25rem;
     font-size: 0.8rem;
     color: #52606d;
+  }
+
+  .champ-description {
+    flex: 2 1 16rem; // prend plus de place que les champs voisins
+
+    input {
+      width: 100%;
+    }
+  }
+
+  // Aligne les boutons sur la ligne des champs (pas sur celle des
+  // libellés au-dessus) : "align-self: end" les cale en bas de la ligne
+  // flex, comme le bas des <input>. "margin-left: auto" les pousse vers
+  // la droite du formulaire plutôt que de les laisser collés au champ
+  // précédent.
+  .boutons-alignes-champs {
+    display: flex;
+    gap: 0.75rem;
+    align-self: end;
+    margin-left: auto;
   }
 
   input,

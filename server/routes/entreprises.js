@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
 // POST /api/entreprises — ajoute une entreprise au référentiel
 router.post('/', async (req, res) => {
   try {
-    const { nom, corpsDeTravaux, contact } = req.body
-    const entreprise = await Entreprise.create({ nom, corpsDeTravaux, contact })
+    const { nom, corpsDeTravaux, numeroLot, contact } = req.body
+    const entreprise = await Entreprise.create({ nom, corpsDeTravaux, numeroLot, contact })
     res.status(201).json(entreprise)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })

@@ -13,6 +13,7 @@ const contactSchema = new mongoose.Schema({
 
 const acquereurSchema = new mongoose.Schema({
   lots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lot' }],
+  civilite: { type: String, enum: ['M.', 'Mme', 'M. et Mme'] },
   nom: { type: String, required: true },
   prenom: { type: String, required: true },
   adresse: String,

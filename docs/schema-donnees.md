@@ -143,6 +143,7 @@ sous-document embarqué (pas une collection séparée).
 | Champ | Type | Remarque |
 |---|---|---|
 | `lots` | `[ObjectId → Lot]` | tableau plutôt qu'un seul, pour couvrir le cas rare d'un acquéreur multi-lots (prévu dans le cadrage initial) |
+| `civilite` | enum `'M.' \| 'Mme' \| 'M. et Mme'` | ajouté le 10/07/2026 : distinct du prénom (ex: "M. et Mme Duprat" n'est pas un prénom, c'est une civilité + un nom) |
 | `nom`, `prenom` | String | |
 | `adresse`, `commune`, `codePostal` | String | |
 | `telephone` | String | format **international** (voir remarque) |
@@ -376,6 +377,7 @@ const contactSchema = new mongoose.Schema({
 
 const acquereurSchema = new mongoose.Schema({
   lots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lot' }],
+  civilite: { type: String, enum: ['M.', 'Mme', 'M. et Mme'] },
   nom: { type: String, required: true },
   prenom: { type: String, required: true },
   adresse: String,

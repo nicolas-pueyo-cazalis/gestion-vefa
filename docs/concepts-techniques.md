@@ -176,3 +176,23 @@ ici c'est uniquement du vocabulaire **technique**.
   utilisateurs ne peuvent pas avoir le même email).
 - **`{ timestamps: true }`** : ajoute automatiquement `createdAt`/`updatedAt`
   à chaque document.
+- **Piège `required` + chaîne vide** : pour un champ `String`, Mongoose
+  considère `''` (chaîne vide) comme **non rempli** — `required: true`
+  échoue, même si techniquement une valeur a été fournie.
+
+## Async/await et scripts Node (étape 3)
+
+- **`async`/`await`** : une autre façon d'écrire du code qui attend une
+  Promise, qui se lit comme du code séquentiel classique plutôt que comme
+  une chaîne de `.then()`. `await` "met en pause" la fonction jusqu'à ce que
+  la Promise soit résolue, sans bloquer le reste du programme. Ne peut être
+  utilisé qu'à l'intérieur d'une fonction déclarée `async`.
+- **`Promise.all([...])`** : lance plusieurs opérations asynchrones **en
+  parallèle** et attend qu'elles soient toutes terminées — plus rapide que
+  plusieurs `await` à la suite quand l'ordre n'a pas d'importance.
+- **`Object.fromEntries(tableau.map((x) => [cle, valeur]))`** : construit un
+  objet "dictionnaire" à partir d'un tableau, pratique pour retrouver
+  rapidement un élément par une clé (ex: un lot par sa référence) sans
+  reparcourir tout le tableau à chaque fois.
+- **`Model.insertMany([...])`** : insère plusieurs documents Mongoose en une
+  fois, renvoie le tableau des documents créés (avec leur `_id` généré).

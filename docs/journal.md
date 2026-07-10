@@ -403,3 +403,36 @@ schéma — prévu pour l'étape 4.
 Écrire un script de "seed" (remplissage initial de la base avec les données
 fictives, à la place de celles codées en dur dans `client/src/data/`), puis
 les premières routes REST (`GET /api/lots`, `GET /api/tma`...).
+
+---
+
+## 2026-07-10 — Étape 3 (suite) : script de seed, base peuplée
+
+**Ce qui a été fait**
+
+- `server/seed.js` : connecte à MongoDB, vide les collections existantes,
+  puis recrée un programme, ses 8 lots, 5 acquéreurs et 8 TMA à partir des
+  mêmes données fictives que la version React (`client/src/data/`).
+  Introduction de `async`/`await` (équivalent de `.then()/.catch()`, mais
+  s'écrit comme du code séquentiel classique), `Promise.all(...)` (plusieurs
+  opérations en parallèle), `Object.fromEntries(...)` pour construire un
+  dictionnaire de correspondance référence → document après insertion, et
+  `Model.insertMany(...)`.
+- **Bug corrigé en cours de route** : `prenom: ''` (chaîne vide) échouait la
+  validation `required: true` de Mongoose — une chaîne vide n'est **pas**
+  considérée comme "remplie" pour un champ `String`, contrairement à
+  l'intuition.
+- **Correction de modélisation demandée par Nicolas** : "M. et Mme Duprat"
+  n'est pas un prénom, c'est une civilité + un nom. Ajout d'un champ
+  `civilite` (enum `M.`/`Mme`/`M. et Mme`) sur `Acquereur`, distinct de
+  `prenom`/`nom`, avec des données fictives d'acquéreurs réalistes (prénom
+  et nom séparés proprement). Schéma mis à jour dans `server/models/Acquereur.js`
+  et dans `docs/schema-donnees.md` (les deux gardés synchronisés).
+- Script testé avec succès : `node seed.js` (ou `npm run seed`) recrée la
+  base à chaque exécution (8 lots, 5 acquéreurs, 8 TMA).
+
+**Prochaine étape**
+
+Écrire les premières routes REST (`GET /api/lots`, `GET /api/tma`...) pour
+que le front React puisse remplacer ses données fictives codées en dur par
+de vraies données servies par l'API.

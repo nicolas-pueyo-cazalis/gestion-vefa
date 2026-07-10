@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Tma, { calculerMontantClient, calculerStatutAutomatique } from '../models/Tma.js'
 import TmaEntreprise from '../models/TmaEntreprise.js'
+import Entreprise from '../models/Entreprise.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
@@ -39,7 +40,9 @@ router.get('/', async (req, res) => {
     if (!tma) {
       return res.status(400).json({ message: 'Paramètre "tma" requis' })
     }
-    const lignes = await TmaEntreprise.find({ tma }).sort({ createdAt: 1 })
+    const lignes = await TmaEntreprise.find({ tma })
+      .populate('entreprise', 'nom corpsDeTravaux')
+      .sort({ createdAt: 1 })
     res.json(lignes)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
@@ -49,13 +52,24 @@ router.get('/', async (req, res) => {
 // POST /api/tma-entreprises — ajoute une ligne, recalcule la TMA parente
 router.post('/', async (req, res) => {
   try {
-    const { tma, corpsDeTravaux, entreprise, montantDevis } = req.body
-    if (!tma) {
-      return res.status(400).json({ message: 'Le champ "tma" est requis' })
+    const { tma, entreprise, montantDevis } = req.body
+    if (!tma || !entreprise) {
+      return res.status(400).json({ message: 'Les champs "tma" et "entreprise" sont requis' })
+    }
+
+    const entrepriseDoc = await Entreprise.findById(entreprise)
+    if (!entrepriseDoc) {
+      return res.status(404).json({ message: 'Entreprise introuvable' })
     }
 
     const statut = montantDevis !== null && montantDevis !== undefined ? 'recu' : 'a_chiffrer'
-    const ligne = await TmaEntreprise.create({ tma, corpsDeTravaux, entreprise, montantDevis, statut })
+    const ligne = await TmaEntreprise.create({
+      tma,
+      entreprise,
+      corpsDeTravaux: entrepriseDoc.corpsDeTravaux, // figé au moment de l'ajout
+      montantDevis,
+      statut,
+    })
     await recalculerTma(tma)
     res.status(201).json(ligne)
   } catch (erreur) {

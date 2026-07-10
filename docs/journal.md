@@ -710,3 +710,39 @@ oublier, mais **pas encore implémentés** :
 
 À la reprise : choisir par quel point commencer (référentiel Entreprise,
 page Paramètres, ou les alertes), avec Nicolas.
+
+---
+
+## 2026-07-10 — Point 1 réalisé : référentiel `Entreprise`
+
+**Ce qui a été fait**
+
+- Sous-schéma `Contact` extrait dans `server/models/contactSchema.js`
+  (n'existait qu'à l'intérieur de `Acquereur.js`), réutilisé pour le nouveau
+  modèle `Entreprise` (`nom`, `corpsDeTravaux`, `contact`).
+- `TmaEntreprise.entreprise` passe d'un `String` libre à une référence
+  `ObjectId → Entreprise`. `corpsDeTravaux` reste sur `TmaEntreprise` mais
+  devient une **copie figée** (récupérée automatiquement depuis
+  l'entreprise choisie au moment de la création, pas resaisie à la main) —
+  même principe que `AppelDeFonds.phase`.
+- Ajout au passage de `TmaEntreprise.dateEnvoi` (nécessaire pour l'alerte
+  "entreprise n'a pas répondu à temps" du point 3, pas encore construite
+  mais le terrain est prêt).
+- Nouvelles routes `GET`/`POST /api/entreprises`. Testées en ligne de
+  commande : création d'une ligne `TmaEntreprise` par référence, vérifié
+  que `corpsDeTravaux` est bien recopié automatiquement et que
+  `.populate('entreprise')` renvoie le détail complet.
+- `seed.js` enrichi avec 6 entreprises fictives, reprenant les corps de
+  métier repérés dans le fichier Excel de référence analysé en tout début
+  de projet (LAPIX/GROS OEUVRE, ITOIZ/CHARPENTE, etc. — clin d'œil à
+  l'analyse du 09/07).
+- Formulaire React (`DetailEntreprisesTma.jsx`) mis à jour : liste
+  déroulante des entreprises (au lieu de deux champs texte libres),
+  chargée en parallèle des lignes déjà existantes via `Promise.all`.
+  Testé avec succès dans le navigateur.
+
+**Prochaine étape**
+
+Page "Paramètres" (point 2) ou les deux nouvelles alertes (point 3) — à
+discuter avec Nicolas. Le terrain du point 3 (côté entreprise) est déjà
+posé avec `TmaEntreprise.dateEnvoi`.

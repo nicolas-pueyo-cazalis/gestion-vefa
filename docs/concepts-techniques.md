@@ -298,3 +298,20 @@ ici c'est uniquement du vocabulaire **technique**.
   complètes** : mieux vaut laisser un champ à `null` ("pas encore prêt") que
   d'afficher un total partiel qui pourrait être pris pour un chiffre
   définitif.
+
+## Référentiels et listes déroulantes (étape 4)
+
+- **`<select>` / `<option>`** : contrôlé exactement comme un `<input>`
+  (`value` + `onChange` sur le `<select>`), `required` bloque la
+  soumission si rien n'est choisi — validation native du navigateur,
+  gratuite.
+- **Reconstituer un objet détaillé après un `POST`** : quand la réponse du
+  serveur ne contient que l'`_id` d'une référence (pas de `.populate()` sur
+  une création), et qu'on a déjà la liste complète chargée par ailleurs
+  (ex: toutes les entreprises), on peut retrouver le détail localement
+  (`.find(...)`) plutôt que de refaire une requête réseau juste pour
+  l'affichage immédiat.
+- **Extraire un sous-schéma Mongoose partagé** (`contactSchema.js`) :
+  export par défaut du schéma lui-même (pas d'un modèle), importé dans
+  plusieurs fichiers de modèles — évite de dupliquer une définition
+  identique (ici entre `Acquereur.banque`/`courtier` et `Entreprise.contact`).

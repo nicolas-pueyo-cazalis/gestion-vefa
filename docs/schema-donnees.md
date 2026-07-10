@@ -69,6 +69,7 @@ Lot (1) ──< TMA (N)
 Lot (1) ──< Acquereur (N)          (rare, mais un lot peut avoir plusieurs acquéreurs — achat en indivision)
 Acquereur (N) ──> Lot (N)          (un acquéreur peut, en théorie, acheter plusieurs lots)
 TMA (1) ──< TmaEntreprise (N)
+Entreprise (1) ──< TmaEntreprise (N)   (ajouté le 10/07/2026)
 Utilisateur                         (indépendant, sert à l'authentification)
 ```
 
@@ -321,19 +322,25 @@ entreprises (ex: un percement de mur = maçon + électricien).
 | Champ | Type | Remarque |
 |---|---|---|
 | `tma` | ObjectId → `TMA` | |
-| `corpsDeTravaux` | String | ex: "GROS OEUVRE", "MENUISERIES INTERIEURES" |
-| `entreprise` | String | nom de la société sous-traitante |
+| `entreprise` | ObjectId → `Entreprise` | référence (10/07/2026 : remplace l'ancien texte libre) |
+| `corpsDeTravaux` | String | **copie figée** du corps de métier de l'entreprise au moment de l'ajout — même principe que `AppelDeFonds.phase` : si le référentiel change plus tard, une ligne déjà créée ne doit pas changer rétroactivement |
+| `dateEnvoi` | Date | ajouté le 10/07/2026, défaut à la création — sert de point de départ à l'alerte "entreprise n'a pas répondu à temps" |
 | `montantDevis` | Number | montant → convention "€" en début de document |
 | `statut` | enum `'a_chiffrer' \| 'recu' \| 'valide' \| 'refuse' \| 'travaux' \| 'termine'` | |
 
-> **Pourquoi `entreprise` en simple texte et pas une collection
-> `Entreprise` séparée ?** Le fichier Excel a un référentiel dédié
-> (`LOTS_ENTREPRISES`), mais pour la V1 on reste simple (YAGNI — on n'ajoute
-> pas une collection tant qu'on n'en a pas vraiment besoin, par exemple pour
-> centraliser les coordonnées d'une entreprise). Si la liste des entreprises
-> devient longue et qu'on veut éviter les doublons/fautes de frappe, on
-> pourra extraire une collection `Entreprise` plus tard — c'est un changement
-> non bloquant.
+---
+
+## `Entreprise` (ajouté le 10/07/2026)
+
+Référentiel des sous-traitants, remplace l'ancien texte libre sur
+`TmaEntreprise.entreprise` — demandé par Nicolas notamment pour un futur
+export des TMA envoyé directement aux entreprises.
+
+| Champ | Type | Remarque |
+|---|---|---|
+| `nom` | String | |
+| `corpsDeTravaux` | String | ex: "GROS OEUVRE", "MENUISERIES INTERIEURES" |
+| `contact` | sous-document `Contact` | même sous-schéma que `banque`/`courtier` sur `Acquereur` (extrait dans `server/models/contactSchema.js`, réutilisé plutôt que dupliqué) |
 
 ---
 
@@ -458,21 +465,26 @@ retrouvera côté formulaire React pour un retour immédiat à l'utilisateur.
   document (dès la création du lot, pour toutes les phases à l'avance avec
   des dates vides ? ou seulement au moment où la phase est constatée ?). À
   trancher à l'étape 4 (logique métier avancée).
-- Référentiel `Entreprise` séparé : voir remarque plus haut, non bloquant.
 - Rôle "acquéreur" (accès lecture seule à ses propres données) évoqué dans le
   cadrage initial : pas modélisé pour l'instant, à ajouter si besoin confirmé.
 
 ## Décisions du 10/07/2026 (fin de session étape 4) — travaux à venir
 
-Trois demandes de Nicolas, actées mais **pas encore codées** :
+Trois demandes de Nicolas :
 
-1. **Référentiel `Entreprise`** (confirme le point ouvert ci-dessus, n'est
-   plus "non bloquant") : nouvelle collection avec `nom`, `corpsDeTravaux`,
-   et un sous-document `Contact` (même structure que `banque`/`courtier` sur
-   `Acquereur` : adresse, commune, codePostal, telephone, email) — utile
-   notamment pour un futur export des TMA envoyé directement aux
-   entreprises. `TmaEntreprise.entreprise` passera d'un `String` libre à une
-   référence `ObjectId → Entreprise` (liste déroulante côté formulaire).
+1. ✅ **Référentiel `Entreprise`** — **fait** le 10/07/2026. Nouvelle
+   collection (`server/models/Entreprise.js`) : `nom`, `corpsDeTravaux`, et
+   un sous-document `contact` (même sous-schéma `Contact` réutilisé pour
+   `banque`/`courtier` sur `Acquereur` — extrait dans
+   `server/models/contactSchema.js` pour ne plus être dupliqué).
+   `TmaEntreprise.entreprise` est désormais une référence `ObjectId →
+   Entreprise` (liste déroulante côté formulaire) plutôt qu'un texte libre ;
+   `TmaEntreprise.corpsDeTravaux` reste une **copie figée** du corps de
+   métier de l'entreprise au moment de l'ajout (même principe que
+   `AppelDeFonds.phase`). Routes `GET`/`POST /api/entreprises`. Ajout au
+   passage de `TmaEntreprise.dateEnvoi` (nécessaire pour l'alerte du point 3
+   ci-dessous). Seed enrichi avec 6 entreprises fictives, reprenant les
+   corps de métier observés dans le fichier Excel de référence.
 
 2. **Page "Paramètres"** : nouvelle route React `/parametres` (lien dans le
    bandeau, à côté de Lots/TMA). Rassemble tout ce qui est aujourd'hui dans

@@ -4,19 +4,22 @@ import { formatMontant } from '../utils/formatMontant.js'
 
 function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   const [lignes, setLignes] = useState([])
+  const [entreprisesDisponibles, setEntreprisesDisponibles] = useState([])
   const [chargement, setChargement] = useState(true)
-  const [corpsDeTravaux, setCorpsDeTravaux] = useState('')
-  const [entreprise, setEntreprise] = useState('')
+  const [entrepriseChoisie, setEntrepriseChoisie] = useState('')
   const [montantDevis, setMontantDevis] = useState('')
 
   useEffect(() => {
-    async function chargerLignes() {
-      const reponse = await fetch(`${API_URL}/api/tma-entreprises?tma=${tma._id}`)
-      const donnees = await reponse.json()
-      setLignes(donnees)
+    async function chargerDonnees() {
+      const [reponseLignes, reponseEntreprises] = await Promise.all([
+        fetch(`${API_URL}/api/tma-entreprises?tma=${tma._id}`),
+        fetch(`${API_URL}/api/entreprises`),
+      ])
+      setLignes(await reponseLignes.json())
+      setEntreprisesDisponibles(await reponseEntreprises.json())
       setChargement(false)
     }
-    chargerLignes()
+    chargerDonnees()
   }, [tma._id])
 
   async function ajouterLigne(evenement) {
@@ -26,15 +29,14 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tma: tma._id,
-        corpsDeTravaux,
-        entreprise,
+        entreprise: entrepriseChoisie,
         montantDevis: montantDevis === '' ? null : Number(montantDevis),
       }),
     })
     const nouvelleLigne = await reponse.json()
-    setLignes((liste) => [...liste, nouvelleLigne])
-    setCorpsDeTravaux('')
-    setEntreprise('')
+    const entrepriseDetail = entreprisesDisponibles.find((e) => e._id === entrepriseChoisie)
+    setLignes((liste) => [...liste, { ...nouvelleLigne, entreprise: entrepriseDetail }])
+    setEntrepriseChoisie('')
     setMontantDevis('')
     onChangement()
   }
@@ -55,7 +57,8 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
             {lignes.length === 0 && <li>Aucune entreprise pour l'instant.</li>}
             {lignes.map((ligne) => (
               <li key={ligne._id}>
-                {ligne.corpsDeTravaux} — {ligne.entreprise} — {formatMontant(ligne.montantDevis)}
+                {ligne.corpsDeTravaux} — {ligne.entreprise.nom} —{' '}
+                {ligne.montantDevis === null ? 'en attente de devis' : formatMontant(ligne.montantDevis)}
                 <button type="button" onClick={() => supprimerLigne(ligne._id)}>Retirer</button>
               </li>
             ))}
@@ -64,12 +67,13 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
 
         <form onSubmit={ajouterLigne}>
           <label>
-            Corps de travaux
-            <input value={corpsDeTravaux} onChange={(e) => setCorpsDeTravaux(e.target.value)} />
-          </label>
-          <label>
             Entreprise
-            <input value={entreprise} onChange={(e) => setEntreprise(e.target.value)} />
+            <select value={entrepriseChoisie} onChange={(e) => setEntrepriseChoisie(e.target.value)} required>
+              <option value="" disabled>Choisir...</option>
+              {entreprisesDisponibles.map((e) => (
+                <option key={e._id} value={e._id}>{e.corpsDeTravaux} — {e.nom}</option>
+              ))}
+            </select>
           </label>
           <label>
             Montant devis (€)

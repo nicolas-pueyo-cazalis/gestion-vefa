@@ -1,15 +1,5 @@
 import mongoose from 'mongoose'
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-const contactSchema = new mongoose.Schema({
-  nom: String,
-  adresse: String,
-  commune: String,
-  codePostal: String,
-  telephone: String, // format international E.164, ex: "+33612345678"
-  email: { type: String, match: EMAIL_REGEX },
-}, { _id: false })
+import contactSchema, { EMAIL_REGEX } from './contactSchema.js'
 
 const acquereurSchema = new mongoose.Schema({
   lots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lot' }],

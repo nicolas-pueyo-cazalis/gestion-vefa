@@ -26,7 +26,8 @@ développeur web, en remplacement d'outils Excel/VBA existants.
   - [`schema-donnees.md`](docs/schema-donnees.md) — conception du modèle de données
   - [`concepts-techniques.md`](docs/concepts-techniques.md) — fiche de révision des notions de code vues (vanilla, React...)
 - [`vanilla/`](vanilla/) — étape 1 : version HTML/CSS/JS sans framework
-- [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass (en cours)
+- [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass
+- [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose (en cours)
 - [`références/`](références/) — fichiers Excel de référence (usage interne, non déployés)
 
 ## Avancement
@@ -35,7 +36,7 @@ Le projet avance par étapes (détail dans [`docs/decisions.md`](docs/decisions.
 
 1. ✅ Version HTML/CSS/JS vanilla
 2. ✅ Migration vers React + Vite + React Router + Sass
-3. ⬜ Back-end Express + MongoDB (API REST sécurisée, JWT)
+3. 🔶 Back-end Express + MongoDB (API REST sécurisée, JWT) (en cours)
 4. ⬜ Logique métier avancée (calcul des appels de fonds, workflow TMA)
 5. ⬜ Déploiement
 

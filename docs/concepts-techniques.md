@@ -115,3 +115,64 @@ ici c'est uniquement du vocabulaire **technique**.
   dans WSL — WSL ne reçoit pas toujours les notifications de modification de
   fichiers faites côté Windows, Vite doit donc vérifier les fichiers à
   intervalle régulier au lieu d'attendre d'être prévenu.
+
+## Back-end : Node.js / Express (étape 3)
+
+- **`"type": "module"`** (`package.json`) : autorise `import`/`export` dans
+  le code Node (au lieu de l'ancienne syntaxe `require`/`module.exports`) —
+  même syntaxe que côté React, un seul style à apprendre pour tout le projet.
+- **Middleware** (`app.use(...)`) : une fonction qui s'exécute sur **chaque**
+  requête entrante, avant qu'elle n'atteigne la route ciblée. `cors()`
+  autorise les requêtes venant d'une autre origine (notre front React sur un
+  autre port) ; `express.json()` permet de lire un corps de requête envoyé en
+  JSON.
+- **Route** (`app.get('/chemin', (req, res) => {...})`) : associe une URL +
+  une méthode HTTP (GET, POST...) à une fonction. `req` = ce qu'envoie le
+  client, `res` = ce qu'on renvoie (`res.json({...})`).
+- **`nodemon`** : redémarre automatiquement le serveur Node à chaque
+  modification de fichier — l'équivalent du HMR de Vite, côté serveur.
+- **`dotenv`** (`import 'dotenv/config'`) : charge les variables du fichier
+  `.env` dans `process.env`, pour ne jamais écrire de mot de passe/secret en
+  dur dans le code.
+- **`.env` vs `.env.example`** : `.env` contient les vraies valeurs (jamais
+  commité, dans `.gitignore`) ; `.env.example` est un modèle sans secret,
+  commité, qui montre quelles variables sont attendues.
+- **Promise / `.then()` / `.catch()`** : représente une valeur "pas encore
+  prête" (ex: le résultat d'une connexion réseau à MongoDB). `.then(...)`
+  s'exécute en cas de succès, `.catch(...)` en cas d'échec. `mongoose.connect(...)`
+  en renvoie une.
+- **MongoDB Atlas** : hébergement cloud gratuit de MongoDB — évite d'installer
+  une base de données en local, et c'est la même solution prévue pour le
+  déploiement final.
+
+## Mongoose (étape 3)
+
+- **Schema** : la définition des champs, types, valeurs par défaut et
+  validations d'une collection. Un plan, pas encore utilisable pour
+  interroger la base.
+- **Model** (`mongoose.model('Programme', programmeSchema)`) : créé à partir
+  d'un Schema, c'est l'objet réellement utilisé pour créer/lire/modifier des
+  documents (`Programme.find()`, `Programme.create({...})`).
+- **Référence (`{ type: mongoose.Schema.Types.ObjectId, ref: 'Lot' }`)** : un
+  document stocke seulement l'identifiant (`_id`) d'un document d'une autre
+  collection — pas ses données. Pour récupérer les vraies données liées, il
+  faut explicitement `.populate('champ')` (sinon on n'a que l'ID).
+- **Sous-document embarqué** (ex: `parametres` dans `Programme`, `banque`
+  dans `Acquereur`) : à l'inverse d'une référence, la donnée est stockée
+  directement à l'intérieur du document parent, pas dans une collection
+  séparée — utilisé quand elle n'a pas de sens ou de cycle de vie hors de son
+  parent.
+- **`required: true`** : rend un champ obligatoire, Mongoose refuse
+  l'enregistrement sans lui.
+- **`default:`** : valeur utilisée si le champ n'est pas fourni. Une
+  fonction (`default: () => (...)`) plutôt qu'une valeur fixe pour les
+  tableaux/objets, afin que chaque document reçoive sa propre copie.
+- **`enum: [...]`** : restreint un champ à une liste de valeurs autorisées.
+  Ne vérifie **pas** l'ordre des transitions entre valeurs (ex: statut TMA)
+  — cette règle doit être codée dans les routes, pas dans le schéma.
+- **`match: regex`** : valide un champ texte contre une expression régulière
+  (ex: format email).
+- **`unique: true`** : crée une contrainte d'unicité en base (ex: deux
+  utilisateurs ne peuvent pas avoir le même email).
+- **`{ timestamps: true }`** : ajoute automatiquement `createdAt`/`updatedAt`
+  à chaque document.

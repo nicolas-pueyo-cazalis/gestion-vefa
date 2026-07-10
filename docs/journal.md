@@ -336,3 +336,70 @@ sans rechargement de page.
 À discuter avec Nicolas : poursuivre/enrichir la version React (ex: pages
 supplémentaires, animations, etc.) ou enchaîner sur l'étape 3 (back-end
 Express + MongoDB).
+
+---
+
+## 2026-07-10 — Étape 3 : démarrage du back-end (Express + MongoDB Atlas)
+
+**Ce qui a été fait**
+
+- Choix d'hébergement MongoDB tranché avec Nicolas : **MongoDB Atlas**
+  (cloud, offre gratuite M0) plutôt qu'une installation locale dans WSL —
+  cohérent avec la solution déjà prévue pour le déploiement final
+  (`decisions.md`), pas de migration à refaire plus tard.
+- Création pas à pas du compte Atlas, du cluster gratuit ("Nico"), de
+  l'utilisateur de base de données, et récupération de la chaîne de
+  connexion — guidé étape par étape dans le chat (Nicolas découvrait
+  l'interface Atlas).
+- `.gitignore` créé à la racine du projet (n'existait pas encore), avec
+  règle `.env` en tout premier — **avant** même la création du fichier
+  `server/.env` contenant le mot de passe, pour ne jamais risquer de le
+  commiter par erreur. Vérifié explicitement avec `git add --dry-run` :
+  `server/.env` apparaît bien dans les fichiers ignorés.
+- `server/.env.example` (modèle sans secret, commité) + `server/.env` (réel,
+  jamais commité) créés avec `MONGODB_URI` et `PORT=4000`. Une erreur de
+  copier-coller a été corrigée en cours de route (chevrons `< >` gardés
+  autour du mot de passe par erreur).
+- Scaffold du serveur : `npm init`, dépendances `express`, `mongoose`,
+  `dotenv`, `cors`, `nodemon` (dev). `"type": "module"` ajouté au
+  `package.json` pour utiliser `import`/`export`, comme côté React — pas
+  besoin d'apprendre la syntaxe CommonJS (`require`) en plus.
+- `server/index.js` : connexion Mongoose à Atlas, middlewares `cors()` et
+  `express.json()`, une route de test (`GET /`). Serveur démarré uniquement
+  une fois la connexion à la base confirmée (pas avant). Testé avec succès :
+  connexion à MongoDB confirmée en console, route de test répond bien dans le
+  navigateur (`http://localhost:4000/`).
+
+**Prochaine étape**
+
+Implémenter les schémas Mongoose définitifs (`docs/schema-donnees.md` :
+Programme, Lot, Acquereur, AppelDeFonds, TMA, TmaEntreprise, Utilisateur),
+puis les premières routes REST pour que le front React puisse remplacer ses
+données fictives codées en dur par de vraies données servies par l'API.
+
+---
+
+## 2026-07-10 — Étape 3 (suite) : les 7 modèles Mongoose
+
+**Ce qui a été fait**
+
+Implémentation dans `server/models/` des 7 collections définies dans
+`docs/schema-donnees.md` : `Programme.js` (reprise quasi telle quelle de
+l'exemple déjà écrit dans la doc, avec les paramètres embarqués et leurs
+valeurs par défaut), `Lot.js` (première vraie **référence** `ObjectId` +
+`ref`), `Acquereur.js` (sous-schéma `Contact` réutilisé pour `banque` et
+`courtier`, validation email par regex), `AppelDeFonds.js`, `Tma.js`
+(machine à états en `enum`), `TmaEntreprise.js`, `Utilisateur.js`
+(`unique: true` sur l'email).
+
+**Point de vigilance noté** : un `enum` Mongoose empêche seulement une valeur
+hors-liste, il ne garantit pas l'ordre des transitions (ex: rien n'empêche au
+niveau du schéma de passer de `demande` à `facture` directement). Cette
+règle métier devra être vérifiée dans le code des routes, pas dans le
+schéma — prévu pour l'étape 4.
+
+**Prochaine étape**
+
+Écrire un script de "seed" (remplissage initial de la base avec les données
+fictives, à la place de celles codées en dur dans `client/src/data/`), puis
+les premières routes REST (`GET /api/lots`, `GET /api/tma`...).

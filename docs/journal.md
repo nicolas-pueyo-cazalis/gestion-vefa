@@ -549,3 +549,43 @@ seulement les lire — à discuter avec Nicolas.
 
 Étape 4 (logique métier avancée) ou routes d'écriture (POST/PUT) — à
 discuter avec Nicolas.
+
+---
+
+## 2026-07-10 — Étape 3 (suite) : première route d'écriture, changement de statut TMA
+
+**Ce qui a été fait**
+
+- Introduction de `PATCH` (modifier partiellement une ressource), avec une
+  machine à états codée en dur côté serveur (`TRANSITIONS_AUTORISEES` dans
+  `models/Tma.js`) — un `enum` seul ne suffit pas à empêcher de sauter une
+  étape. Route `PATCH /api/tma/:id/statut` testée avec succès en ligne de
+  commande (transition autorisée acceptée, transition invalide rejetée avec
+  message clair) avant de toucher à l'interface.
+- **Pivot important suite à une remarque de Nicolas** : une première version
+  affichait un bouton par transition possible (toute la mécanique de
+  progression du statut cliquable à la main). Nicolas a fait remarquer que
+  c'est contraire à la logique du fichier Excel d'origine, où le statut se
+  déduisait **automatiquement des dates saisies**, jamais cliqué à la main —
+  risque d'oubli si un client "doit penser à cliquer". Décision : la colonne
+  "Actions" ne garde qu'un bouton **"Refuser"** (la seule chose qui ne peut
+  pas se déduire d'une date, puisque c'est une décision). Le calcul
+  automatique du statut à partir des dates (comme Excel) est repoussé à
+  l'étape 4, quand les vrais formulaires de saisie de dates existeront.
+- **Bug visuel corrigé** : `display: flex` sur la cellule `.actions`
+  perturbait l'alignement des bordures du tableau (lignes décalées) —
+  retiré, plus nécessaire avec un seul bouton par ligne.
+- **Cas limite identifié par Nicolas** : un refus par erreur ne doit pas
+  forcer à reprendre tout le processus depuis "demande" (perte du travail de
+  chiffrage déjà fait si le refus intervient au stade "facture"). Ajout du
+  champ `statutAvantRefus` (mémorisé au moment du refus) et d'une route
+  dédiée `PATCH /api/tma/:id/annuler-refus` qui restaure exactement l'étape
+  quittée — testé en ligne de commande (refus depuis "chiffre" → annulation
+  → retour précis à "chiffre", pas "demande").
+- Le tout branché et testé côté React (`changerStatut`, `annulerRefus`,
+  boutons conditionnels selon le statut courant).
+
+**Prochaine étape**
+
+Étape 4 (calcul automatique du statut TMA à partir des dates, à la manière
+d'Excel) ou logique des appels de fonds — à discuter avec Nicolas.

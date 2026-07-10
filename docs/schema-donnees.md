@@ -253,6 +253,7 @@ Un document par (lot × phase du barème) — créé au moment où la phase est
 | `montantClient` | Number | calculé selon `tauxMargeTma` / `regleMontantNegatifTma` du programme, **figé** une fois validé (même logique de snapshot que pour `AppelDeFonds`) ; montant → convention "€" |
 | `dateEnvoiFactureClient`, `dateRetourClient` | Date | |
 | `statut` | enum (voir machine à états ci-dessous) | |
+| `statutAvantRefus` | enum `'demande' \| 'etude' \| 'chiffre' \| 'facture'` | ajouté le 10/07/2026 : mémorise l'étape quittée au moment d'un refus, pour permettre d'y revenir exactement (pas un retour systématique à "demande") |
 
 ### Machine à états de `TMA.statut`
 
@@ -261,8 +262,8 @@ post-validation identifiées comme piste d'amélioration :
 
 ```
 demande → etude → chiffre → facture → valide → travaux → termine
-                                 ↘
-                                refuse   (possible depuis demande, etude ou chiffre)
+                     ↘          ↘
+                      ────────→ refuse   (possible depuis demande, etude, chiffre ou facture)
 ```
 
 > **Correction du 10/07/2026** — l'ordre initial (`valide` avant `facture`)
@@ -279,6 +280,15 @@ back-end, pas seulement côté front) : **on ne peut pas passer à `valide` si
 le statut n'est pas déjà `facture`** — et plus généralement, on ne peut pas
 sauter une étape ni revenir en arrière une fois `valide` (sauf `refuse`, qui
 n'est possible qu'avant validation).
+
+> **Rattrapage d'un refus par erreur (10/07/2026)** — un clic accidentel sur
+> "Refuser" ne doit pas forcer à tout reprendre depuis "demande" (le
+> chiffrage entreprises déjà fait ne doit pas être perdu). Le statut quitté
+> est mémorisé dans `statutAvantRefus` au moment du refus, et une action
+> dédiée (`PATCH /api/tma/:id/annuler-refus`, distincte de la transition
+> générique) restaure exactement cette valeur. Ce n'est **pas** une
+> transition normale de la machine à états (elle dépend d'une donnée, pas
+> d'une règle fixe statut → statut), d'où la route séparée.
 
 > **Date limite de retour entreprise** (`dateEnvoiEntreprises +
 > programme.parametres.delaiRetourEntrepriseTmaJours`) : calculée à la volée,

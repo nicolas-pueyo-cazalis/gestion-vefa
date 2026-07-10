@@ -222,3 +222,38 @@ ici c'est uniquement du vocabulaire **technique**.
 - **`--legacy-watch`** (`nodemon --legacy-watch index.js`) : même souci que
   `server.watch.usePolling` côté Vite — nécessaire pour que `nodemon`
   détecte les modifications de fichiers faites côté Windows depuis WSL.
+- **`PATCH`** : méthode HTTP pour modifier **partiellement** une ressource
+  existante (ex: juste le `statut` d'une TMA) — différente de `GET` (lire),
+  `POST` (créer) ou `PUT` (remplacer tout le document).
+- **`req.params.id`** vs **`req.body`** : `req.params` lit les valeurs dans
+  l'URL elle-même (`:id` dans `/api/tma/:id/statut`), `req.body` lit le
+  contenu JSON envoyé par le client (nécessite `express.json()`).
+- **`?? []`** (nullish coalescing) : comme `||`, mais ne se déclenche que si
+  la valeur est `null`/`undefined` — pas pour les autres "fausses" valeurs
+  JS (`0`, `''`...), qui restent alors inchangées.
+- **Machine à états côté serveur** : un objet `{ statutActuel: [statutsAutorisés] }`
+  vérifié explicitement dans la route, en plus de l'`enum` Mongoose (qui ne
+  vérifie que "la valeur existe dans la liste", pas "la transition est
+  légale depuis l'état actuel").
+- **Route dédiée plutôt que transition générique, quand la cible dépend
+  d'une donnée** : "annuler un refus" ne va pas vers un statut fixe (ça
+  dépend de `statutAvantRefus`, propre à chaque document) — plutôt que de
+  complexifier la route générique `PATCH /:id/statut`, une route séparée
+  `PATCH /:id/annuler-refus` reste plus simple à lire et à faire évoluer.
+
+## React : nouveaux motifs (étape 3)
+
+- **`{condition && <Composant />}`** : affichage conditionnel en JSX. Si
+  `condition` est fausse, JS s'arrête (`false && ...` vaut `false`) et React
+  n'affiche rien pour une valeur `false`. Si vraie, le JSX s'affiche.
+- **Mise à jour partielle du state après un appel réseau** : après un
+  `PATCH`, ne remplacer dans le state que les champs réellement modifiés
+  (`{ ...tma, statut: nouveauStatut }`) plutôt que tout l'objet renvoyé par
+  le serveur — surtout si la réponse n'est pas `.populate()`e comme les
+  données déjà affichées, sous peine d'écraser des données affichées
+  (`lot.reference`, `acquereur.nom`...) par de simples identifiants.
+- **Piège `display: flex` sur une cellule de tableau (`<td>`)** : peut
+  perturber l'alignement des bordures entre lignes d'un `<table>` — à
+  réserver aux cas où plusieurs éléments doivent vraiment être mis en ligne
+  dans la cellule ; pour un seul élément (ou zéro), garder l'affichage par
+  défaut de la cellule.

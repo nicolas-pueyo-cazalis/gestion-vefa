@@ -17,3 +17,19 @@ export const STATUTS_TMA = {
 // accord final (décision du 10/07/2026, révisée par rapport au 09/07).
 export const STATUTS_EN_COURS = ["demande", "etude", "chiffre", "facture"];
 export const STATUTS_VALIDE = ["valide", "travaux", "termine"];
+
+// Copie de server/models/Tma.js — uniquement pour savoir quels boutons
+// afficher côté interface. La vraie vérification (celle qui compte pour la
+// sécurité des données) est faite côté serveur : même si ce fichier était
+// modifié ou contourné, le serveur refuserait quand même une transition
+// interdite.
+export const TRANSITIONS_AUTORISEES = {
+  demande: ["etude", "refuse"],
+  etude: ["chiffre", "refuse"],
+  chiffre: ["facture", "refuse"],
+  facture: ["valide", "refuse"],
+  valide: ["travaux"],
+  travaux: ["termine"],
+  refuse: [],
+  termine: [],
+};

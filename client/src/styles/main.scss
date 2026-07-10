@@ -131,6 +131,22 @@ table {
   tbody tr:last-child td {
     border-bottom: none;
   }
+
+  td.actions {
+    button {
+      border: 1px solid $couleur-bordure;
+      background: $couleur-carte;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      white-space: nowrap;
+
+      &:hover {
+        background: #eef2f6;
+      }
+    }
+  }
 }
 
 .badge {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { STATUTS_TMA, STATUTS_EN_COURS, STATUTS_VALIDE } from '../data/tma.js'
+import { STATUTS_TMA, STATUTS_EN_COURS, STATUTS_VALIDE, TRANSITIONS_AUTORISEES } from '../data/tma.js'
 import { API_URL } from '../config.js'
 import { formatMontant } from '../utils/formatMontant.js'
 import StatCard from '../components/StatCard.jsx'
@@ -38,6 +38,40 @@ function Tma() {
 
   if (chargement) return <p>Chargement des TMA...</p>
   if (erreur) return <p>Erreur : {erreur}</p>
+
+  async function changerStatut(id, nouveauStatut) {
+    const reponse = await fetch(`${API_URL}/api/tma/${id}/statut`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: nouveauStatut }),
+    })
+
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+
+    const tmaMiseAJour = await reponse.json()
+    setTmaList((liste) =>
+      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+    )
+  }
+
+  async function annulerRefus(id) {
+    const reponse = await fetch(`${API_URL}/api/tma/${id}/annuler-refus`, { method: 'PATCH' })
+
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+
+    const tmaMiseAJour = await reponse.json()
+    setTmaList((liste) =>
+      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+    )
+  }
 
   const tmaFiltrees =
     statutActif === 'tous' ? tmaList : tmaList.filter((tma) => tma.statut === statutActif)
@@ -79,6 +113,7 @@ function Tma() {
             <th>Montant entreprises</th>
             <th>Montant client</th>
             <th>Statut</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -91,6 +126,14 @@ function Tma() {
               <td>{tma.montantEntreprises === null ? '—' : formatMontant(tma.montantEntreprises)}</td>
               <td>{tma.montantClient === null ? '—' : formatMontant(tma.montantClient)}</td>
               <td><Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} /></td>
+              <td className="actions">
+                {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
+                  <button onClick={() => changerStatut(tma._id, 'refuse')}>Refuser</button>
+                )}
+                {tma.statut === 'refuse' && (
+                  <button onClick={() => annulerRefus(tma._id)}>Annuler le refus</button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

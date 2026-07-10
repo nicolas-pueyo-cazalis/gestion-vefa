@@ -290,6 +290,15 @@ n'est possible qu'avant validation).
 > transition normale de la machine à états (elle dépend d'une donnée, pas
 > d'une règle fixe statut → statut), d'où la route séparée.
 
+> **Calcul automatique depuis les dates (10/07/2026)** — reprend le principe
+> Excel d'origine (`docs/analyse-excel.md`) : `demande → etude → chiffre →
+> facture → valide` ne se clique pas à la main, ça se déduit des dates
+> saisies (`dateEnvoiEntreprises`, `montantEntreprises`, `dateEnvoiFactureClient`,
+> `dateRetourClient`) via `calculerStatutAutomatique()` (`server/models/Tma.js`),
+> appelée par `PATCH /api/tma/:id/dates`. Au-delà de `valide` (`travaux`,
+> `termine`) et pour `refuse`, il n'y a pas de date correspondante dans le
+> modèle actuel — ça reste une action manuelle via `PATCH /api/tma/:id/statut`.
+
 > **Date limite de retour entreprise** (`dateEnvoiEntreprises +
 > programme.parametres.delaiRetourEntrepriseTmaJours`) : calculée à la volée,
 > même logique que pour les échéances de `Lot`.

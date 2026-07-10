@@ -33,3 +33,7 @@ export const TRANSITIONS_AUTORISEES = {
   refuse: [],
   termine: [],
 };
+
+// Statuts pour lesquels modifier les dates n'a plus d'effet sur le statut
+// (copie de server/routes/tma.js, même raison : juste pour l'affichage).
+export const STATUTS_NON_RECALCULABLES = ["travaux", "termine", "refuse"];

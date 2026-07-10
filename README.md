@@ -27,9 +27,11 @@ développeur web, en remplacement d'outils Excel/VBA existants.
   - [`concepts-techniques.md`](docs/concepts-techniques.md) — fiche de révision des notions de code vues (vanilla, React...)
 - [`vanilla/`](vanilla/) — étape 1 : version HTML/CSS/JS sans framework
 - [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass
-- [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose (en cours).
-  Modèles des 7 collections, script de seed (`npm run seed`), premières
-  routes de lecture (`/api/programme`, `/api/lots`, `/api/tma`)
+- [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose. Modèles
+  des 7 collections, script de seed (`npm run seed`), routes de lecture
+  (`/api/programme`, `/api/lots`, `/api/tma`) et d'écriture (changement de
+  statut TMA avec machine à états, calcul automatique du statut depuis les
+  dates)
 - [`références/`](références/) — fichiers Excel de référence (usage interne, non déployés)
 
 ## Avancement
@@ -38,8 +40,8 @@ Le projet avance par étapes (détail dans [`docs/decisions.md`](docs/decisions.
 
 1. ✅ Version HTML/CSS/JS vanilla
 2. ✅ Migration vers React + Vite + React Router + Sass
-3. 🔶 Back-end Express + MongoDB (API REST sécurisée, JWT) (en cours)
-4. ⬜ Logique métier avancée (calcul des appels de fonds, workflow TMA)
+3. 🔶 Back-end Express + MongoDB (API REST sécurisée, JWT) (en cours — auth JWT restante)
+4. 🔶 Logique métier avancée (statut TMA automatique fait, appels de fonds restants)
 5. ⬜ Déploiement
 
 ## Stack technique

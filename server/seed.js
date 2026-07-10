@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 import Programme from './models/Programme.js'
 import Lot from './models/Lot.js'
 import Acquereur from './models/Acquereur.js'
-import Tma from './models/Tma.js'
+import Tma, { calculerMontantClient } from './models/Tma.js'
 
 // Données fictives (aucune donnée réelle) — reprises de client/src/data/.
 // Une fois les routes de lecture en place, client/src/data/ sera supprimé :
@@ -51,13 +51,6 @@ const TMA_DATA = [
   { lot: 'A01', acquereur: 'duprat', localisation: 'Terrasse', description: 'Pose de stores extérieurs', montantEntreprises: 900, statut: 'travaux' },
   { lot: 'C01', acquereur: 'ferreira', localisation: 'Cuisine', description: "Ajout d'un îlot central", montantEntreprises: 2100, statut: 'termine' },
 ]
-
-// Programme.parametres.tauxMargeTma / regleMontantNegatifTma (docs/schema-donnees.md)
-function calculerMontantClient(montantEntreprises) {
-  if (montantEntreprises === null || montantEntreprises === undefined) return null
-  if (montantEntreprises < 0) return 0
-  return montantEntreprises * 1.3
-}
 
 async function seed() {
   await mongoose.connect(process.env.MONGODB_URI)

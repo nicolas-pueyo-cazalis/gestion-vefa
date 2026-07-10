@@ -1,10 +1,19 @@
-import { useEffect, useState } from 'react'
-import { STATUTS_TMA, STATUTS_EN_COURS, STATUTS_VALIDE, TRANSITIONS_AUTORISEES } from '../data/tma.js'
+import { Fragment, useEffect, useState } from 'react'
+import {
+  STATUTS_TMA,
+  STATUTS_EN_COURS,
+  STATUTS_VALIDE,
+  TRANSITIONS_AUTORISEES,
+  STATUTS_NON_RECALCULABLES,
+} from '../data/tma.js'
 import { API_URL } from '../config.js'
 import { formatMontant } from '../utils/formatMontant.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
+import FormulaireDatesTma from '../components/FormulaireDatesTma.jsx'
+
+const NB_COLONNES = 8
 
 const STATUTS_FILTRE = [
   { valeur: 'tous', libelle: 'Tous' },
@@ -20,6 +29,7 @@ function Tma() {
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
+  const [idEnEdition, setIdEnEdition] = useState(null)
 
   useEffect(() => {
     async function chargerTma() {
@@ -73,6 +83,38 @@ function Tma() {
     )
   }
 
+  async function enregistrerDates(id, donnees) {
+    const reponse = await fetch(`${API_URL}/api/tma/${id}/dates`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees),
+    })
+
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+
+    const tmaMiseAJour = await reponse.json()
+    setTmaList((liste) =>
+      liste.map((tma) =>
+        tma._id === tmaMiseAJour._id
+          ? {
+              ...tma,
+              statut: tmaMiseAJour.statut,
+              montantEntreprises: tmaMiseAJour.montantEntreprises,
+              montantClient: tmaMiseAJour.montantClient,
+              dateEnvoiEntreprises: tmaMiseAJour.dateEnvoiEntreprises,
+              dateEnvoiFactureClient: tmaMiseAJour.dateEnvoiFactureClient,
+              dateRetourClient: tmaMiseAJour.dateRetourClient,
+            }
+          : tma,
+      ),
+    )
+    setIdEnEdition(null)
+  }
+
   const tmaFiltrees =
     statutActif === 'tous' ? tmaList : tmaList.filter((tma) => tma.statut === statutActif)
 
@@ -118,23 +160,36 @@ function Tma() {
         </thead>
         <tbody>
           {tmaFiltrees.map((tma) => (
-            <tr key={tma._id}>
-              <td>{tma.lot.reference}</td>
-              <td>{nomAcquereur(tma.acquereur)}</td>
-              <td>{tma.localisation}</td>
-              <td>{tma.description}</td>
-              <td>{tma.montantEntreprises === null ? '—' : formatMontant(tma.montantEntreprises)}</td>
-              <td>{tma.montantClient === null ? '—' : formatMontant(tma.montantClient)}</td>
-              <td><Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} /></td>
-              <td className="actions">
-                {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
-                  <button onClick={() => changerStatut(tma._id, 'refuse')}>Refuser</button>
-                )}
-                {tma.statut === 'refuse' && (
-                  <button onClick={() => annulerRefus(tma._id)}>Annuler le refus</button>
-                )}
-              </td>
-            </tr>
+            <Fragment key={tma._id}>
+              <tr>
+                <td>{tma.lot.reference}</td>
+                <td>{nomAcquereur(tma.acquereur)}</td>
+                <td>{tma.localisation}</td>
+                <td>{tma.description}</td>
+                <td>{tma.montantEntreprises === null ? '—' : formatMontant(tma.montantEntreprises)}</td>
+                <td>{tma.montantClient === null ? '—' : formatMontant(tma.montantClient)}</td>
+                <td><Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} /></td>
+                <td className="actions">
+                  {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && (
+                    <button onClick={() => setIdEnEdition(tma._id)}>Modifier les dates</button>
+                  )}
+                  {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
+                    <button onClick={() => changerStatut(tma._id, 'refuse')}>Refuser</button>
+                  )}
+                  {tma.statut === 'refuse' && (
+                    <button onClick={() => annulerRefus(tma._id)}>Annuler le refus</button>
+                  )}
+                </td>
+              </tr>
+              {idEnEdition === tma._id && (
+                <FormulaireDatesTma
+                  tma={tma}
+                  colonnes={NB_COLONNES}
+                  onEnregistrer={enregistrerDates}
+                  onFermer={() => setIdEnEdition(null)}
+                />
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>

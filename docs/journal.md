@@ -589,3 +589,41 @@ discuter avec Nicolas.
 
 Étape 4 (calcul automatique du statut TMA à partir des dates, à la manière
 d'Excel) ou logique des appels de fonds — à discuter avec Nicolas.
+
+---
+
+## 2026-07-10 — Étape 4 : calcul automatique du statut TMA depuis les dates
+
+**Ce qui a été fait**
+
+- `calculerStatutAutomatique()` (`server/models/Tma.js`) : reproduit la
+  logique de la formule Excel d'origine (`docs/analyse-excel.md`), adaptée
+  au nouvel ordre `chiffre → facture → valide`. Ne couvre que la portion
+  "pilotée par les dates" du cycle (`demande` à `valide`) — `travaux`/`termine`
+  restent manuels (pas de date correspondante dans le modèle actuel),
+  `refuse` aussi (décision, pas fait constaté).
+- Nouvelle route `PATCH /api/tma/:id/dates` : met à jour
+  `dateEnvoiEntreprises`/`montantEntreprises`/`dateEnvoiFactureClient`/`dateRetourClient`,
+  recalcule automatiquement le statut (sauf si déjà `travaux`/`termine`/`refuse`,
+  pour ne pas faire "reculer" une TMA déjà avancée manuellement). Testée en
+  ligne de commande, progression complète vérifiée :
+  demande → étude → chiffré → facturé → validé, une étape à la fois.
+- **Factorisation** : `calculerMontantClient()` déplacée de `seed.js` vers
+  `models/Tma.js` (exportée), réutilisée aussi dans la nouvelle route — évite
+  la duplication, et corrige un oubli (`montantClient` n'était pas recalculé
+  quand `montantEntreprises` changeait via la nouvelle route).
+- **Formulaire React** : nouveau composant `FormulaireDatesTma.jsx` — un
+  formulaire "différé" (les champs se remplissent localement, un seul envoi
+  au clic sur "Enregistrer", contrairement aux boutons de filtre qui
+  envoient immédiatement). Affiché comme une ligne de tableau supplémentaire
+  (`<td colSpan={8}>`) sous la ligne concernée, via un bouton "Modifier les
+  dates" — cache automatiquement quand le statut n'est plus "recalculable"
+  (`travaux`/`termine`/`refuse`).
+- Testé avec succès dans le navigateur : remplir "Date envoi entreprises"
+  fait passer une TMA de "Demande" à "Étude" sans bouton de statut dédié.
+
+**Prochaine étape**
+
+Logique des appels de fonds (barème, déclenchement sur attestation MOE +
+statut Acté), ou création de nouvelles TMA/lots depuis l'interface — à
+discuter avec Nicolas.

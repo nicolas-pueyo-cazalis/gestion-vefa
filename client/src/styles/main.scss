@@ -147,6 +147,47 @@ table {
       }
     }
   }
+
+  .formulaire-dates td {
+    background: #f5f7fa;
+  }
+
+  .formulaire-dates form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 1rem;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+      color: #52606d;
+    }
+
+    input {
+      border: 1px solid $couleur-bordure;
+      border-radius: 4px;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    button {
+      border: 1px solid $couleur-bordure;
+      background: $couleur-carte;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    button[type='submit'] {
+      background: $couleur-texte;
+      color: white;
+      border-color: $couleur-texte;
+    }
+  }
 }
 
 .badge {

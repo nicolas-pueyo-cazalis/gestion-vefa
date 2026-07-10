@@ -257,3 +257,22 @@ ici c'est uniquement du vocabulaire **technique**.
   réserver aux cas où plusieurs éléments doivent vraiment être mis en ligne
   dans la cellule ; pour un seul élément (ou zéro), garder l'affichage par
   défaut de la cellule.
+
+## React : formulaires et listes de composants (étape 4)
+
+- **`<Fragment key={...}>` vs `<>...</>`** : la version courte `<>` (Fragment
+  implicite) n'accepte pas de prop `key`. Dès qu'un `.map()` doit retourner
+  **plusieurs** éléments par itération (ex: une ligne de tableau + une ligne
+  de formulaire conditionnelle), il faut la forme longue `<Fragment
+  key={...}>...</Fragment>` (import `{ Fragment }` depuis `'react'`).
+- **Formulaire "différé"** : chaque champ garde sa valeur dans un `useState`
+  local, rien n'est envoyé tant que l'utilisateur n'a pas soumis — à
+  l'opposé d'un composant comme `FiltreStatuts` qui envoie un changement
+  immédiatement à chaque clic. Le bon choix dépend du nombre de champs à
+  saisir d'un coup.
+- **`evenement.preventDefault()`** sur la soumission d'un `<form>` : sans
+  ça, le navigateur recharge la page entière (comportement HTML par défaut)
+  au lieu de laisser le JavaScript gérer l'envoi via `fetch`.
+- **`<td colSpan={n}>`** : fusionne une cellule sur `n` colonnes — utile pour
+  insérer un contenu (formulaire, message) qui doit occuper toute la largeur
+  d'un tableau sans respecter sa grille de colonnes habituelle.

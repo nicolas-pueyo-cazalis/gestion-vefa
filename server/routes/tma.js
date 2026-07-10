@@ -1,5 +1,7 @@
 import { Router } from 'express'
-import Tma, { TRANSITIONS_AUTORISEES } from '../models/Tma.js'
+import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique, calculerMontantClient } from '../models/Tma.js'
+
+const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
 const router = Router()
 
@@ -41,6 +43,39 @@ router.patch('/:id/statut', async (req, res) => {
     }
 
     tma.statut = statut
+    await tma.save()
+    res.json(tma)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// PATCH /api/tma/:id/dates — met à jour les dates/montant d'une TMA et
+// recalcule automatiquement son statut à partir de ces valeurs (comme
+// Excel), sauf si elle est déjà en travaux/terminée/refusée : dans ce cas,
+// on garde les dates modifiables (correction) mais sans faire reculer le
+// statut malgré elles.
+router.patch('/:id/dates', async (req, res) => {
+  try {
+    const { dateEnvoiEntreprises, montantEntreprises, dateEnvoiFactureClient, dateRetourClient } = req.body
+    const tma = await Tma.findById(req.params.id)
+
+    if (!tma) {
+      return res.status(404).json({ message: 'TMA introuvable' })
+    }
+
+    if (dateEnvoiEntreprises !== undefined) tma.dateEnvoiEntreprises = dateEnvoiEntreprises
+    if (montantEntreprises !== undefined) {
+      tma.montantEntreprises = montantEntreprises
+      tma.montantClient = calculerMontantClient(montantEntreprises)
+    }
+    if (dateEnvoiFactureClient !== undefined) tma.dateEnvoiFactureClient = dateEnvoiFactureClient
+    if (dateRetourClient !== undefined) tma.dateRetourClient = dateRetourClient
+
+    if (!STATUTS_NON_RECALCULABLES.includes(tma.statut)) {
+      tma.statut = calculerStatutAutomatique(tma)
+    }
+
     await tma.save()
     res.json(tma)
   } catch (erreur) {

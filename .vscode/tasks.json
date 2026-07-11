@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Serveur backend (Express)",
+      "type": "shell",
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu", "-e", "bash", "-lc",
+        "cd '/mnt/c/01 - PERSO/Formations développeur/Gestion VEFA/server' && npm run dev"
+      ],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated",
+        "group": "serveurs",
+        "clear": true
+      }
+    },
+    {
+      "label": "Serveur front (Vite)",
+      "type": "shell",
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu", "-e", "bash", "-lc",
+        "cd '/mnt/c/01 - PERSO/Formations développeur/Gestion VEFA/client' && npm run dev"
+      ],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated",
+        "group": "serveurs",
+        "clear": true
+      }
+    },
+    {
+      "label": "Démarrer les serveurs (front + back)",
+      "dependsOn": [
+        "Serveur backend (Express)",
+        "Serveur front (Vite)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

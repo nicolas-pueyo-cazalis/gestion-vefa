@@ -56,6 +56,11 @@ function Lots() {
     setLots(await reponse.json())
   }
 
+  async function chargerAcquereurs() {
+    const reponse = await fetch(`${API_URL}/api/acquereurs`)
+    setAcquereurs(await reponse.json())
+  }
+
   useEffect(() => {
     async function chargerTout() {
       try {
@@ -86,7 +91,11 @@ function Lots() {
       alert(message)
       return
     }
-    await chargerLots()
+    // La modification peut avoir créé ou renommé un acquéreur (voir
+    // FormulaireEditionLot) — sans ce rafraîchissement, la liste
+    // déroulante "Client" resterait affichée avec les anciennes valeurs
+    // jusqu'au prochain rechargement complet de la page.
+    await Promise.all([chargerLots(), chargerAcquereurs()])
     setIdEnEdition(null)
   }
 

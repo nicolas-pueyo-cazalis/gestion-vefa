@@ -118,7 +118,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Lot introuvable' })
     }
 
-    const { acquereurNouveau, ...champs } = req.body
+    const { acquereurNouveau, acquereurMiseAJour, ...champs } = req.body
 
     if (champs.parkings) {
       const erreurParkings = await validerNumerosUniques(lot.programme, lot._id, 'parkings', champs.parkings)
@@ -145,6 +145,16 @@ router.patch('/:id', async (req, res) => {
       nouvelAcquereurId = acquereurCree._id.toString()
     } else if ('acquereur' in champs) {
       nouvelAcquereurId = champs.acquereur || null
+      // Corrige le nom/civilité de l'acquéreur déjà lié, plutôt que d'en
+      // créer un nouveau — sinon renommer un client depuis la page Lots
+      // laissait une fiche fantôme (sans lot) dans la page Clients. Voir
+      // docs/bugs.md.
+      if (acquereurMiseAJour && champs.acquereur) {
+        await Acquereur.findByIdAndUpdate(champs.acquereur, {
+          civilite: acquereurMiseAJour.civilite,
+          nom: acquereurMiseAJour.nom,
+        })
+      }
     }
 
     Object.assign(lot, champs)

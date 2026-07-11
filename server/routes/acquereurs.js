@@ -7,7 +7,7 @@ const router = Router()
 // listes déroulantes de liaison sur la page Lots)
 router.get('/', async (req, res) => {
   try {
-    const acquereurs = await Acquereur.find().sort({ nom: 1, prenom: 1 })
+    const acquereurs = await Acquereur.find().sort({ nom: 1, prenom: 1 }).populate('lots', 'reference')
     res.json(acquereurs)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })

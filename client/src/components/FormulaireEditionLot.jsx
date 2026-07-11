@@ -15,9 +15,25 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFerm
   const [dateReservation, setDateReservation] = useState(versDateInput(lot.dateReservation))
   const [dateActe, setDateActe] = useState(versDateInput(lot.dateActe))
   const [acquereurChoisi, setAcquereurChoisi] = useState(lot.acquereur?._id ?? '')
-  const [civiliteNouveau, setCiviliteNouveau] = useState('M.')
-  const [nomNouveau, setNomNouveau] = useState('')
+  const [civiliteNom, setCiviliteNom] = useState(lot.acquereur?.civilite ?? 'M.')
+  const [nomNom, setNomNom] = useState(lot.acquereur?.nom ?? '')
   const [commentaire, setCommentaire] = useState(lot.commentaire ?? '')
+
+  // La civilité/le nom affichés suivent le client sélectionné dans la
+  // liste déroulante, et restent modifiables — que ce soit pour corriger
+  // le nom d'un client déjà lié (sans créer de fiche fantôme, voir
+  // docs/bugs.md) ou saisir un nouveau client.
+  function changerAcquereur(id) {
+    setAcquereurChoisi(id)
+    if (id === NOUVEL_ACQUEREUR || id === '') {
+      setCiviliteNom('M.')
+      setNomNom('')
+    } else {
+      const trouve = acquereurs.find((a) => a._id === id)
+      setCiviliteNom(trouve?.civilite ?? 'M.')
+      setNomNom(trouve?.nom ?? '')
+    }
+  }
 
   const indexStatut = ORDRE_STATUTS.indexOf(statut)
   const optionAutorisee = indexStatut >= 1
@@ -46,9 +62,12 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFerm
       commentaire: commentaire || null,
     }
     if (acquereurChoisi === NOUVEL_ACQUEREUR) {
-      donnees.acquereurNouveau = { civilite: civiliteNouveau, nom: nomNouveau }
+      donnees.acquereurNouveau = { civilite: civiliteNom, nom: nomNom }
     } else {
       donnees.acquereur = acquereurChoisi || null
+      if (acquereurChoisi) {
+        donnees.acquereurMiseAJour = { civilite: civiliteNom, nom: nomNom }
+      }
     }
     onEnregistrer(lot._id, donnees)
   }
@@ -67,7 +86,7 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFerm
           </label>
           <label>
             Client
-            <select value={acquereurChoisi} onChange={(e) => setAcquereurChoisi(e.target.value)}>
+            <select value={acquereurChoisi} onChange={(e) => changerAcquereur(e.target.value)}>
               <option value="">— Aucun —</option>
               {acquereurs.map((a) => (
                 <option key={a._id} value={a._id}>
@@ -77,11 +96,11 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFerm
               <option value={NOUVEL_ACQUEREUR}>+ Nouveau client...</option>
             </select>
           </label>
-          {acquereurChoisi === NOUVEL_ACQUEREUR && (
+          {acquereurChoisi !== '' && (
             <>
               <label>
                 Civilité
-                <select value={civiliteNouveau} onChange={(e) => setCiviliteNouveau(e.target.value)}>
+                <select value={civiliteNom} onChange={(e) => setCiviliteNom(e.target.value)}>
                   <option value="M.">M.</option>
                   <option value="Mme">Mme</option>
                   <option value="M. et Mme">M. et Mme</option>
@@ -89,7 +108,7 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFerm
               </label>
               <label>
                 Nom
-                <input value={nomNouveau} onChange={(e) => setNomNouveau(e.target.value)} required />
+                <input value={nomNom} onChange={(e) => setNomNom(e.target.value)} required />
               </label>
             </>
           )}

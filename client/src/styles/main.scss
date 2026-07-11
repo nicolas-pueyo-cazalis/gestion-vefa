@@ -170,6 +170,26 @@ table {
     white-space: normal;
   }
 
+  // Page Clients : mêmes contraintes que .nom-client (1 retour à la ligne
+  // maximum, pas de compression excessive).
+  .adresse-cellule {
+    display: inline-block;
+    max-width: 14rem;
+    white-space: normal;
+  }
+
+  .email-cellule {
+    display: inline-block;
+    max-width: 16rem;
+    white-space: normal;
+  }
+
+  // Peu de caractères utiles (ex: "A01, B02") : pas besoin de toute la
+  // largeur que lui donnait l'en-tête "N° du logement".
+  .logement-cellule {
+    max-width: 6rem;
+  }
+
   td.actions {
     button {
       border: 1px solid $couleur-bordure;
@@ -299,6 +319,14 @@ table {
   left: 50%;
   transform: translateX(-50%);
   padding: 0 1rem;
+
+  // Page Clients : moins de colonnes que Lots, pas besoin d'aller jusqu'au
+  // bord de l'écran — entre-deux entre la largeur normale de <main>
+  // (960px) et la pleine largeur des Lots (1600px).
+  &--marge {
+    max-width: 1250px;
+    padding: 0 2.5rem;
+  }
 }
 
 table.tableau-lots {
@@ -392,15 +420,6 @@ table.tableau-lots {
     border-radius: 4px;
     padding: 0.35rem 0.5rem;
     font-size: 0.9rem;
-
-    &.invalide {
-      border-color: #dc2626;
-    }
-  }
-
-  .erreur-champ {
-    color: #dc2626;
-    font-size: 0.75rem;
   }
 
   button {
@@ -527,8 +546,16 @@ table.tableau-lots {
     padding: 0.35rem 0.5rem;
     font-size: 0.9rem;
   }
+}
 
-  input.invalide {
-    border-color: #dc2626;
-  }
+// Validation de formulaire : règles globales (utilisées dans Paramètres,
+// mais aussi dans les tableaux comme la page Clients).
+input.invalide,
+select.invalide {
+  border-color: #dc2626;
+}
+
+.erreur-champ {
+  color: #dc2626;
+  font-size: 0.75rem;
 }

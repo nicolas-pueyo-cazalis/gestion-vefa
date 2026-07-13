@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
+import { statutSignature, calculerDateLimiteMois, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
@@ -24,25 +25,6 @@ const STATUTS_FILTRE = [
 // signature notaire part lui aussi de la réservation).
 function estConcerne(lot) {
   return Boolean(lot.dateReservation)
-}
-
-// Seule différence avec calculerDateLimite (Suivi de prêt) : un délai en
-// mois, pas en jours — setMonth() gère lui-même le débordement d'année
-// (ex: réservation en novembre + 3 mois = février de l'année suivante).
-function calculerDateLimite(dateReservation, delaiMois) {
-  const date = new Date(dateReservation)
-  date.setMonth(date.getMonth() + delaiMois)
-  return date
-}
-
-function statutSignature(lot, delaiMois) {
-  if (lot.dateActe) return 'signe'
-  const limite = calculerDateLimite(lot.dateReservation, delaiMois)
-  return limite < new Date() ? 'retard' : 'attente'
-}
-
-function formatDate(valeur) {
-  return valeur ? new Date(valeur).toLocaleDateString('fr-FR') : '—'
 }
 
 function nomComplet(acquereur) {
@@ -168,7 +150,7 @@ function SignatureActe() {
                   <td>{nomComplet(lot.acquereur)}</td>
                   <td>{formatDate(lot.dateReservation)}</td>
                   <td><BoutonContact titre="Notaire" contact={lot.acquereur?.notaire} /></td>
-                  <td>{formatDate(calculerDateLimite(lot.dateReservation, delaiMois))}</td>
+                  <td>{formatDate(calculerDateLimiteMois(lot.dateReservation, delaiMois))}</td>
                   <td>{formatDate(lot.dateActe)}</td>
                   <td>
                     <Badge statut={statutSignature(lot, delaiMois)} texte={LIBELLES_STATUT[statutSignature(lot, delaiMois)]} />

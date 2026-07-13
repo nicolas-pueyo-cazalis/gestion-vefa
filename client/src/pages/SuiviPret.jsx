@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
+import { statutPret, calculerDateLimiteJours, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
@@ -28,27 +29,6 @@ const STATUTS_FILTRE = [
 // les lots encore "libre"/"option" n'ont pas de date de réservation.
 function estConcerne(lot) {
   return Boolean(lot.dateReservation)
-}
-
-function calculerDateLimite(dateReservation, delaiJours) {
-  const date = new Date(dateReservation)
-  date.setDate(date.getDate() + delaiJours)
-  return date
-}
-
-// "En retard" n'est jamais stocké, recalculé à la volée — même principe
-// que partout ailleurs dans l'appli (statutAppel, calculerStatutAutomatique).
-// "sans_pret" prime sur tout le reste : une fois déclarée, l'échéance de
-// prêt ne concerne plus ce dossier.
-function statutPret(lot, delaiJours) {
-  if (lot.acquereur?.sansPret) return 'sans_pret'
-  if (lot.acquereur?.dateOffrePretRecue) return 'recue'
-  const limite = calculerDateLimite(lot.dateReservation, delaiJours)
-  return limite < new Date() ? 'retard' : 'attente'
-}
-
-function formatDate(valeur) {
-  return valeur ? new Date(valeur).toLocaleDateString('fr-FR') : '—'
 }
 
 function nomComplet(acquereur) {
@@ -177,7 +157,7 @@ function SuiviPret() {
                       <>
                         <td><BoutonContact titre="Banque" contact={acquereur?.banque} /></td>
                         <td><BoutonContact titre="Courtier" contact={acquereur?.courtier} /></td>
-                        <td>{formatDate(calculerDateLimite(lot.dateReservation, delaiJours))}</td>
+                        <td>{formatDate(calculerDateLimiteJours(lot.dateReservation, delaiJours))}</td>
                         <td>{formatDate(acquereur?.dateOffrePretRecue)}</td>
                         <td>
                           <Badge statut={statut} texte={LIBELLES_STATUT[statut]} />

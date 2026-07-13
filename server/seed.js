@@ -4,6 +4,8 @@ import Programme from './models/Programme.js'
 import Lot from './models/Lot.js'
 import Acquereur from './models/Acquereur.js'
 import Tma, { calculerMontantClient } from './models/Tma.js'
+import TmaEntreprise from './models/TmaEntreprise.js'
+import AppelDeFonds from './models/AppelDeFonds.js'
 
 // Données fictives (aucune donnée réelle) — reprises de client/src/data/.
 // Une fois les routes de lecture en place, client/src/data/ sera supprimé :
@@ -94,11 +96,19 @@ async function seed() {
   // La collection Entreprise n'est plus touchée par le seed (décision du
   // 10/07/2026) : Nicolas y saisit ses propres entreprises et ne veut plus
   // les voir réapparaître à chaque reseed lié à d'autres collections.
+  // TmaEntreprise et AppelDeFonds ajoutés le 13/07/2026 : ces deux
+  // collections référencent Tma/Lot par ObjectId — sans les vider aussi,
+  // un reseed recrée Tma/Lot avec de **nouveaux** identifiants et laisse
+  // les anciennes lignes TmaEntreprise/AppelDeFonds orphelines, pointant
+  // vers des documents qui n'existent plus (découvert en construisant la
+  // fenêtre d'alertes, voir docs/bugs.md).
   await Promise.all([
     Programme.deleteMany({}),
     Lot.deleteMany({}),
     Acquereur.deleteMany({}),
     Tma.deleteMany({}),
+    TmaEntreprise.deleteMany({}),
+    AppelDeFonds.deleteMany({}),
   ])
   console.log('Anciennes données supprimées (hors entreprises, plus gérées par le seed)')
 

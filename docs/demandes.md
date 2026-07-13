@@ -442,6 +442,20 @@ qui ont persisté dans la version finale.
 
 ---
 
+## Alertes de retard (13/07/2026)
+
+104. Demande de passer aux alertes de retard (point 3 du cadrage initial
+     du 09/07/2026, et décisions du 10/07/2026 pour les deux alertes
+     TMA) — devenu testable maintenant que Suivi de prêt et Signature
+     acte existent.
+105. Rappel explicite en cours de construction : *"alerte également pour
+     TMA n'oublies pas"* — les deux alertes TMA (entreprise n'ayant pas
+     chiffré à temps, client n'ayant pas répondu à une facture) actées le
+     10/07/2026 mais jamais construites depuis, à inclure dans la même
+     fenêtre que prêt/notaire/appels de fonds.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

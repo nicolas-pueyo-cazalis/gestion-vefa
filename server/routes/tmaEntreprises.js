@@ -33,15 +33,18 @@ async function recalculerTma(tmaId) {
   return tma
 }
 
-// GET /api/tma-entreprises?tma=<id> — lignes entreprise d'une TMA donnée
+// GET /api/tma-entreprises?tma=<id> — lignes entreprise d'une TMA donnée,
+// ou GET /api/tma-entreprises (sans filtre) — toutes les lignes, avec le
+// lot concerné peuplé (via `tma`), pour la fenêtre d'alertes au démarrage
+// (AlerteRetards.jsx, 13/07/2026) qui doit repérer les entreprises en
+// retard sur l'ensemble du programme, pas une TMA à la fois.
 router.get('/', async (req, res) => {
   try {
     const { tma } = req.query
-    if (!tma) {
-      return res.status(400).json({ message: 'Paramètre "tma" requis' })
-    }
-    const lignes = await TmaEntreprise.find({ tma })
+    const filtre = tma ? { tma } : {}
+    const lignes = await TmaEntreprise.find(filtre)
       .populate('entreprise', 'nom corpsDeTravaux')
+      .populate({ path: 'tma', select: 'lot statut', populate: { path: 'lot', select: 'reference' } })
       .sort({ createdAt: 1 })
     res.json(lignes)
   } catch (erreur) {

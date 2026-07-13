@@ -516,3 +516,45 @@ vérifiée activement à chaque fois qu'un nouveau composant réutilise le
 même sous-composant (ici `TelephoneInput`) — la doc existante ne protège
 pas automatiquement le nouveau code, elle doit être relue/appliquée à la
 main à chaque nouvel usage.
+
+---
+
+## `seed.js` ne vidait pas `TmaEntreprise`/`AppelDeFonds` : 18 lignes orphelines accumulées
+
+**Symptôme** : découvert en construisant la fenêtre d'alertes de retard
+(13/07/2026), qui a besoin de lister **toutes** les lignes `TmaEntreprise`
+(pas une TMA à la fois comme jusqu'ici) — 18 lignes existaient en base,
+mais **aucune** ne pointait vers une TMA réellement existante
+(`tma: null` une fois peuplé), rendant le champ `entreprise` illisible et
+la fenêtre potentiellement fausse.
+
+**Cause** : `seed.js` vide `Programme`, `Lot`, `Acquereur` et `Tma` à
+chaque exécution (`deleteMany`), en recréant des documents avec de
+**nouveaux** `_id` — mais ne vidait ni `TmaEntreprise`, ni `AppelDeFonds`,
+deux collections qui référencent `Tma`/`Lot` par ObjectId. Les lignes déjà
+créées lors d'un test antérieur (10/07/2026, tout premier test du détail
+entreprises d'une TMA) se sont retrouvées orphelines dès le reseed
+suivant : leur `tma` pointait vers un `_id` qui n'existe plus. Comme
+aucune route ne permettait jusqu'ici de lister les `TmaEntreprise` sans
+préciser une TMA (`GET /api/tma-entreprises?tma=<id>` uniquement), ces
+orphelines restaient invisibles — ni affichées (aucune TMA ne les
+réclamait), ni gênantes, jusqu'à ce qu'une nouvelle fonctionnalité
+interroge "tout" d'un coup.
+
+**Correction** : `TmaEntreprise.deleteMany({})` et
+`AppelDeFonds.deleteMany({})` ajoutés à la liste des collections vidées
+par `seed.js` (`Entreprise` reste volontairement exclue, décision du
+10/07/2026). Les 18 lignes déjà orphelines supprimées par un script
+ponctuel (comparaison avec la liste des `Tma` existants, plutôt qu'un
+simple `tma: null` — le champ était en réalité absent du document, pas
+`null`, un reliquat d'anciens documents créés avant que le champ ne soit
+obligatoire).
+
+**Leçon** : dès qu'une collection référence une autre par `ObjectId`,
+**toute** collection qui la vide (ici `seed.js`) doit aussi vider ses
+dépendants — sinon des orphelines s'accumulent silencieusement,
+invisibles tant qu'aucune route ne les interroge sans filtre. Une
+relation "presque jamais interrogée dans son ensemble" (ici : toutes les
+`TmaEntreprise` du programme, tous suivis confondus) est justement le
+genre d'angle mort qu'une nouvelle fonctionnalité transversale (une
+alerte, un export...) finit tôt ou tard par révéler.

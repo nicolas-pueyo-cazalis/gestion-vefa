@@ -471,6 +471,54 @@ table.tableau-lots {
   }
 }
 
+// Fenêtre d'alertes au démarrage (AlerteRetards.jsx, 13/07/2026) : plus
+// large que FenetreContact (plusieurs sections possibles), avec défilement
+// vertical si la liste est longue plutôt que de déborder de l'écran.
+.fenetre-alertes {
+  min-width: 26rem;
+  max-width: 32rem;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  h4 {
+    margin: 1rem 0 0.4rem;
+    font-size: 0.85rem;
+    color: #b91c1c;
+  }
+
+  section:first-of-type h4 {
+    margin-top: 0;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  li a {
+    font-size: 0.85rem;
+    color: $couleur-texte;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  button {
+    margin-top: 1.25rem;
+    border: 1px solid $couleur-bordure;
+    background: $couleur-carte;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+}
+
 .section-parametres {
   background: $couleur-carte;
   border: 1px solid $couleur-bordure;

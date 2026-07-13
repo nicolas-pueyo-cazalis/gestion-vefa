@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
 import { formatMontant } from '../utils/formatMontant.js'
+import { statutAppel, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
@@ -21,19 +22,6 @@ const STATUTS_FILTRE = [
   { valeur: 'tous', libelle: 'Tous' },
   ...Object.entries(LIBELLES_STATUT).map(([valeur, libelle]) => ({ valeur, libelle })),
 ]
-
-// "En retard" n'est jamais stocké : recalculé à la volée à partir de la
-// date limite et de l'absence de règlement (docs/schema-donnees.md).
-function statutAppel(appel) {
-  if (appel.dateReglement) return 'regle'
-  if (!appel.dateEmission) return 'attente'
-  const enRetard = appel.dateLimiteReglement && new Date(appel.dateLimiteReglement) < new Date()
-  return enRetard ? 'retard' : 'emis'
-}
-
-function formatDate(valeur) {
-  return valeur ? new Date(valeur).toLocaleDateString('fr-FR') : '—'
-}
 
 function AppelsDeFonds() {
   const [appels, setAppels] = useState([])

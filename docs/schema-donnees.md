@@ -334,6 +334,36 @@ différemment (règle métier n°4 de `analyse-excel.md`).
   (nouvelle catégorie de statut dédiée, `sans_pret`). Réversible via
   "Reprendre le suivi".
 
+## Alertes de retard (13/07/2026)
+
+Implémentation de la règle métier n°5 de `analyse-excel.md` (fenêtre de
+notification à l'ouverture) et des deux alertes TMA actées le 10/07/2026 —
+aucune nouvelle collection, uniquement une nouvelle lecture transversale
+des données déjà en place.
+
+- **`client/src/utils/statuts.js`** : centralise tous les calculs "en
+  retard" (`statutAppel`, `statutPret`, `statutSignature`,
+  `estEntrepriseEnRetard`, `estFactureTmaEnRetard`) — utilisé à la fois
+  par les pages dédiées (Appels de fonds, Suivi de prêt, Signature acte)
+  et par `AlerteRetards.jsx`, pour garantir que la fenêtre d'alertes
+  affiche exactement les mêmes retards que ce que montre chaque page.
+- **`AlerteRetards.jsx`**, montée une seule fois dans `Layout.jsx` (pas
+  remonté en changeant de page) : récupère lots, programme, appels de
+  fonds, TMA et lignes `TmaEntreprise`, calcule 5 catégories de retard, et
+  s'affiche automatiquement s'il y en a au moins un. Fermeture manuelle,
+  pas de réapparition avant un rechargement complet de la page — cohérent
+  avec "à l'ouverture de l'application".
+- **Deux alertes TMA** (décisions du 10/07/2026, absentes d'Excel) :
+  une entreprise sollicitée qui n'a pas transmis de devis dans le délai
+  (`TmaEntreprise.dateEnvoi + delaiRetourEntrepriseTmaJours`), et un
+  client qui n'a pas répondu à une facture TMA dans le délai
+  (`Tma.dateEnvoiFactureClient + delaiReponseFactureTmaJours`, uniquement
+  si le statut est encore `facture`).
+- **`GET /api/tma-entreprises`** assoupli : le paramètre `?tma=` devient
+  optionnel (sans lui, renvoie toutes les lignes, avec la TMA et son lot
+  peuplés) — nécessaire pour balayer tout le programme d'un coup, plutôt
+  qu'une TMA à la fois comme le faisait jusqu'ici `DetailEntreprisesTma.jsx`.
+
 ## `TMA`
 
 | Champ | Type | Remarque |

@@ -1594,3 +1594,59 @@ tronquée.
 Nicolas doit revérifier : saisir un téléphone incomplet sur banque/
 courtier/notaire doit maintenant afficher un message d'erreur sous le
 champ et bloquer "Enregistrer", sans planter le formulaire.
+
+---
+
+## 2026-07-13 (suite) — Alertes de retard (règle métier n°5 + décisions TMA du 10/07)
+
+**Ce qui a été fait**
+
+Dernier grand chantier du cadrage initial : la fenêtre de notification à
+l'ouverture de l'application, prévue depuis le 09/07/2026 (règle métier
+n°5 de `analyse-excel.md`), complétée par deux alertes TMA actées le
+10/07/2026 mais jamais construites — rappelées explicitement par Nicolas
+en cours de route (*"alerte également pour TMA n'oublies pas"*).
+
+- **Refactorisation préalable** : les calculs de statut "en retard",
+  jusque-là dupliqués dans `AppelsDeFonds.jsx`, `SuiviPret.jsx` et
+  `SignatureActe.jsx`, extraits dans `client/src/utils/statuts.js`
+  (`statutAppel`, `statutPret`, `statutSignature`,
+  `calculerDateLimiteJours`/`Mois`, `formatDate`) — nécessaire pour que la
+  nouvelle fenêtre d'alertes utilise exactement la même logique que
+  chaque page, sans risquer une divergence future entre les deux.
+- **Deux nouvelles fonctions** pour les alertes TMA :
+  `estEntrepriseEnRetard` (`TmaEntreprise.dateEnvoi +
+  delaiRetourEntrepriseTmaJours`) et `estFactureTmaEnRetard`
+  (`Tma.dateEnvoiFactureClient + delaiReponseFactureTmaJours`, seulement
+  si `statut === 'facture'`).
+- **`GET /api/tma-entreprises`** assoupli : `?tma=` devient optionnel,
+  peuple maintenant aussi `tma.lot` — nécessaire pour balayer toutes les
+  lignes du programme, pas une TMA à la fois.
+- **`AlerteRetards.jsx`**, montée une fois dans `Layout.jsx` (pas
+  remontée en changeant de page, donc affichée une seule fois "à
+  l'ouverture") : 5 catégories de retard (prêt, signature acte, appels de
+  fonds, entreprises TMA, factures TMA), chacune avec un lien vers la
+  page concernée. Ne s'affiche que s'il y a au moins un retard ; fermeture
+  manuelle.
+- **Bug de fond découvert en testant** : `GET /api/tma-entreprises` sans
+  filtre a révélé 18 lignes `TmaEntreprise` orphelines (créées le
+  10/07/2026, jamais nettoyées depuis) — cause : `seed.js` ne vide ni
+  `TmaEntreprise` ni `AppelDeFonds`, alors que ces deux collections
+  référencent `Tma`/`Lot` par ObjectId recréés à chaque reseed. Corrigé
+  (`seed.js` vide maintenant aussi ces deux collections) et les 18 lignes
+  orphelines supprimées. Détail dans `docs/bugs.md`.
+- **Testé** via des données temporaires créées puis supprimées en base
+  (aucune TMA/entreprise réelle n'existait encore pour tester ces deux
+  alertes précises) : les deux règles TMA se déclenchent correctement.
+  Le cas "prêt en retard" (C01, aucune offre renseignée, délai dépassé)
+  est déjà présent dans les vraies données et servira de test réel dans
+  le navigateur.
+
+**Prochaine étape**
+
+Nicolas doit recharger l'application et vérifier que la fenêtre d'alertes
+s'affiche (au moins le retard prêt de C01), puis tester la fermeture. Le
+cadrage initial du projet (09/07/2026) est maintenant entièrement couvert
+— prochaines pistes possibles : authentification JWT, export PDF
+(appels de fonds, coordonnées banque/courtier/notaire), ou tout nouveau
+retour de Nicolas après une phase de test plus large.

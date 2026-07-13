@@ -131,7 +131,7 @@ async function genererAppelsDeFonds(lot) {
 router.get('/', async (req, res) => {
   try {
     const lots = await Lot.find().sort({ reference: 1 })
-      .populate('acquereur', 'civilite nom prenom banque courtier dateOffrePretRecue')
+      .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
     res.json(lots)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
@@ -261,7 +261,7 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    const lotPeuple = await lot.populate('acquereur', 'civilite nom prenom banque courtier dateOffrePretRecue')
+    const lotPeuple = await lot.populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
     res.json(lotPeuple)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })

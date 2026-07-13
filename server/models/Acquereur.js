@@ -13,6 +13,7 @@ const acquereurSchema = new mongoose.Schema({
   email: { type: String, match: EMAIL_REGEX },
   banque: contactSchema,
   courtier: contactSchema,
+  notaire: contactSchema, // ajouté le 13/07/2026, page "Signature acte"
   // Remplace l'ancien booléen `offrePretRecue` (13/07/2026) : comme pour
   // TmaEntreprise.dateRetour, c'est un fait qui ne peut pas se déduire
   // d'ailleurs (personne ne peut savoir automatiquement quand la banque a
@@ -20,6 +21,11 @@ const acquereurSchema = new mongoose.Schema({
   // case à cocher — ça permet en plus de savoir si l'offre est arrivée
   // avant ou après la date limite (page "Suivi de prêt").
   dateOffrePretRecue: Date,
+  // Acquisition sans financement bancaire (13/07/2026) : contrairement au
+  // reste de l'appli, ça ne se déduit d'aucune date — c'est un fait déclaré
+  // une fois pour toutes par le bouton "Sans prêt" (page "Suivi de prêt"),
+  // qui vide au passage banque/courtier/dateOffrePretRecue.
+  sansPret: { type: Boolean, default: false },
 }, { timestamps: true })
 
 export default mongoose.model('Acquereur', acquereurSchema)

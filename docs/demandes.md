@@ -422,6 +422,26 @@ qui ont persisté dans la version finale.
 
 ---
 
+## Remarques PDF — "Remarques sur interfaces Suivi de prêt et acte" (13/07/2026)
+
+100. **Suivi de prêt** : banque et courtier doivent avoir des coordonnées
+     complètes (pas juste un nom), consultables dans une fenêtre qui
+     s'ouvre au clic depuis le tableau, et disponibles pour un futur
+     export PDF.
+101. **Suivi de prêt** : bouton "Sans prêt" qui vide toutes les infos à
+     partir de la colonne "Banque" et fusionne la ligne avec la mention
+     "Acquisition avec fonds personnels".
+102. **Signature acte** : ajouter une colonne "Notaire", avec le même
+     traitement que banque/courtier (coordonnées complètes, fenêtre au
+     clic, disponible à l'export PDF).
+103. Signalement : un mauvais numéro de téléphone (banque/courtier/
+     notaire) ne s'enregistrait pas sans message d'erreur — demande de
+     reprendre le même principe de sécurisation que le formulaire
+     Entreprises (téléphone, commune, code postal), sans nouveau bug
+     (bug de régression, voir `docs/bugs.md`).
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

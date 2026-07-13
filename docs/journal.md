@@ -1522,3 +1522,75 @@ maintenant "Acté" suite au test en ligne de commande — à signaler, au cas
 où Nicolas préférait le garder "Réservé" pour ses futurs tests. Ensuite :
 alertes de retard (fenêtre de notification à l'ouverture, prêt/notaire/
 appels de fonds), désormais testables avec de vraies données.
+
+---
+
+## 2026-07-13 (suite) — Remarques PDF sur Suivi de prêt et Signature acte
+
+**Ce qui a été fait**
+
+Nicolas a testé les deux nouvelles pages et transmis un PDF de remarques
+(`docs/demandes.md`, #100-102) :
+
+- **Coordonnées complètes** pour banque/courtier/notaire (au lieu d'un
+  simple nom) : `contactSchema` déjà réutilisé, `Acquereur.notaire` ajouté
+  (même sous-schéma). Deux nouveaux composants réutilisables :
+  `FenetreContact.jsx` (fenêtre modale simple, recouvrement + boîte
+  centrée, sans dépendance externe) et `BoutonContact.jsx` (nom affiché en
+  lien, ouvre la fenêtre au clic) — utilisés sur les deux pages. Formulaire
+  d'édition factorisé dans `ChampsContact.jsx` (contrôlé par le parent,
+  sans validation stricte — ce sont des contacts de référence, pas
+  l'acquéreur lui-même).
+- **Notaire** rattaché à l'acquéreur (comme banque/courtier), placé juste
+  après la colonne "Réservation" sur demande explicite de Nicolas. Son
+  édition passe par une seconde requête `PATCH /api/acquereurs/:id`
+  depuis `FormulaireSignatureActe.jsx`, en plus du `PATCH /api/lots/:id`
+  déjà existant pour `dateActe`.
+- **Bouton "Sans prêt"** (`Acquereur.sansPret`) : vide
+  banque/courtier/dateOffrePretRecue, la ligne se fusionne alors en une
+  seule cellule ("Acquisition avec fonds personnels") sur "Suivi de
+  prêt", nouvelle catégorie de statut `sans_pret` exclue des décomptes
+  attente/retard/reçue, et nouveau bouton "Reprendre le suivi" pour
+  revenir en arrière.
+- **Bug découvert et corrigé** : un premier script de nettoyage de
+  l'ancien champ `offrePretRecue` (`Acquereur.updateMany` avec `$unset`)
+  avait annoncé "5 acquéreurs mis à jour" sans que le champ disparaisse
+  réellement — le mode strict de Mongoose ignore silencieusement un
+  `$unset` sur un chemin retiré du schéma. Corrigé en repassant par la
+  collection MongoDB native (`mongoose.connection.collection(...)`), qui
+  ignore le schéma. Détail dans `docs/bugs.md`.
+
+**Prochaine étape**
+
+Nicolas doit tester dans le navigateur : coordonnées complètes banque/
+courtier/notaire, fenêtre de détail au clic, bouton "Sans prêt" et son
+inverse "Reprendre le suivi". L'export PDF mentionné dans la remarque
+reste hors périmètre pour l'instant (même statut que l'export appels de
+fonds, déjà reporté) — seules les données sont prêtes à l'accueillir.
+
+---
+
+## 2026-07-13 (suite) — Régression validation téléphone (banque/courtier/notaire)
+
+**Ce qui a été fait**
+
+Nicolas a testé et signalé qu'un mauvais numéro de téléphone sur banque/
+courtier/notaire ne s'enregistrait pas, sans message d'erreur — exactement
+le bug déjà connu et corrigé sur le formulaire Entreprises (`docs/bugs.md`),
+réintroduit par le nouveau composant `ChampsContact.jsx` qui n'avait pas
+repris cette validation (#103 dans `docs/demandes.md`).
+
+Corrigé : `ChampsContact` valide maintenant commune/code postal/email
+(mêmes regex que le formulaire Client/Entreprises) et suit la validité du
+téléphone renvoyée par `TelephoneInput`, avec message d'erreur inline sous
+chaque champ. Nouvelle prop `onValiditeChange` pour remonter la validité
+globale au formulaire parent — `FormulaireSuiviPret.jsx` et
+`FormulaireSignatureActe.jsx` bloquent désormais la soumission tant qu'une
+erreur est affichée, plutôt que d'enregistrer silencieusement une version
+tronquée.
+
+**Prochaine étape**
+
+Nicolas doit revérifier : saisir un téléphone incomplet sur banque/
+courtier/notaire doit maintenant afficher un message d'erreur sous le
+champ et bloquer "Enregistrer", sans planter le formulaire.

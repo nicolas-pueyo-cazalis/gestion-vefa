@@ -446,3 +446,73 @@ en masse d'une phase déjà existante, auto-émission de la 1ʳᵉ phase), et la
 correction précédente n'en avait couvert qu'un seul. Extraire la règle
 dans une fonction partagée, appelée par tous les points d'entrée, évite
 que ce genre d'oubli se reproduise à la prochaine évolution de la règle.
+
+---
+
+## `$unset` silencieusement ignoré sur un champ retiré du schéma Mongoose
+
+**Symptôme** : après avoir renommé `Acquereur.offrePretRecue` (booléen) en
+`dateOffrePretRecue` (Date), un script ponctuel
+(`Acquereur.updateMany({}, { $unset: { offrePretRecue: '' } })`) censé
+nettoyer l'ancien champ sur les documents existants a annoncé "5
+acquéreurs" mis à jour — mais une vérification ultérieure a montré que le
+champ obsolète `offrePretRecue: false` était toujours présent en base sur
+ces mêmes documents.
+
+**Cause** : en mode strict Mongoose (activé par défaut), toute opération
+de mise à jour passant par un **modèle** (`Model.updateMany`,
+`findByIdAndUpdate`...) est filtrée pour ne garder que les chemins
+réellement déclarés dans le schéma — y compris pour `$unset`. Comme
+`offrePretRecue` avait déjà été retiré du schéma Mongoose *avant*
+l'exécution du script de nettoyage, l'opération `$unset` sur ce champ a
+été silencieusement supprimée de la requête envoyée à MongoDB (mode
+strict = protection contre les fautes de frappe sur les noms de champs,
+mais qui empêche aussi de nettoyer un champ qu'on vient de retirer du
+schéma). Le compteur "5 acquéreurs" affiché venait du nombre de documents
+**correspondant** au filtre (`{}`), pas du nombre réellement modifié.
+
+**Correction** : contourner le modèle et passer par la **collection MongoDB
+native** (`mongoose.connection.collection('acquereurs').updateMany(...)`),
+qui n'applique aucun filtrage de schéma.
+
+**Leçon** : le mode strict de Mongoose, précieux pour éviter les fautes de
+frappe au quotidien, devient un piège dès qu'on veut nettoyer un champ
+qu'on a déjà retiré du schéma — dans ce cas précis, il faut soit nettoyer
+**avant** de modifier le schéma, soit passer par la collection native
+comme ici. Un `modifiedCount` élevé sur une opération `$unset` ne prouve
+pas que quelque chose a réellement changé : il faut revérifier l'état des
+documents après coup, pas seulement lire le résumé renvoyé par la requête.
+
+---
+
+## Régression : téléphone invalide silencieusement effacé, sans message (banque/courtier/notaire)
+
+**Symptôme** (signalé par Nicolas) : dans les formulaires "Suivi de prêt"
+et "Signature acte", saisir un numéro de téléphone invalide (ex: 8
+chiffres) pour la banque/le courtier/le notaire ne l'enregistrait pas,
+sans aucun message d'erreur.
+
+**Cause** : c'est très exactement le bug déjà rencontré et corrigé sur le
+formulaire Entreprises (voir plus haut, "Numéro de téléphone incomplet
+silencieusement effacé à la soumission") — mais réintroduit ici. Le
+nouveau composant `ChampsContact.jsx` (13/07/2026, remarque sur banque/
+courtier/notaire) utilisait `TelephoneInput` en n'écoutant que le premier
+argument de son `onChange(valeur, estValide)`, sans jamais vérifier
+`estValide` ni valider commune/code postal/email — la même classe de bug
+que celle déjà documentée, réapparue parce que le nouveau composant n'avait
+pas repris la correction déjà connue.
+
+**Correction** : `ChampsContact` valide maintenant commune/code postal/
+email par regex (mêmes règles que le formulaire Client/Entreprises) et
+suit `estValide` du téléphone, avec un message d'erreur inline sous
+chaque champ concerné. Sa validité globale remonte au formulaire parent
+via une prop `onValiditeChange`, que `FormulaireSuiviPret.jsx` et
+`FormulaireSignatureActe.jsx` utilisent pour bloquer la soumission tant
+qu'une erreur est affichée (au lieu d'enregistrer silencieusement une
+version tronquée de la saisie).
+
+**Leçon** : une correction déjà documentée dans `docs/bugs.md` doit être
+vérifiée activement à chaque fois qu'un nouveau composant réutilise le
+même sous-composant (ici `TelephoneInput`) — la doc existante ne protège
+pas automatiquement le nouveau code, elle doit être relue/appliquée à la
+main à chaque nouvel usage.

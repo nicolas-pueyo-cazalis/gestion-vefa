@@ -275,6 +275,39 @@ table {
     }
   }
 
+  // Un ou plusieurs contacts (banque/courtier/notaire) à l'intérieur d'un
+  // formulaire de ligne (13/07/2026) — le fieldset regroupe visuellement
+  // les 6 champs d'un même contact, la légende sert de titre.
+  .formulaire-contacts {
+    align-items: start;
+  }
+
+  .fieldset-contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.6rem;
+    border: 1px solid $couleur-bordure;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+
+    legend {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #52606d;
+      padding: 0 0.3rem;
+    }
+  }
+
+  // Ligne "Sans prêt" (13/07/2026) : les colonnes banque → statut se
+  // fusionnent en une seule cellule, plutôt que d'afficher des tirets
+  // dans chaque colonne.
+  .cellule-fusionnee {
+    color: #52606d;
+    font-style: italic;
+    text-align: center;
+  }
+
   .detail-entreprises ul {
     list-style: none;
     padding: 0;
@@ -378,6 +411,63 @@ table.tableau-lots {
 @each $statut, $couleur in $couleurs-statut {
   .badge.#{$statut} {
     background: $couleur;
+  }
+}
+
+// Nom de contact cliquable (banque/courtier/notaire, 13/07/2026), affiché
+// comme un lien plutôt qu'un bouton classique — ouvre FenetreContact.
+.lien-contact {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+
+  &:hover {
+    color: #1d4ed8;
+  }
+}
+
+// Fenêtre modale simple (FenetreContact) : recouvrement plein écran semi-
+// transparent + boîte centrée, sans dépendance externe.
+.fenetre-fond {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 41, 51, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.fenetre-contenu {
+  background: $couleur-carte;
+  border-radius: 8px;
+  padding: 1.5rem;
+  min-width: 20rem;
+  max-width: 90vw;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+  h3 {
+    margin: 0 0 1rem;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 1rem;
+    margin: 0 0 1rem;
+  }
+
+  dt {
+    font-weight: 600;
+    color: #52606d;
+  }
+
+  dd {
+    margin: 0;
   }
 }
 

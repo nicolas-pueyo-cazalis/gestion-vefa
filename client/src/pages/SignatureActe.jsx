@@ -4,8 +4,9 @@ import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireSignatureActe from '../components/FormulaireSignatureActe.jsx'
+import BoutonContact from '../components/BoutonContact.jsx'
 
-const NB_COLONNES = 7
+const NB_COLONNES = 8
 
 const LIBELLES_STATUT = {
   attente: 'En attente',
@@ -80,17 +81,33 @@ function SignatureActe() {
   // date de signature — même route que la page Lots/Paramètres, qui gère
   // déjà la validation des dates et déclenche au passage la génération
   // des appels de fonds (server/routes/lots.js, genererAppelsDeFonds()).
-  async function enregistrer(idLot, dateActe) {
-    const reponse = await fetch(`${API_URL}/api/lots/${idLot}`, {
+  // Le notaire (13/07/2026) est rattaché à l'acquéreur, pas au lot : deux
+  // requêtes distinctes quand un acquéreur est lié.
+  async function enregistrer(lot, { dateActe, notaire }) {
+    const reponseLot = await fetch(`${API_URL}/api/lots/${lot._id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'acte', dateActe }),
     })
-    if (!reponse.ok) {
-      const { message } = await reponse.json()
+    if (!reponseLot.ok) {
+      const { message } = await reponseLot.json()
       alert(message)
       return
     }
+
+    if (lot.acquereur) {
+      const reponseAcquereur = await fetch(`${API_URL}/api/acquereurs/${lot.acquereur._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notaire }),
+      })
+      if (!reponseAcquereur.ok) {
+        const { message } = await reponseAcquereur.json()
+        alert(message)
+        return
+      }
+    }
+
     await chargerLots()
     setIdEnEdition(null)
   }
@@ -131,6 +148,7 @@ function SignatureActe() {
               <th>Lot</th>
               <th>Client</th>
               <th>Réservation</th>
+              <th>Notaire</th>
               <th>Limite signature</th>
               <th>Date de l'acte</th>
               <th>Statut</th>
@@ -149,6 +167,7 @@ function SignatureActe() {
                   <td>{lot.reference}</td>
                   <td>{nomComplet(lot.acquereur)}</td>
                   <td>{formatDate(lot.dateReservation)}</td>
+                  <td><BoutonContact titre="Notaire" contact={lot.acquereur?.notaire} /></td>
                   <td>{formatDate(calculerDateLimite(lot.dateReservation, delaiMois))}</td>
                   <td>{formatDate(lot.dateActe)}</td>
                   <td>

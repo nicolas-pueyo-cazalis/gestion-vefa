@@ -171,6 +171,8 @@ sous-document embarqué (pas une collection séparée).
 | `banque` | sous-document `Contact` | voir ci-dessous |
 | `courtier` | sous-document `Contact` | voir ci-dessous |
 | `dateOffrePretRecue` | Date \| `null` | remplace l'ancien booléen `offrePretRecue` (13/07/2026) : une vraie date, **saisie manuelle** comme `TmaEntreprise.dateRetour` (personne ne peut deviner quand la banque a répondu), qui permet en plus de savoir si l'offre est arrivée avant ou après la date limite (page "Suivi de prêt") |
+| `notaire` | sous-document `Contact` | ajouté le 13/07/2026, page "Signature acte" — même sous-schéma que `banque`/`courtier` |
+| `sansPret` | Boolean | ajouté le 13/07/2026 : acquisition financée sur fonds personnels, sans prêt bancaire — **saisie manuelle** (bouton "Sans prêt", page "Suivi de prêt"), rien dans les dates ne permet de le déduire. Vide `banque`/`courtier`/`dateOffrePretRecue` au passage |
 
 > **Remarque du 09/07 — téléphone international :** un client peut avoir un
 > numéro étranger (belge, suisse, autre...), donc un simple regex "numéro
@@ -313,6 +315,24 @@ différemment (règle métier n°4 de `analyse-excel.md`).
   /api/lots/:id` avec `{ statut: 'acte', dateActe }` — **la même route**
   que la page Lots, qui déclenche donc aussi, sans code supplémentaire, la
   génération des appels de fonds (`genererAppelsDeFonds()`).
+
+### Contacts secondaires et acquisition sans prêt (13/07/2026)
+
+- **Banque / courtier / notaire** : coordonnées complètes (pas juste un
+  nom), sur le modèle de `Contact` déjà utilisé ailleurs — affichées comme
+  un lien cliquable dans le tableau (composant `BoutonContact.jsx`), qui
+  ouvre une fenêtre (`FenetreContact.jsx`) avec le détail. Le formulaire
+  d'édition (`ChampsContact.jsx`, réutilisé sur les deux pages) ne
+  duplique pas la validation stricte du formulaire Client (commune/code
+  postal/email) — ce sont des contacts de référence, pas ceux de
+  l'acquéreur lui-même.
+- **Acquisition sans prêt** (`Acquereur.sansPret`) : le bouton "Sans prêt"
+  vide `banque`/`courtier`/`dateOffrePretRecue` et bascule la ligne dans un
+  état à part sur la page "Suivi de prêt" — les colonnes concernées se
+  fusionnent en une seule cellule ("Acquisition avec fonds personnels"),
+  et le dossier sort du décompte "en attente"/"en retard"/"offre reçue"
+  (nouvelle catégorie de statut dédiée, `sans_pret`). Réversible via
+  "Reprendre le suivi".
 
 ## `TMA`
 

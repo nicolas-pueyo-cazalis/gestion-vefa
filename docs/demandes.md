@@ -407,6 +407,21 @@ qui ont persisté dans la version finale.
 
 ---
 
+## Suivi de prêt et Signature acte (13/07/2026)
+
+98. Demande explicite : construire les deux dernières interfaces
+    identifiées dans le cadrage initial (règle métier n°4 de
+    `analyse-excel.md`) — suivi de l'obtention du prêt bancaire, et suivi
+    de la signature de l'acte notarié. Nécessaire selon Nicolas pour
+    pouvoir ensuite tester correctement les alertes de retard (prévues
+    depuis le tout début, mais impossibles à tester sans données de
+    prêt/notaire réelles à afficher).
+99. Choix d'organisation : **deux pages séparées** ("Suivi de prêt" et
+    "Signature acte"), plutôt qu'une seule page combinée comme dans le
+    fichier Excel d'origine.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

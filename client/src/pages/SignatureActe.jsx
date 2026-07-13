@@ -1,0 +1,178 @@
+import { Fragment, useEffect, useState } from 'react'
+import { API_URL } from '../config.js'
+import StatCard from '../components/StatCard.jsx'
+import Badge from '../components/Badge.jsx'
+import FiltreStatuts from '../components/FiltreStatuts.jsx'
+import FormulaireSignatureActe from '../components/FormulaireSignatureActe.jsx'
+
+const NB_COLONNES = 7
+
+const LIBELLES_STATUT = {
+  attente: 'En attente',
+  retard: 'En retard',
+  signe: 'Signé',
+}
+
+const STATUTS_FILTRE = [
+  { valeur: 'tous', libelle: 'Tous' },
+  ...Object.entries(LIBELLES_STATUT).map(([valeur, libelle]) => ({ valeur, libelle })),
+]
+
+// Même règle que pour le suivi de prêt : un lot n'entre dans ce suivi
+// qu'une fois réservé (règle métier n°4 de l'analyse Excel — le délai de
+// signature notaire part lui aussi de la réservation).
+function estConcerne(lot) {
+  return Boolean(lot.dateReservation)
+}
+
+// Seule différence avec calculerDateLimite (Suivi de prêt) : un délai en
+// mois, pas en jours — setMonth() gère lui-même le débordement d'année
+// (ex: réservation en novembre + 3 mois = février de l'année suivante).
+function calculerDateLimite(dateReservation, delaiMois) {
+  const date = new Date(dateReservation)
+  date.setMonth(date.getMonth() + delaiMois)
+  return date
+}
+
+function statutSignature(lot, delaiMois) {
+  if (lot.dateActe) return 'signe'
+  const limite = calculerDateLimite(lot.dateReservation, delaiMois)
+  return limite < new Date() ? 'retard' : 'attente'
+}
+
+function formatDate(valeur) {
+  return valeur ? new Date(valeur).toLocaleDateString('fr-FR') : '—'
+}
+
+function nomComplet(acquereur) {
+  return [acquereur?.civilite, acquereur?.prenom, acquereur?.nom].filter(Boolean).join(' ') || '—'
+}
+
+function SignatureActe() {
+  const [lots, setLots] = useState([])
+  const [programme, setProgramme] = useState(null)
+  const [chargement, setChargement] = useState(true)
+  const [erreur, setErreur] = useState(null)
+  const [statutActif, setStatutActif] = useState('tous')
+  const [idEnEdition, setIdEnEdition] = useState(null)
+
+  async function chargerLots() {
+    const reponse = await fetch(`${API_URL}/api/lots`)
+    setLots(await reponse.json())
+  }
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const reponseProgramme = await fetch(`${API_URL}/api/programme`)
+        setProgramme(await reponseProgramme.json())
+        await chargerLots()
+      } catch (e) {
+        setErreur(e.message)
+      } finally {
+        setChargement(false)
+      }
+    }
+    init()
+  }, [])
+
+  // Signer l'acte ici revient à passer le lot au statut "Acté" avec sa
+  // date de signature — même route que la page Lots/Paramètres, qui gère
+  // déjà la validation des dates et déclenche au passage la génération
+  // des appels de fonds (server/routes/lots.js, genererAppelsDeFonds()).
+  async function enregistrer(idLot, dateActe) {
+    const reponse = await fetch(`${API_URL}/api/lots/${idLot}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'acte', dateActe }),
+    })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+    await chargerLots()
+    setIdEnEdition(null)
+  }
+
+  if (chargement) return <p>Chargement du suivi de signature...</p>
+  if (erreur) return <p>Erreur : {erreur}</p>
+
+  const delaiMois = programme.parametres.delaiSignatureNotaireMois
+
+  const lotsConcernes = lots
+    .filter(estConcerne)
+    .sort((a, b) => a.reference.localeCompare(b.reference))
+
+  const lotsFiltres = lotsConcernes
+    .filter((lot) => statutActif === 'tous' || statutSignature(lot, delaiMois) === statutActif)
+
+  const enAttente = lotsConcernes.filter((l) => statutSignature(l, delaiMois) === 'attente').length
+  const enRetard = lotsConcernes.filter((l) => statutSignature(l, delaiMois) === 'retard').length
+  const signes = lotsConcernes.filter((l) => statutSignature(l, delaiMois) === 'signe').length
+
+  return (
+    <>
+      <h1 className="titre-page">Signature acte</h1>
+
+      <section className="stats">
+        <StatCard valeur={lotsConcernes.length} libelle="Dossiers concernés" />
+        <StatCard valeur={enAttente} libelle="En attente" />
+        <StatCard valeur={enRetard} libelle="En retard" />
+        <StatCard valeur={signes} libelle="Signés" />
+      </section>
+
+      <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+
+      <div className="tableau-scroll tableau-scroll--marge">
+        <table className="tableau-lots">
+          <thead>
+            <tr>
+              <th>Lot</th>
+              <th>Client</th>
+              <th>Réservation</th>
+              <th>Limite signature</th>
+              <th>Date de l'acte</th>
+              <th>Statut</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lotsFiltres.length === 0 && (
+              <tr>
+                <td colSpan={NB_COLONNES}>Aucun dossier ne correspond à ce filtre.</td>
+              </tr>
+            )}
+            {lotsFiltres.map((lot) => (
+              <Fragment key={lot._id}>
+                <tr>
+                  <td>{lot.reference}</td>
+                  <td>{nomComplet(lot.acquereur)}</td>
+                  <td>{formatDate(lot.dateReservation)}</td>
+                  <td>{formatDate(calculerDateLimite(lot.dateReservation, delaiMois))}</td>
+                  <td>{formatDate(lot.dateActe)}</td>
+                  <td>
+                    <Badge statut={statutSignature(lot, delaiMois)} texte={LIBELLES_STATUT[statutSignature(lot, delaiMois)]} />
+                  </td>
+                  <td className="actions">
+                    <button type="button" onClick={() => setIdEnEdition(lot._id)}>Modifier</button>
+                  </td>
+                </tr>
+                {idEnEdition === lot._id && (
+                  <FormulaireSignatureActe
+                    lot={lot}
+                    colonnes={NB_COLONNES}
+                    onEnregistrer={enregistrer}
+                    onFermer={() => setIdEnEdition(null)}
+                  />
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
+}
+
+export default SignatureActe

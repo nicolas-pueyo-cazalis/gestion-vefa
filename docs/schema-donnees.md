@@ -170,7 +170,7 @@ sous-document embarqué (pas une collection séparée).
 | `email` | String | validé par un format email (regex) |
 | `banque` | sous-document `Contact` | voir ci-dessous |
 | `courtier` | sous-document `Contact` | voir ci-dessous |
-| `offrePretRecue` | Boolean | défaut `false` |
+| `dateOffrePretRecue` | Date \| `null` | remplace l'ancien booléen `offrePretRecue` (13/07/2026) : une vraie date, **saisie manuelle** comme `TmaEntreprise.dateRetour` (personne ne peut deviner quand la banque a répondu), qui permet en plus de savoir si l'offre est arrivée avant ou après la date limite (page "Suivi de prêt") |
 
 > **Remarque du 09/07 — téléphone international :** un client peut avoir un
 > numéro étranger (belge, suisse, autre...), donc un simple regex "numéro
@@ -280,6 +280,39 @@ pas à la réalité.
 > fenêtre d'alerte au démarrage sans risquer une donnée obsolète.
 
 ---
+
+## Suivi prêt / notaire (13/07/2026)
+
+Ne correspond pas à une nouvelle collection : ces deux suivis se
+construisent entièrement à partir de champs déjà existants
+(`Lot.dateReservation`, `Lot.dateActe`, `Acquereur.banque/courtier/
+dateOffrePretRecue`, `programme.parametres.delaiObtentionPretJours`,
+`programme.parametres.delaiSignatureNotaireMois`) — aucun nouveau modèle,
+uniquement deux nouvelles pages front qui recombinent ces données
+différemment (règle métier n°4 de `analyse-excel.md`).
+
+> **Décision d'organisation** — dans le fichier Excel d'origine, prêt et
+> notaire sont réunis dans une seule vue (`Suivi_Prêt_et_Notaire`). Nicolas
+> a préféré **deux pages séparées** (`/suivi-pret` et `/signature-acte`),
+> chacune avec ses propres cartes de stats et son propre filtre par statut
+> — plus simple à lire qu'un seul tableau avec deux sujets mélangés.
+
+- Un lot n'apparaît dans ces deux pages qu'une fois **réservé**
+  (`dateReservation` renseignée) — avant, les échéances n'ont pas de point
+  de départ.
+- **Suivi de prêt** : date limite = `dateReservation +
+  delaiObtentionPretJours` (jours). Statut dérivé (jamais stocké, même
+  principe que partout ailleurs) : `recue` si `dateOffrePretRecue` est
+  renseignée, sinon `retard` si la date limite est dépassée, sinon
+  `attente`.
+- **Signature acte** : date limite = `dateReservation +
+  delaiSignatureNotaireMois` (mois, via `setMonth()` plutôt que
+  `setDate()` — gère seul le débordement d'année). Statut dérivé : `signe`
+  si `Lot.dateActe` est renseignée, sinon `retard`/`attente` selon la date
+  limite. Signer l'acte depuis cette page revient à faire un `PATCH
+  /api/lots/:id` avec `{ statut: 'acte', dateActe }` — **la même route**
+  que la page Lots, qui déclenche donc aussi, sans code supplémentaire, la
+  génération des appels de fonds (`genererAppelsDeFonds()`).
 
 ## `TMA`
 

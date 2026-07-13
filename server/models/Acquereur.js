@@ -13,7 +13,13 @@ const acquereurSchema = new mongoose.Schema({
   email: { type: String, match: EMAIL_REGEX },
   banque: contactSchema,
   courtier: contactSchema,
-  offrePretRecue: { type: Boolean, default: false },
+  // Remplace l'ancien booléen `offrePretRecue` (13/07/2026) : comme pour
+  // TmaEntreprise.dateRetour, c'est un fait qui ne peut pas se déduire
+  // d'ailleurs (personne ne peut savoir automatiquement quand la banque a
+  // répondu), donc une vraie date saisie à la main plutôt qu'une simple
+  // case à cocher — ça permet en plus de savoir si l'offre est arrivée
+  // avant ou après la date limite (page "Suivi de prêt").
+  dateOffrePretRecue: Date,
 }, { timestamps: true })
 
 export default mongoose.model('Acquereur', acquereurSchema)

@@ -23,6 +23,8 @@ function Bandeau() {
         <NavLink to="/clients">Clients</NavLink>
         <NavLink to="/tma">TMA</NavLink>
         <NavLink to="/appels-de-fonds">Appels de fonds</NavLink>
+        <NavLink to="/suivi-pret">Suivi de prêt</NavLink>
+        <NavLink to="/signature-acte">Signature acte</NavLink>
         <NavLink to="/parametres" className="nav-parametres">Paramètres</NavLink>
       </nav>
     </header>

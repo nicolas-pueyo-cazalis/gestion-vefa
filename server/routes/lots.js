@@ -124,10 +124,14 @@ async function genererAppelsDeFonds(lot) {
   )
 }
 
-// GET /api/lots — liste de tous les lots, triés par référence
+// GET /api/lots — liste de tous les lots, triés par référence. Champs
+// acquéreur étendus (13/07/2026) : banque/courtier/dateOffrePretRecue sont
+// nécessaires à la page "Suivi de prêt", qui part des lots (pas des
+// acquéreurs) pour avoir accès à `dateReservation` en même temps.
 router.get('/', async (req, res) => {
   try {
-    const lots = await Lot.find().sort({ reference: 1 }).populate('acquereur', 'civilite nom prenom')
+    const lots = await Lot.find().sort({ reference: 1 })
+      .populate('acquereur', 'civilite nom prenom banque courtier dateOffrePretRecue')
     res.json(lots)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
@@ -257,7 +261,7 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    const lotPeuple = await lot.populate('acquereur', 'civilite nom prenom')
+    const lotPeuple = await lot.populate('acquereur', 'civilite nom prenom banque courtier dateOffrePretRecue')
     res.json(lotPeuple)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })

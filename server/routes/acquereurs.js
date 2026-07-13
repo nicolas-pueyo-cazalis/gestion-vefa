@@ -21,11 +21,11 @@ router.post('/', async (req, res) => {
   try {
     const {
       civilite, nom, prenom, adresse, commune, codePostal,
-      telephone, email, banque, courtier, offrePretRecue,
+      telephone, email, banque, courtier, dateOffrePretRecue,
     } = req.body
     const acquereur = await Acquereur.create({
       civilite, nom, prenom, adresse, commune, codePostal,
-      telephone, email, banque, courtier, offrePretRecue,
+      telephone, email, banque, courtier, dateOffrePretRecue,
     })
     res.status(201).json(acquereur)
   } catch (erreur) {

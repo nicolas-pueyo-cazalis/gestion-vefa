@@ -1463,3 +1463,62 @@ WSL comme terminal de référence).
 Nicolas doit revérifier la page `/appels-de-fonds` : Réservation et
 Achèvement des fondations de A01/A02/B02/C01 doivent maintenant afficher
 "Réglé". Toujours aucun commit fait sur l'ensemble "Appels de fonds".
+
+---
+
+## 2026-07-13 (suite) — Commit "Appels de fonds", puis Suivi de prêt et Signature acte
+
+**Ce qui a été fait**
+
+- Nicolas a confirmé que tout fonctionnait, et a commité l'ensemble du
+  travail "Appels de fonds" (construction + deux rounds de remarques +
+  correction "réglé à l'acte") en un seul commit.
+- Nicolas a demandé de poursuivre avec les deux dernières interfaces du
+  cadrage initial plutôt que les alertes de retard directement — plus
+  simple de tester des alertes une fois qu'il y a de vraies données
+  prêt/notaire à afficher (`docs/demandes.md`, #98-99).
+- **Choix d'organisation** (question posée) : deux pages séparées plutôt
+  qu'une seule vue combinée comme dans l'Excel d'origine.
+- **Modèle `Acquereur`** : `offrePretRecue` (Boolean) remplacé par
+  `dateOffrePretRecue` (Date) — cohérent avec le principe déjà appliqué
+  partout ailleurs (statut dérivé d'une date, pas d'un booléen manuel).
+  Champ obsolète nettoyé en base sur les 5 acquéreurs existants
+  (`$unset`, script ponctuel supprimé après usage).
+- **`GET`/`PATCH /api/lots`** : populate de `acquereur` étendu
+  (`banque`, `courtier`, `dateOffrePretRecue`) — les deux nouvelles pages
+  partent des lots (pas des acquéreurs) pour avoir `dateReservation` et
+  `dateActe` en même temps.
+- **Page `/suivi-pret`** (`SuiviPret.jsx` + `FormulaireSuiviPret.jsx`) :
+  liste les lots réservés, date limite d'obtention du prêt calculée
+  (`dateReservation + delaiObtentionPretJours`), statut dérivé
+  (`attente`/`retard`/`recue`), édition banque/courtier/date d'offre
+  reçue via `PATCH /api/acquereurs/:id` (déjà générique, aucun changement
+  de route nécessaire).
+- **Page `/signature-acte`** (`SignatureActe.jsx` +
+  `FormulaireSignatureActe.jsx`) : même principe, délai en **mois**
+  cette fois (`setMonth()`, gère seul le débordement d'année). Signer
+  l'acte réutilise `PATCH /api/lots/:id` (`{ statut: 'acte', dateActe }`)
+  — la même route que la page Lots, qui déclenche donc automatiquement la
+  génération des appels de fonds, sans code supplémentaire. Testé sur D01
+  (réservé, sans acquéreur lié) : passage à "Acté" réussi, 6 appels de
+  fonds générés, dont "Réservation" et "Achèvement des fondations"
+  directement réglés (cascade du 13/07 déjà en place).
+- Nouvelles couleurs de badge (`recue`, `signe`, vert comme `regle`) et
+  liens de nav ajoutés (`Bandeau.jsx` : Appels de fonds → Suivi de prêt →
+  Signature acte → Paramètres).
+- **Point de méthode noté** : un test `curl -d '...'` avec un accent
+  (« Crédit Agricole ») envoyé depuis le Bash "Git Bash" de l'environnement
+  Windows a corrompu l'encodage en base (`Cr�dit Agricole`) — le `curl` de
+  ce shell ne passe pas les caractères accentés en UTF-8 correct. Corrigé
+  en renvoyant la même requête via `wsl.exe -e bash -lc 'curl ...'`. Pour
+  tout futur test manuel avec des caractères accentés, utiliser le curl de
+  WSL, pas celui du Bash Windows.
+
+**Prochaine étape**
+
+Nicolas doit tester `/suivi-pret` et `/signature-acte` dans le navigateur
+(remplir banque/courtier/date d'offre, signer un acte). D01 est
+maintenant "Acté" suite au test en ligne de commande — à signaler, au cas
+où Nicolas préférait le garder "Réservé" pour ses futurs tests. Ensuite :
+alertes de retard (fenêtre de notification à l'ouverture, prêt/notaire/
+appels de fonds), désormais testables avec de vraies données.

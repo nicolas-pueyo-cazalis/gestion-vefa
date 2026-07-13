@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { API_URL } from '../../config.js'
+import { apiFetch } from '../../utils/api.js'
 import TelephoneInput from '../TelephoneInput.jsx'
 
 // Validées en JS plutôt qu'en attribut HTML "pattern" : plus lisible, plus
@@ -44,7 +45,7 @@ function SectionEntreprises({ entreprises, onChangement }) {
     setErreurs(nouvellesErreurs)
     if (Object.keys(nouvellesErreurs).length > 0) return
 
-    await fetch(`${API_URL}/api/entreprises`, {
+    const reponse = await apiFetch(`${API_URL}/api/entreprises`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -54,6 +55,11 @@ function SectionEntreprises({ entreprises, onChangement }) {
         contact: { adresse, commune, codePostal, telephone, email },
       }),
     })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
     setNom('')
     setCorpsDeTravaux('')
     setNumeroLot('')
@@ -68,7 +74,12 @@ function SectionEntreprises({ entreprises, onChangement }) {
   }
 
   async function supprimer(id) {
-    await fetch(`${API_URL}/api/entreprises/${id}`, { method: 'DELETE' })
+    const reponse = await apiFetch(`${API_URL}/api/entreprises/${id}`, { method: 'DELETE' })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
     onChangement()
   }
 

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import { statutPret, calculerDateLimiteJours, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
@@ -44,14 +45,14 @@ function SuiviPret() {
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerLots() {
-    const reponse = await fetch(`${API_URL}/api/lots`)
+    const reponse = await apiFetch(`${API_URL}/api/lots`)
     setLots(await reponse.json())
   }
 
   useEffect(() => {
     async function init() {
       try {
-        const reponseProgramme = await fetch(`${API_URL}/api/programme`)
+        const reponseProgramme = await apiFetch(`${API_URL}/api/programme`)
         setProgramme(await reponseProgramme.json())
         await chargerLots()
       } catch (e) {
@@ -64,7 +65,7 @@ function SuiviPret() {
   }, [])
 
   async function enregistrer(idAcquereur, donnees) {
-    const reponse = await fetch(`${API_URL}/api/acquereurs/${idAcquereur}`, {
+    const reponse = await apiFetch(`${API_URL}/api/acquereurs/${idAcquereur}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),

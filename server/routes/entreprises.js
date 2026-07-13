@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Entreprise from '../models/Entreprise.js'
+import { autoriserRoles } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -15,7 +16,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST /api/entreprises — ajoute une entreprise au référentiel
-router.post('/', async (req, res) => {
+router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { nom, corpsDeTravaux, numeroLot, contact } = req.body
     const entreprise = await Entreprise.create({ nom, corpsDeTravaux, numeroLot, contact })
@@ -26,7 +27,7 @@ router.post('/', async (req, res) => {
 })
 
 // DELETE /api/entreprises/:id — retire une entreprise du référentiel
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const entreprise = await Entreprise.findByIdAndDelete(req.params.id)
     if (!entreprise) {

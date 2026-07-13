@@ -456,6 +456,20 @@ qui ont persisté dans la version finale.
 
 ---
 
+## Authentification JWT (13/07/2026)
+
+106. Demande de passer à l'authentification JWT, prévue depuis le
+     cadrage initial (09/07/2026) — dernier grand chantier restant une
+     fois le cadrage entièrement couvert.
+107. Choix (question posée) : pas d'auto-inscription publique — les
+     comptes (3 rôles : admin/gestionnaire/lecture) sont créés par un
+     admin depuis Paramètres, pas par n'importe qui.
+108. Choix (question posée) : toute l'application derrière la connexion,
+     y compris la simple lecture — pas de consultation possible sans
+     être connecté.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

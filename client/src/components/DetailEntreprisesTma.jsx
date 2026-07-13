@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import LigneEntreprise from './LigneEntreprise.jsx'
 
 function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
@@ -13,8 +14,8 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   useEffect(() => {
     async function chargerDonnees() {
       const [reponseLignes, reponseEntreprises] = await Promise.all([
-        fetch(`${API_URL}/api/tma-entreprises?tma=${tma._id}`),
-        fetch(`${API_URL}/api/entreprises`),
+        apiFetch(`${API_URL}/api/tma-entreprises?tma=${tma._id}`),
+        apiFetch(`${API_URL}/api/entreprises`),
       ])
       setLignes(await reponseLignes.json())
       setEntreprisesDisponibles(await reponseEntreprises.json())
@@ -25,7 +26,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
 
   async function ajouterLigne(evenement) {
     evenement.preventDefault()
-    const reponse = await fetch(`${API_URL}/api/tma-entreprises`, {
+    const reponse = await apiFetch(`${API_URL}/api/tma-entreprises`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -35,6 +36,11 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
         dateRetour: dateRetour || null,
       }),
     })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
     const nouvelleLigne = await reponse.json()
     const entrepriseDetail = entreprisesDisponibles.find((e) => e._id === entrepriseChoisie)
     setLignes((liste) => [...liste, { ...nouvelleLigne, entreprise: entrepriseDetail }])
@@ -45,17 +51,27 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   }
 
   async function supprimerLigne(id) {
-    await fetch(`${API_URL}/api/tma-entreprises/${id}`, { method: 'DELETE' })
+    const reponse = await apiFetch(`${API_URL}/api/tma-entreprises/${id}`, { method: 'DELETE' })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
     setLignes((liste) => liste.filter((ligne) => ligne._id !== id))
     onChangement()
   }
 
   async function modifierLigne(id, donnees) {
-    const reponse = await fetch(`${API_URL}/api/tma-entreprises/${id}`, {
+    const reponse = await apiFetch(`${API_URL}/api/tma-entreprises/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),
     })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
     const ligneMiseAJour = await reponse.json()
     setLignes((liste) =>
       liste.map((ligne) =>

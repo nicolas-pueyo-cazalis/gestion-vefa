@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import AppelDeFonds from '../models/AppelDeFonds.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
+import { autoriserRoles } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -52,7 +53,7 @@ function emettreAttestation(appel, dateAttestationMOE) {
 // attestées, pour ne jamais écraser une correction déjà faite à la main.
 // Doit être déclarée AVANT "/:id" ci-dessous, sinon Express interprète
 // "phase" comme une valeur de :id.
-router.patch('/phase', async (req, res) => {
+router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { phase, dateAttestationMOE } = req.body
     if (!phase || !dateAttestationMOE) {
@@ -81,7 +82,7 @@ router.patch('/phase', async (req, res) => {
 // "Enregistrer" sur une ligne dont ce champ était vide à l'écran (ex: la
 // phase "Réservation", jamais attestée puisqu'auto-émise) effaçait
 // silencieusement l'émission déjà calculée.
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { dateReglement } = req.body
     const appel = await AppelDeFonds.findById(req.params.id)

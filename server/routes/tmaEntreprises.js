@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Tma, { calculerMontantClient, calculerStatutAutomatique } from '../models/Tma.js'
 import TmaEntreprise from '../models/TmaEntreprise.js'
 import Entreprise from '../models/Entreprise.js'
+import { autoriserRoles } from '../middleware/auth.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
@@ -53,7 +54,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST /api/tma-entreprises — ajoute une ligne, recalcule la TMA parente
-router.post('/', async (req, res) => {
+router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { tma, entreprise, montantDevis, dateRetour } = req.body
     if (!tma || !entreprise) {
@@ -85,7 +86,7 @@ router.post('/', async (req, res) => {
 // d'une ligne existante (ex: une entreprise en attente qui répond enfin),
 // recalcule la TMA parente. Aucun champ n'est déduit automatiquement : les
 // deux se renseignent explicitement, comme les autres dates de l'appli.
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { montantDevis, dateRetour } = req.body
     const ligne = await TmaEntreprise.findById(req.params.id)
@@ -111,7 +112,7 @@ router.patch('/:id', async (req, res) => {
 })
 
 // DELETE /api/tma-entreprises/:id — retire une ligne, recalcule la TMA parente
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const ligne = await TmaEntreprise.findByIdAndDelete(req.params.id)
     if (!ligne) {

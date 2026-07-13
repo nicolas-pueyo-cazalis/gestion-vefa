@@ -1,18 +1,27 @@
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 function Bandeau() {
   const [programme, setProgramme] = useState(null)
+  const { utilisateur, deconnecter } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     async function chargerProgramme() {
-      const reponse = await fetch(`${API_URL}/api/programme`)
+      const reponse = await apiFetch(`${API_URL}/api/programme`)
       const donnees = await reponse.json()
       setProgramme(donnees)
     }
     chargerProgramme()
   }, [])
+
+  function seDeconnecter() {
+    deconnecter()
+    navigate('/connexion')
+  }
 
   return (
     <header>
@@ -27,6 +36,10 @@ function Bandeau() {
         <NavLink to="/signature-acte">Signature acte</NavLink>
         <NavLink to="/parametres" className="nav-parametres">Paramètres</NavLink>
       </nav>
+      <div className="bandeau-utilisateur">
+        <span>{utilisateur?.nom || utilisateur?.email} <span className="bandeau-role">({utilisateur?.role})</span></span>
+        <button type="button" onClick={seDeconnecter}>Déconnexion</button>
+      </div>
     </header>
   )
 }

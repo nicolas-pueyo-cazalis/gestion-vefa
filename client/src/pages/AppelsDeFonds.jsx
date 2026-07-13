@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import { formatMontant } from '../utils/formatMontant.js'
 import { statutAppel, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
@@ -34,14 +35,14 @@ function AppelsDeFonds() {
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerAppels() {
-    const reponse = await fetch(`${API_URL}/api/appels-de-fonds`)
+    const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds`)
     setAppels(await reponse.json())
   }
 
   useEffect(() => {
     async function init() {
       try {
-        const reponseProgramme = await fetch(`${API_URL}/api/programme`)
+        const reponseProgramme = await apiFetch(`${API_URL}/api/programme`)
         setProgramme(await reponseProgramme.json())
         await chargerAppels()
       } catch (e) {
@@ -54,7 +55,7 @@ function AppelsDeFonds() {
   }, [])
 
   async function enregistrer(id, donnees) {
-    const reponse = await fetch(`${API_URL}/api/appels-de-fonds/${id}`, {
+    const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),
@@ -69,7 +70,7 @@ function AppelsDeFonds() {
   }
 
   async function appliquerAttestationMasse(donnees) {
-    const reponse = await fetch(`${API_URL}/api/appels-de-fonds/phase`, {
+    const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds/phase`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),

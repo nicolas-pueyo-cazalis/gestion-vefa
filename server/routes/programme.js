@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Programme from '../models/Programme.js'
+import { autoriserRoles } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
 })
 
 // PATCH /api/programme — modifie les infos du programme et/ou ses paramètres
-router.patch('/', async (req, res) => {
+router.patch('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { parametres, ...champsProgramme } = req.body
     const programme = await Programme.findOne()

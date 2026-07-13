@@ -23,6 +23,9 @@ import tmaEntreprisesRouter from './routes/tmaEntreprises.js'
 import entreprisesRouter from './routes/entreprises.js'
 import acquereursRouter from './routes/acquereurs.js'
 import appelsDeFondsRouter from './routes/appelsDeFonds.js'
+import authRouter from './routes/auth.js'
+import utilisateursRouter from './routes/utilisateurs.js'
+import { verifierToken } from './middleware/auth.js'
 
 const app = express()
 
@@ -33,6 +36,14 @@ app.get('/', (req, res) => {
   res.json({ message: 'API Gestion VEFA en ligne' })
 })
 
+// /api/auth (connexion) reste public — on ne peut pas exiger un jeton pour
+// en obtenir un. Tout le reste de l'API (13/07/2026, authentification JWT)
+// exige désormais d'être connecté : aucune donnée (lots, clients,
+// montants...) n'est accessible sans jeton valide, y compris en lecture.
+app.use('/api/auth', authRouter)
+app.use('/api', verifierToken)
+
+app.use('/api/utilisateurs', utilisateursRouter)
 app.use('/api/programme', programmeRouter)
 app.use('/api/lots', lotsRouter)
 app.use('/api/tma', tmaRouter)

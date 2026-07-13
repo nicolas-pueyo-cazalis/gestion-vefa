@@ -519,6 +519,48 @@ main à chaque nouvel usage.
 
 ---
 
+## Page blanche pour un rôle "lecture" qui tente de modifier Paramètres
+
+**Symptôme** (signalé par Nicolas, testé avec un compte "lecture" tout
+juste créé) : dans Paramètres, dès qu'on modifie un champ et clique sur
+"Enregistrer", la page devient entièrement blanche, sans le message
+d'erreur habituel des autres interfaces.
+
+**Cause** : troisième occurrence de la même famille de bug déjà
+documentée deux fois plus haut ("Page blanche : import d'un fichier qui
+n'existe pas encore", "Page TMA en page blanche : référence lot cassée").
+`Parametres.jsx` (fonction `enregistrer()`) ne vérifiait jamais
+`reponse.ok` avant de traiter le corps de la réponse comme le programme à
+jour : `setProgramme(await reponse.json())`. Avec l'authentification JWT
+(13/07/2026), un compte "lecture" reçoit désormais un vrai 403 sur toute
+écriture — mais son corps (`{ message: "Action réservée à un rôle
+supérieur" }`) était pris pour le nouveau `programme`. Au rendu suivant,
+`SectionDelaisEtTaux.jsx` (et les autres sections) font `const p =
+programme.parametres` puis `p.delaiObtentionPretJours` : `parametres`
+n'existe pas sur `{ message: "..." }`, `TypeError` non rattrapée → React
+démonte tout l'arbre.
+
+**Correction** : `if (!reponse.ok) { alert(message); return }` ajouté
+avant d'utiliser la réponse, comme partout ailleurs dans l'appli. En
+auditant systématiquement tous les appels d'écriture du front (grep
+`method: 'POST'/'PATCH'/'DELETE'` vs présence d'un test `.ok`), le même
+défaut a été trouvé sur 5 autres actions qui ne plantaient pas mais
+échouaient silencieusement (`SectionEntreprises.jsx` : ajout/suppression
+d'entreprise ; `DetailEntreprisesTma.jsx` : ajout/modification/suppression
+d'une ligne entreprise) — corrigées de la même façon.
+
+**Leçon** : l'authentification JWT a introduit un **nouveau code
+d'erreur (403)** sur des actions qui ne pouvaient auparavant échouer que
+par une erreur de validation (400) déjà gérée — tout endroit qui
+supposait "une réponse à une écriture est forcément un succès" est
+devenu un point de rupture potentiel. Une évolution transversale comme
+l'authentification doit être suivie d'un audit de **tous** les appels
+d'écriture existants, pas seulement des nouveaux — le même réflexe que
+pour `seed.js` juste au-dessus (une règle qui change quelque part doit
+faire relire tous les endroits qui en dépendaient implicitement).
+
+---
+
 ## `seed.js` ne vidait pas `TmaEntreprise`/`AppelDeFonds` : 18 lignes orphelines accumulées
 
 **Symptôme** : découvert en construisant la fenêtre d'alertes de retard

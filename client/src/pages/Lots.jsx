@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { STATUTS_LOT } from '../data/lots.js'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import { formatMontant } from '../utils/formatMontant.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
@@ -52,12 +53,12 @@ function Lots() {
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerLots() {
-    const reponse = await fetch(`${API_URL}/api/lots`)
+    const reponse = await apiFetch(`${API_URL}/api/lots`)
     setLots(await reponse.json())
   }
 
   async function chargerAcquereurs() {
-    const reponse = await fetch(`${API_URL}/api/acquereurs`)
+    const reponse = await apiFetch(`${API_URL}/api/acquereurs`)
     setAcquereurs(await reponse.json())
   }
 
@@ -65,8 +66,8 @@ function Lots() {
     async function chargerTout() {
       try {
         const [reponseProgramme, reponseAcquereurs] = await Promise.all([
-          fetch(`${API_URL}/api/programme`),
-          fetch(`${API_URL}/api/acquereurs`),
+          apiFetch(`${API_URL}/api/programme`),
+          apiFetch(`${API_URL}/api/acquereurs`),
         ])
         setProgramme(await reponseProgramme.json())
         setAcquereurs(await reponseAcquereurs.json())
@@ -81,7 +82,7 @@ function Lots() {
   }, [])
 
   async function enregistrerLot(id, donnees) {
-    const reponse = await fetch(`${API_URL}/api/lots/${id}`, {
+    const reponse = await apiFetch(`${API_URL}/api/lots/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),

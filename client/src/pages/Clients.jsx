@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import StatCard from '../components/StatCard.jsx'
 import FormulaireEditionClient from '../components/FormulaireEditionClient.jsx'
 
@@ -53,7 +54,7 @@ function Clients() {
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerAcquereurs() {
-    const reponse = await fetch(`${API_URL}/api/acquereurs`)
+    const reponse = await apiFetch(`${API_URL}/api/acquereurs`)
     setAcquereurs(await reponse.json())
   }
 
@@ -71,7 +72,7 @@ function Clients() {
   }, [])
 
   async function enregistrerAcquereur(id, donnees) {
-    const reponse = await fetch(`${API_URL}/api/acquereurs/${id}`, {
+    const reponse = await apiFetch(`${API_URL}/api/acquereurs/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { API_URL } from '../../config.js'
+import { apiFetch } from '../../utils/api.js'
 import { ORIENTATIONS } from '../../data/lots.js'
 import LigneLot from './LigneLot.jsx'
 import ListeNumeros from './ListeNumeros.jsx'
@@ -42,7 +43,7 @@ function SectionLots({ programme, lots, onChangement }) {
     setErreur('')
     setErreurParkings('')
     setErreurCaves('')
-    const reponse = await fetch(`${API_URL}/api/lots`, {
+    const reponse = await apiFetch(`${API_URL}/api/lots`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -83,7 +84,7 @@ function SectionLots({ programme, lots, onChangement }) {
   // pour qu'elle s'affiche au bon endroit dans le formulaire d'édition —
   // plutôt qu'un alert() générique.
   async function modifier(id, donnees) {
-    const reponse = await fetch(`${API_URL}/api/lots/${id}`, {
+    const reponse = await apiFetch(`${API_URL}/api/lots/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),
@@ -96,7 +97,7 @@ function SectionLots({ programme, lots, onChangement }) {
   }
 
   async function supprimer(id) {
-    const reponse = await fetch(`${API_URL}/api/lots/${id}`, { method: 'DELETE' })
+    const reponse = await apiFetch(`${API_URL}/api/lots/${id}`, { method: 'DELETE' })
     if (!reponse.ok) {
       const { message } = await reponse.json()
       alert(message)

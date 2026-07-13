@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique } from '../models/Tma.js'
 import Lot from '../models/Lot.js'
+import { autoriserRoles } from '../middleware/auth.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
@@ -27,7 +28,7 @@ router.get('/', async (req, res) => {
 // avoir de TMA (personne pour la demander). Statut de départ "demande" par
 // défaut (voir le schéma), sans dates — elles se renseignent ensuite au
 // fil de l'eau et font avancer le statut automatiquement.
-router.post('/', async (req, res) => {
+router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { lot, localisation, description, dateDemande } = req.body
 
@@ -59,7 +60,7 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/tma/:id/statut — fait avancer une TMA vers un nouveau statut,
 // en vérifiant que la transition est autorisée (docs/schema-donnees.md).
-router.patch('/:id/statut', async (req, res) => {
+router.patch('/:id/statut', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { statut } = req.body
     const tma = await Tma.findById(req.params.id)
@@ -96,7 +97,7 @@ router.patch('/:id/statut', async (req, res) => {
 // elles. Ne touche plus à montantEntreprises/montantClient : ces champs
 // sont désormais entièrement pilotés par les lignes TmaEntreprise (voir
 // recalculerTma dans routes/tmaEntreprises.js).
-router.patch('/:id/dates', async (req, res) => {
+router.patch('/:id/dates', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { dateEnvoiEntreprises, dateEnvoiFactureClient, dateRetourClient } = req.body
     const tma = await Tma.findById(req.params.id)
@@ -121,7 +122,7 @@ router.patch('/:id/dates', async (req, res) => {
 })
 
 // PATCH /api/tma/:id/annuler-refus — restaure le statut précédent un refus
-router.patch('/:id/annuler-refus', async (req, res) => {
+router.patch('/:id/annuler-refus', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const tma = await Tma.findById(req.params.id)
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import {
   statutPret, statutSignature, statutAppel,
   estEntrepriseEnRetard, estFactureTmaEnRetard, formatDate,
@@ -23,11 +24,11 @@ function AlerteRetards() {
   useEffect(() => {
     async function charger() {
       const [programme, lots, appels, tmaList, tmaEntreprises] = await Promise.all([
-        fetch(`${API_URL}/api/programme`).then((r) => r.json()),
-        fetch(`${API_URL}/api/lots`).then((r) => r.json()),
-        fetch(`${API_URL}/api/appels-de-fonds`).then((r) => r.json()),
-        fetch(`${API_URL}/api/tma`).then((r) => r.json()),
-        fetch(`${API_URL}/api/tma-entreprises`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/programme`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/lots`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/appels-de-fonds`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/tma`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/tma-entreprises`).then((r) => r.json()),
       ])
       setDonnees({ programme, lots, appels, tmaList, tmaEntreprises })
     }

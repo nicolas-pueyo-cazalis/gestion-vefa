@@ -7,6 +7,7 @@ import {
   STATUTS_NON_RECALCULABLES,
 } from '../data/tma.js'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import { formatMontant } from '../utils/formatMontant.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
@@ -37,14 +38,14 @@ function Tma() {
   const [creationOuverte, setCreationOuverte] = useState(false)
 
   async function chargerTma() {
-    const reponse = await fetch(`${API_URL}/api/tma`)
+    const reponse = await apiFetch(`${API_URL}/api/tma`)
     setTmaList(await reponse.json())
   }
 
   useEffect(() => {
     async function chargerTout() {
       try {
-        const reponseLots = await fetch(`${API_URL}/api/lots`)
+        const reponseLots = await apiFetch(`${API_URL}/api/lots`)
         setLots(await reponseLots.json())
         await chargerTma()
       } catch (e) {
@@ -57,7 +58,7 @@ function Tma() {
   }, [])
 
   async function creerTma(donnees) {
-    const reponse = await fetch(`${API_URL}/api/tma`, {
+    const reponse = await apiFetch(`${API_URL}/api/tma`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),
@@ -75,7 +76,7 @@ function Tma() {
   if (erreur) return <p>Erreur : {erreur}</p>
 
   async function changerStatut(id, nouveauStatut) {
-    const reponse = await fetch(`${API_URL}/api/tma/${id}/statut`, {
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/statut`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: nouveauStatut }),
@@ -94,7 +95,7 @@ function Tma() {
   }
 
   async function annulerRefus(id) {
-    const reponse = await fetch(`${API_URL}/api/tma/${id}/annuler-refus`, { method: 'PATCH' })
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/annuler-refus`, { method: 'PATCH' })
 
     if (!reponse.ok) {
       const { message } = await reponse.json()
@@ -109,7 +110,7 @@ function Tma() {
   }
 
   async function enregistrerDates(id, donnees) {
-    const reponse = await fetch(`${API_URL}/api/tma/${id}/dates`, {
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/dates`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees),

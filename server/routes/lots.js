@@ -5,6 +5,7 @@ import Programme from '../models/Programme.js'
 import Tma from '../models/Tma.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
+import { autoriserRoles } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -141,7 +142,7 @@ router.get('/', async (req, res) => {
 // POST /api/lots — crée un lot (caractéristiques techniques, saisies depuis
 // la page Paramètres > Lots). Un lot créé démarre toujours "libre", sans
 // acquéreur : ça se renseigne ensuite via PATCH, au fil de la vente.
-router.post('/', async (req, res) => {
+router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const {
       programme, reference, etage, type, orientation,
@@ -189,7 +190,7 @@ router.post('/', async (req, res) => {
 // existant) ou `acquereurNouveau` (`{ civilite, nom }`, crée l'acquéreur à
 // la volée). Dans les deux cas, la relation inverse `Acquereur.lots` est
 // synchronisée pour rester cohérente dans les deux sens.
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const lot = await Lot.findById(req.params.id)
     if (!lot) {
@@ -273,7 +274,7 @@ router.patch('/:id', async (req, res) => {
 // documents se retrouvent avec une référence cassée, ex: `tma.lot` qui
 // devient `null` après `.populate()` et fait planter la page TMA). Nettoie
 // aussi la relation inverse si un acquéreur y était lié.
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const [nombreTma, nombreAppels] = await Promise.all([
       Tma.countDocuments({ lot: req.params.id }),

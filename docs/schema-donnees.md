@@ -479,14 +479,60 @@ export des TMA envoyé directement aux entreprises.
 ## `Utilisateur`
 
 Nécessaire pour l'authentification JWT (absente d'Excel — un vrai apport de
-l'appli web, voir pistes d'amélioration).
+l'appli web). **Implémentée le 13/07/2026** (voir section suivante).
 
 | Champ | Type | Remarque |
 |---|---|---|
 | `email` | String | unique |
-| `motDePasseHash` | String | jamais le mot de passe en clair |
+| `motDePasseHash` | String | jamais le mot de passe en clair — haché avec `bcryptjs` |
 | `nom` | String | |
 | `role` | enum `'admin' \| 'gestionnaire' \| 'lecture'` | |
+
+## Authentification JWT (13/07/2026)
+
+Toute l'application est désormais derrière la connexion — aucune page ni
+donnée accessible sans être connecté, y compris en simple lecture
+(décision explicite de Nicolas : cohérent avec des données clients/
+financières réelles une fois déployé).
+
+### Création des comptes
+
+**Pas d'auto-inscription publique** (décision explicite) : les 3 rôles
+(`admin`/`gestionnaire`/`lecture`) correspondent à une petite équipe
+interne, pas à du grand public. Le premier compte (admin) a été créé par
+un script ponctuel ; tous les suivants se créent depuis Paramètres >
+Utilisateurs (`SectionUtilisateurs.jsx`), réservé aux admins.
+
+### Mécanisme
+
+- **Connexion** (`POST /api/auth/connexion`) : compare le mot de passe
+  saisi au hachage stocké (`bcrypt.compare`), puis signe un jeton JWT
+  contenant uniquement `{ id, role }` (jamais le mot de passe, même
+  haché) — durée 7 jours (outil interne, pas une appli bancaire).
+- **`server/middleware/auth.js`** : `verifierToken` (lit l'en-tête
+  `Authorization: Bearer <jeton>`, renvoie 401 si absent/invalide, pose
+  `req.utilisateur`) appliqué **globalement** à `/api/*` dans
+  `server/index.js` (sauf `/api/auth`, qui doit rester public). `autoriserRoles(...roles)`
+  renvoie 403 si le rôle de `req.utilisateur` n'est pas dans la liste —
+  appliqué à chaque route d'écriture (`POST`/`PATCH`/`DELETE`) avec
+  `autoriserRoles('admin', 'gestionnaire')` : le rôle `lecture` peut tout
+  consulter mais ne peut jamais rien modifier.
+- **`GET /api/auth/moi`** : revalide un jeton déjà stocké (utilisé par
+  `AuthContext.jsx` au chargement de l'app) — un compte supprimé
+  entre-temps par un admin ne doit pas laisser croire qu'on est encore
+  connecté.
+- **Front** : `client/src/utils/api.js` (`apiFetch`, remplace `fetch`
+  partout dans l'appli — même signature, ajoute automatiquement le jeton,
+  redirige vers `/connexion` sur un 401), `client/src/context/
+  AuthContext.jsx` (premier contexte React du projet — état partagé
+  "qui est connecté", `localStorage` comme source de vérité entre deux
+  rechargements), `RouteProtegee.jsx` (bloque l'accès à `<Layout />` tant
+  que `utilisateur` est `null`), `pages/Connexion.jsx`.
+- **Rôle `lecture`** : le back bloque déjà toute écriture (403 avec
+  message clair, affiché comme les autres erreurs de l'appli). Les
+  boutons d'action ne sont **pas** encore masqués côté interface pour ce
+  rôle — laissé volontairement pour une itération suivante, le blocage
+  serveur suffit à garantir la sécurité réelle des données.
 
 ---
 
@@ -606,6 +652,18 @@ retrouvera côté formulaire React pour un retour immédiat à l'utilisateur.
   cas réel à modéliser) — à reprendre quand une vraie négociation de ce
   type se présentera, plutôt que d'anticiper une solution générique sans
   cas d'usage précis.
+- **Export PDF** (reporté le 11/07/2026, `docs/demandes.md` #90) : un
+  document par lot avec le détail des appels de fonds par phase et le
+  solde restant dû. Les coordonnées complètes banque/courtier/notaire
+  (13/07/2026) ont été construites avec cet export en tête — les données
+  sont prêtes à l'accueillir, l'export lui-même reste à construire.
+- **Masquage des actions selon le rôle "lecture"** (13/07/2026) : depuis
+  l'authentification JWT, le serveur refuse déjà toute écriture pour ce
+  rôle (403), mais les boutons (Modifier/Ajouter/Supprimer...) restent
+  visibles côté interface même quand l'action va échouer. À reprendre si
+  ce rôle est réellement utilisé un jour — masquer/désactiver ces boutons
+  selon `useAuth().utilisateur.role` plutôt que de laisser l'utilisateur
+  cliquer pour rien.
 
 ## Décisions du 10/07/2026 (fin de session étape 4) — travaux à venir
 

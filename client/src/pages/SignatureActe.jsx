@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
+import { apiFetch } from '../utils/api.js'
 import { statutSignature, calculerDateLimiteMois, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
@@ -40,14 +41,14 @@ function SignatureActe() {
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerLots() {
-    const reponse = await fetch(`${API_URL}/api/lots`)
+    const reponse = await apiFetch(`${API_URL}/api/lots`)
     setLots(await reponse.json())
   }
 
   useEffect(() => {
     async function init() {
       try {
-        const reponseProgramme = await fetch(`${API_URL}/api/programme`)
+        const reponseProgramme = await apiFetch(`${API_URL}/api/programme`)
         setProgramme(await reponseProgramme.json())
         await chargerLots()
       } catch (e) {
@@ -66,7 +67,7 @@ function SignatureActe() {
   // Le notaire (13/07/2026) est rattaché à l'acquéreur, pas au lot : deux
   // requêtes distinctes quand un acquéreur est lié.
   async function enregistrer(lot, { dateActe, notaire }) {
-    const reponseLot = await fetch(`${API_URL}/api/lots/${lot._id}`, {
+    const reponseLot = await apiFetch(`${API_URL}/api/lots/${lot._id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'acte', dateActe }),
@@ -78,7 +79,7 @@ function SignatureActe() {
     }
 
     if (lot.acquereur) {
-      const reponseAcquereur = await fetch(`${API_URL}/api/acquereurs/${lot.acquereur._id}`, {
+      const reponseAcquereur = await apiFetch(`${API_URL}/api/acquereurs/${lot.acquereur._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notaire }),

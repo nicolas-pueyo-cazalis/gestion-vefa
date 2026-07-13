@@ -1650,3 +1650,116 @@ cadrage initial du projet (09/07/2026) est maintenant entièrement couvert
 — prochaines pistes possibles : authentification JWT, export PDF
 (appels de fonds, coordonnées banque/courtier/notaire), ou tout nouveau
 retour de Nicolas après une phase de test plus large.
+
+---
+
+## 2026-07-13 (suite) — Authentification JWT
+
+**Ce qui a été fait**
+
+Dernier chantier du cadrage initial (09/07/2026), choisi par Nicolas
+plutôt que l'export PDF ou le déploiement. Deux décisions actées avant de
+commencer (questions posées) : pas d'auto-inscription publique (comptes
+créés par un admin, cohérent avec une petite équipe interne — 3 rôles
+admin/gestionnaire/lecture) et toute l'application derrière la connexion,
+y compris la simple lecture.
+
+**Backend**
+
+- Dépendances ajoutées : `bcryptjs` (hachage du mot de passe, pure JS —
+  pas de compilation native comme `bcrypt`) et `jsonwebtoken`.
+  `JWT_SECRET` généré (`openssl rand -hex 32`) et ajouté à `.env`/
+  `.env.example`.
+- `server/middleware/auth.js` : `verifierToken` (lit `Authorization:
+  Bearer <jeton>`, pose `req.utilisateur = { id, role }`, 401 si absent/
+  invalide) et `autoriserRoles(...roles)` (403 si le rôle ne correspond
+  pas).
+- `server/routes/auth.js` : `POST /connexion` (compare via
+  `bcrypt.compare`, signe un jeton contenant seulement `{ id, role }`,
+  7 jours) et `GET /moi` (revalide un jeton déjà stocké).
+- `server/routes/utilisateurs.js` : CRUD des comptes, réservé aux admins
+  (`router.use(autoriserRoles('admin'))`) — un admin ne peut pas se
+  supprimer lui-même.
+- `server/index.js` : `/api/auth` monté **avant** le middleware global
+  (reste public, sinon impossible d'obtenir un jeton), puis
+  `app.use('/api', verifierToken)` protège tout le reste.
+  `autoriserRoles('admin', 'gestionnaire')` ajouté à chaque route
+  d'écriture (`POST`/`PATCH`/`DELETE`) des 6 routeurs existants (lots,
+  tma, tma-entreprises, entreprises, acquereurs, appels-de-fonds,
+  programme) — le rôle `lecture` peut tout consulter, jamais rien
+  modifier.
+
+**Frontend**
+
+- `client/src/utils/api.js` (`apiFetch`) : remplace `fetch` partout,
+  même signature (`fetch(url, options)`), ajoute automatiquement le
+  jeton, redirige vers `/connexion` sur un 401. **44 appels `fetch(`
+  répartis sur 12 fichiers** renommés en `apiFetch(` (remplacement
+  mécanique, tous les appels suivaient déjà le même format
+  `` fetch(`${API_URL}/api/...`) ``), plus l'import ajouté dans chacun.
+- `client/src/context/AuthContext.jsx` : premier contexte React du
+  projet (jusqu'ici chaque page allait chercher ses propres données —
+  "qui est connecté" est la première donnée réellement transversale).
+  `localStorage` reste la source de vérité entre deux rechargements ; le
+  contexte n'en est qu'une vue réactive. Revalide le jeton stocké auprès
+  de `/api/auth/moi` au chargement plutôt que de lui faire confiance
+  aveuglément.
+- `RouteProtegee.jsx` (bloque `<Layout />` tant que personne n'est
+  connecté, redirige vers `/connexion` en mémorisant la page demandée) et
+  `pages/Connexion.jsx` — routes réorganisées dans `App.jsx`
+  (`/connexion` public, tout le reste sous `RouteProtegee`).
+- `Bandeau.jsx` : nom/rôle de l'utilisateur connecté + bouton
+  "Déconnexion".
+- `Paramètres > Utilisateurs` (`SectionUtilisateurs.jsx` +
+  `LigneUtilisateur.jsx`, visible seulement si `role === 'admin'`) :
+  créer un compte, modifier rôle/mot de passe, retirer un compte (sauf
+  soi-même).
+
+**Testé** en ligne de commande de bout en bout : route protégée sans
+jeton → 401 ; `/api/auth/connexion` reste public même derrière le
+middleware global ; connexion réussie → jeton valide → accès aux routes
+protégées et à `/api/utilisateurs` (admin). Premier compte admin créé par
+script ponctuel (email fourni par Nicolas, mot de passe transmis dans le
+chat puis haché — jamais stocké en clair, script supprimé après usage).
+
+**Laissé de côté volontairement** : les boutons d'action ne sont pas
+encore masqués côté interface pour le rôle `lecture` (le blocage serveur
+suffit à garantir la sécurité réelle ; l'UI resterait à affiner si ce
+rôle est réellement utilisé).
+
+**Prochaine étape**
+
+Nicolas doit se connecter avec `nicolas.cazalis@gmail.com`, vérifier que
+toutes les pages restent accessibles, que la déconnexion fonctionne, et
+tester la création d'un second compte depuis Paramètres > Utilisateurs.
+Pistes suivantes : export PDF, déploiement, ou masquage des actions pour
+le rôle lecture si besoin confirmé.
+
+---
+
+## 2026-07-13 (suite) — Page blanche pour un rôle "lecture" dans Paramètres
+
+**Ce qui a été fait**
+
+Nicolas a créé un compte "lecture" pour tester, et signalé une page
+blanche en tentant d'enregistrer une modification dans Paramètres, sans
+le message d'erreur habituel. Troisième occurrence de la famille de bug
+"page blanche" (voir `docs/bugs.md`) : `Parametres.jsx` ne vérifiait pas
+`reponse.ok` avant d'utiliser la réponse — un 403 (nouveau depuis
+l'authentification JWT) était pris pour le programme à jour, et
+`programme.parametres` devenait `undefined` plus loin, plantant tout
+l'arbre React.
+
+Corrigé, puis audit systématique de tous les appels d'écriture du front
+(grep `method:` vs présence d'un test `.ok`) : le même défaut existait
+aussi sur 5 actions de `SectionEntreprises.jsx` et
+`DetailEntreprisesTma.jsx` (échec silencieux, pas de plantage mais pas de
+message non plus) — corrigées de la même façon. Toutes les écritures du
+front vérifient désormais `reponse.ok` avant de considérer une action
+réussie.
+
+**Prochaine étape**
+
+Nicolas doit revérifier avec son compte "lecture" : une tentative
+d'écriture doit maintenant afficher un message d'erreur clair, sans page
+blanche, sur Paramètres comme partout ailleurs.

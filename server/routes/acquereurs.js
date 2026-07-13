@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Acquereur from '../models/Acquereur.js'
+import { autoriserRoles } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -17,7 +18,7 @@ router.get('/', async (req, res) => {
 // POST /api/acquereurs — crée un acquéreur. Utilisé aussi bien depuis la
 // future page Clients (coordonnées complètes) que depuis la page Lots
 // (création rapide civilité + nom lors de la saisie du "Nom client").
-router.post('/', async (req, res) => {
+router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const {
       civilite, nom, prenom, adresse, commune, codePostal,
@@ -35,7 +36,7 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/acquereurs/:id — modification partielle (édition des
 // coordonnées depuis la page Clients)
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const acquereur = await Acquereur.findByIdAndUpdate(req.params.id, req.body, {
       new: true,

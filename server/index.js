@@ -22,6 +22,7 @@ import tmaRouter from './routes/tma.js'
 import tmaEntreprisesRouter from './routes/tmaEntreprises.js'
 import entreprisesRouter from './routes/entreprises.js'
 import acquereursRouter from './routes/acquereurs.js'
+import appelsDeFondsRouter from './routes/appelsDeFonds.js'
 
 const app = express()
 
@@ -38,6 +39,7 @@ app.use('/api/tma', tmaRouter)
 app.use('/api/tma-entreprises', tmaEntreprisesRouter)
 app.use('/api/entreprises', entreprisesRouter)
 app.use('/api/acquereurs', acquereursRouter)
+app.use('/api/appels-de-fonds', appelsDeFondsRouter)
 
 mongoose
   .connect(process.env.MONGODB_URI)

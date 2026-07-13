@@ -120,6 +120,27 @@ main {
   }
 }
 
+.filtres-phases {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+
+  &-titre {
+    font-weight: 600;
+    color: #52606d;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+  }
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

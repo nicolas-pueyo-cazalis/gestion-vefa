@@ -22,6 +22,7 @@ function Bandeau() {
         <NavLink to="/" end>Lots</NavLink>
         <NavLink to="/clients">Clients</NavLink>
         <NavLink to="/tma">TMA</NavLink>
+        <NavLink to="/appels-de-fonds">Appels de fonds</NavLink>
         <NavLink to="/parametres" className="nav-parametres">Paramètres</NavLink>
       </nav>
     </header>

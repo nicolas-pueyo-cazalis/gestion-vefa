@@ -8,6 +8,10 @@ const appelDeFondsSchema = new mongoose.Schema({
   phase: {
     nom: { type: String, required: true },
     pourcentage: { type: Number, required: true },
+    // Figé lui aussi (11/07/2026) : si le barème du programme est réordonné
+    // après coup, l'ordre d'affichage d'un appel déjà généré ne doit pas
+    // changer rétroactivement — même raisonnement que nom/pourcentage.
+    ordre: { type: Number, required: true },
   },
   montant: { type: Number, required: true },
   dateAttestationMOE: Date,

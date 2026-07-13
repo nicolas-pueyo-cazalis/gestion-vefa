@@ -213,18 +213,57 @@ sous-document embarqué (pas une collection séparée).
 
 ## `AppelDeFonds`
 
-Un document par (lot × phase du barème) — créé au moment où la phase est
-émise, pas à l'avance pour toutes les phases futures.
+Un document par (lot × phase du barème).
+
+> **Décision (11/07/2026) — moment de création, point tranché.** Question
+> restée ouverte depuis la conception initiale du schéma : crée-t-on les 6
+> lignes (une par phase) dès la création du lot, ou seulement au moment où
+> chaque phase est constatée ? Tranché en faveur d'une troisième option :
+> **les 6 lignes sont générées d'un coup, automatiquement, au moment précis
+> où le lot passe au statut "Acté"** (`server/routes/lots.js`,
+> `genererAppelsDeFonds()`, appelée depuis `PATCH /api/lots/:id`). Avant
+> "Acté", un appel de fonds n'a de toute façon aucun sens (règle métier n°2
+> de l'analyse Excel — les deux conditions de déclenchement sont attestation
+> MOE **et** lot Acté), donc pas de lignes "pour rien" à afficher pour les
+> lots pas encore vendus ; et à l'inverse, pas besoin d'une action manuelle
+> "ajouter une phase" une fois le lot vendu.
 
 | Champ | Type | Remarque |
 |---|---|---|
 | `lot` | ObjectId → `Lot` | |
-| `phase` | `{ nom: String, pourcentage: Number }` | **copie figée** de la phase au moment de l'émission (voir ci-dessous) |
-| `montant` | Number | = `lot.prixTTC × phase.pourcentage`, figé à l'émission ; montant → convention "€" en début de document |
-| `dateAttestationMOE` | Date | condition n°1 de déclenchement |
-| `dateEmission` | Date | posée quand les 2 conditions sont réunies (attestation MOE + lot `acte`) |
-| `dateLimiteReglement` | Date | = `dateEmission + programme.parametres.delaiReglementAppelJours` |
-| `dateReglement` | Date \| `null` | |
+| `phase` | `{ nom: String, pourcentage: Number }` | **copie figée** de la phase au moment de la génération (voir ci-dessous) |
+| `montant` | Number | = `lot.prixTTC × phase.pourcentage`, figé à la génération ; montant → convention "€" en début de document |
+| `dateAttestationMOE` | Date | condition n°1 de déclenchement, **saisie manuelle** (en masse, par phase) — absente pour la 1ère phase du barème (voir plus bas) |
+| `dateEmission` | Date | posée automatiquement dès que `dateAttestationMOE` passe de vide à renseignée — la 2ᵉ condition (lot Acté) est déjà acquise puisque la ligne n'existe que pour un lot Acté |
+| `dateLimiteReglement` | Date | calculée automatiquement en même temps que `dateEmission` = `dateEmission + programme.parametres.delaiReglementAppelJours` |
+| `dateReglement` | Date \| `null` | **saisie manuelle** en général, mais posée **automatiquement** dans deux cas précis où le règlement est factuellement acquis dès la génération (voir "Règlement automatique" ci-dessous) |
+
+### Règlement automatique (13/07/2026)
+
+Deux cas où `dateReglement` se déduit automatiquement plutôt que d'attendre
+une saisie manuelle — implémentés dans `calculerEmissionAppel()`
+(`server/utils/appelsDeFonds.js`), partagée entre `genererAppelsDeFonds()`
+(`server/routes/lots.js`) et `emettreAttestation()`
+(`server/routes/appelsDeFonds.js`) :
+
+1. **1ʳᵉ phase du barème (ex: "Réservation")** : le dépôt de garantie est
+   réglé au moment même de la réservation, factuellement — `dateEmission`
+   **et** `dateReglement` valent tous les deux `lot.dateReservation`. Cette
+   phase ne demande jamais d'attestation MOE (voir plus haut).
+2. **Toute autre phase, si `lot.dateActe` est postérieure ou égale à la
+   date à laquelle cette phase a été attestée** (pour ce lot ou pour un
+   autre lot du même programme) : l'acquéreur signe son acte alors que
+   cette phase est déjà constatée, donc déjà due — le notaire encaisse la
+   somme au moment de la signature. `dateEmission` **et** `dateReglement`
+   valent alors `lot.dateActe` (pas la date de traitement du script/de la
+   requête). Dans le cas normal inverse (`lot.dateActe` antérieure à
+   l'attestation — l'acquéreur a acheté avant que la phase ne soit
+   constatée), le circuit reste inchangé : `dateEmission` = maintenant,
+   `dateReglement` reste `null` en attente d'une vraie saisie.
+
+Dans les deux cas, `dateReglement` reste modifiable à la main ensuite
+(bouton "Modifier", en vidant la date) si l'automatisme ne correspondait
+pas à la réalité.
 
 > **Pourquoi copier `phase` au lieu de juste stocker un `pourcentage` recalculé
 > à la volée depuis `Programme.parametres.baremePhases` ?** Parce que le
@@ -471,12 +510,19 @@ retrouvera côté formulaire React pour un retour immédiat à l'utilisateur.
 
 ## Points restés ouverts (à trancher plus tard, sans bloquer la suite)
 
-- Génération automatique des `AppelDeFonds` : quand exactement crée-t-on le
-  document (dès la création du lot, pour toutes les phases à l'avance avec
-  des dates vides ? ou seulement au moment où la phase est constatée ?). À
-  trancher à l'étape 4 (logique métier avancée).
 - Rôle "acquéreur" (accès lecture seule à ses propres données) évoqué dans le
   cadrage initial : pas modélisé pour l'instant, à ajouter si besoin confirmé.
+- **Plan de règlement négocié (11/07/2026)** : `genererAppelsDeFonds()`
+  suppose que chaque acquéreur suit le barème standard du programme
+  (`Programme.parametres.baremePhases`). Nicolas a soulevé le cas d'un
+  client qui négocierait un autre système de règlement (ex : tout payé à
+  l'acte, plutôt qu'au fil des phases) — *"je ne sais pas encore comment
+  faire, mais il se peut qu'un client négocie un autre système de
+  règlement... je ne sais pas comment on pourrait intégrer cette règle"*.
+  Aucune piste actée pour l'instant (pas encore un besoin concret avec un
+  cas réel à modéliser) — à reprendre quand une vraie négociation de ce
+  type se présentera, plutôt que d'anticiper une solution générique sans
+  cas d'usage précis.
 
 ## Décisions du 10/07/2026 (fin de session étape 4) — travaux à venir
 

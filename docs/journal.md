@@ -1185,3 +1185,281 @@ nouvelle page Clients.
 **Prochaine étape**
 
 Nouvelle page "Clients" (coordonnées complètes des acquéreurs).
+
+---
+
+## 2026-07-11 — Page Clients, corrections diverses, remise à zéro des données de démo
+
+**Ce qui a été fait**
+
+Session dense de retours sur trois interfaces, traités au fil de l'eau :
+
+- **Nouvelle page Clients** : coordonnées complètes des acquéreurs
+  (`Clients.jsx`), tri par n° de logement (pas par nom), téléphone affiché
+  au format national français (`06 XX XX XX XX`) ou international pour
+  l'étranger (`formatNational()`/`formatInternational()` de
+  `libphonenumber-js` — stockage E.164 inchangé, seul l'affichage change).
+- **Bug important corrigé** : renommer le client d'un lot depuis la page
+  Lots créait une nouvelle fiche `Acquereur` (orpheline) au lieu de
+  corriger celle déjà liée — reproduit avec un cas réel de Nicolas
+  ("DUPOND" créé en voulant corriger "Ferreira", devenu orphelin sous le
+  nom "Ferreires"). Corrigé : `FormulaireEditionLot.jsx` propose désormais
+  civilité/nom éditables pour le client **déjà sélectionné**, pas
+  seulement pour "+ Nouveau" ; `PATCH /api/lots/:id` accepte un nouveau
+  champ `acquereurMiseAJour` qui met à jour l'acquéreur existant au lieu
+  d'en créer un. Détail dans `docs/bugs.md`.
+- **Nettoyage des données de démo** (décision de Nicolas, "je vais en
+  noter des nouveaux") : les 5 clients fictifs d'origine avaient déjà été
+  renommés par Nicolas en testant le correctif ci-dessus — plus aucune
+  "vraie" donnée fictive visible, mais les documents (et les TMA de démo
+  qui les référencent, `acquereur` étant obligatoire sur `TMA`)
+  subsistaient. Script ponctuel exécuté (confirmé par Nicolas parmi 3
+  options proposées) : suppression de toutes les TMA et de tous les
+  acquéreurs, déconnexion des lots. Base repartie à zéro sur Clients et
+  TMA, lots/programme/entreprises inchangés.
+- **Ajustements de mise en page** (plusieurs allers-retours) : tableau
+  Clients en pleine largeur puis largeur "entre-deux" (1250px, ni 960 ni
+  1600 — Nicolas a trouvé la première pleine largeur trop importante),
+  colonne "N° logement" réduite (libellé raccourci + largeur limitée).
+- **Bug de fraîcheur corrigé** : après avoir renommé/créé un client depuis
+  la page Lots, la liste déroulante "Client" du formulaire restait affichée
+  avec les anciennes valeurs (la liste des acquéreurs n'était chargée
+  qu'une fois, au montage de la page). `Lots.jsx` recharge désormais aussi
+  les acquéreurs après chaque modification d'un lot, pas seulement les lots.
+- **Bug d'environnement** : les serveurs (front + back) n'avaient pas
+  redémarré depuis la session précédente — relancés manuellement. Un
+  caractère invisible ("é" isolé) s'était glissé en tout début de
+  `client/src/data/lots.js`, cassant la syntaxe JS et provoquant une page
+  blanche sur toute l'application (même famille de bug que "import cassé
+  = app entière invisible", voir `docs/bugs.md`) — corrigé.
+- **Outillage** : `.vscode/tasks.json` créé à la demande de Nicolas — un
+  raccourci (`Ctrl+Maj+B`) démarre les deux serveurs (front + back) chacun
+  dans son propre terminal, pour qu'il puisse les relancer lui-même sans
+  dépendre de l'assistant à chaque session.
+
+**Prochaine étape**
+
+Logique des appels de fonds (barème, déclenchement sur attestation MOE +
+statut Acté) — jusqu'ici uniquement modélisée, jamais construite.
+
+---
+
+## 2026-07-11 (suite) — Appels de fonds : nouvelle interface dédiée
+
+**Ce qui a été fait**
+
+Première vraie fonctionnalité "calculée" du projet depuis les TMA (montants,
+délais, génération automatique) — construite en s'appuyant sur les règles
+métier de `docs/analyse-excel.md`, jamais codées jusqu'ici.
+
+- **Décision d'architecture tranchée** (question restée ouverte depuis la
+  conception initiale du schéma, voir `docs/schema-donnees.md`) : les 6
+  lignes `AppelDeFonds` d'un lot (une par phase du barème) sont générées
+  **automatiquement, d'un coup, au moment précis où le lot passe au statut
+  "Acté"** — plutôt qu'à la création du lot (lignes vides pour des lots
+  pas encore vendus) ou une à une à la main. Cohérent avec la règle métier
+  n°2 de l'analyse Excel : avant "Acté", un appel de fonds n'a de toute
+  façon aucun sens. Implémenté dans `genererAppelsDeFonds()`
+  (`server/routes/lots.js`), déclenché depuis `PATCH /api/lots/:id` en
+  comparant le statut avant/après sauvegarde, avec sécurité anti-doublon
+  (ne génère pas si des appels existent déjà pour ce lot).
+- **Nouvelles routes `server/routes/appelsDeFonds.js`** : `GET
+  /api/appels-de-fonds` (tous, ou filtré par `?lot=`), `PATCH
+  /api/appels-de-fonds/:id`. Calcul automatique reproduit la règle Excel
+  ("posée quand les 2 conditions sont réunies") : dès que
+  `dateAttestationMOE` passe de vide à renseignée, `dateEmission`
+  (aujourd'hui) et `dateLimiteReglement` (émission +
+  `programme.parametres.delaiReglementAppelJours`, 30 jours par défaut) se
+  calculent seuls — la 2ᵉ condition (lot Acté) étant déjà acquise par
+  construction. `dateReglement` reste entièrement manuelle. Testé en ligne
+  de commande de bout en bout : passage d'un lot à "Acté" → 6 appels
+  générés avec les bons montants (`prixTTC × %`) → attestation MOE saisie
+  → émission/limite calculées → règlement saisi.
+- **Nicolas a demandé une interface dédiée** plutôt que le détail imbriqué
+  dans la page Lots initialement prévu (sur le modèle "Entreprises" pour
+  les TMA) — nouvelle page `AppelsDeFonds.jsx` (route `/appels-de-fonds`,
+  lien de nav entre "TMA" et "Paramètres"), avec ses propres cartes de
+  stats (total, en attente, en retard, réglés, montants émis/payé/solde)
+  et son propre filtre par statut. Le statut affiché (`attente` / `emis` /
+  `retard` / `regle`) n'est **jamais stocké**, recalculé à la volée
+  (`statutAppel()`) — même principe que partout ailleurs dans l'appli.
+  Nouvelles couleurs de badge ajoutées à `$couleurs-statut`
+  (`_variables.scss`).
+- Documentation mise à jour : la question "moment de génération des
+  AppelDeFonds" dans `docs/schema-donnees.md`, listée comme point ouvert
+  depuis la toute première conception du schéma (09/07/2026), est
+  désormais tranchée et documentée.
+
+**Prochaine étape**
+
+Tester l'interface dans le navigateur avec Nicolas, puis alertes de retard
+(fenêtre de notification à l'ouverture, prêt/notaire/appels de fonds) ou
+authentification JWT — à discuter.
+
+---
+
+## 2026-07-11 (suite) — Bug de rattrapage + remarques PDF sur Appels de fonds
+
+**Ce qui a été fait**
+
+- **Bug signalé par Nicolas** : un lot passé "Acté" n'apparaissait pas dans
+  "Appels de fonds". Cause : deux lots (A01, C01) étaient "Acté" **dès les
+  données de seed**, jamais passés par une transition PATCH — la condition
+  de génération (`ancienStatut !== 'acte' && lot.statut === 'acte'`) ne
+  s'était donc jamais déclenchée pour eux. Corrigée en profondeur :
+  la règle ne compare plus l'ancien statut, elle vérifie simplement
+  `lot.statut === 'acte'` à chaque `PATCH` (idempotent, s'auto-corrige) —
+  couvre aussi bien la transition normale que le rattrapage d'un lot déjà
+  Acté par un autre moyen. Rattrapage manuel effectué pour A01/C01. Détail
+  dans `docs/bugs.md` ("une règle 'si l'état final est X' est plus fiable
+  qu'une règle 'si on vient de passer à X'").
+- **Nouveau PDF de remarques** ("Remarques sur interface Appels de fonds"),
+  5 points :
+  1. **Filtre par phase** à cases à cocher (sélection multiple, aucune
+     case = toutes) — nouveau composant `FiltrePhases.jsx`, en plus du
+     filtre par statut déjà existant.
+  2. **Attestation MOE en masse** : nouveau formulaire
+     `FormulaireAttestationMasse.jsx` + route `PATCH
+     /api/appels-de-fonds/phase` — une seule saisie (phase + date)
+     s'applique à tous les lots de cette phase pas encore attestés,
+     plutôt qu'un par un. Logique de calcul (`emettreAttestation()`)
+     factorisée pour être partagée entre cette route et la saisie
+     individuelle.
+  3. **Règle métier ajoutée** : un lot Acté a nécessairement déjà une date
+     de réservation — la première phase du barème (ex: "Réservation") est
+     donc désormais **auto-émise** à la génération, sans attestation MOE,
+     en utilisant directement `lot.dateReservation`. Nouvelle validation
+     dans `routes/lots.js` : impossible de passer un lot à "Acté" sans
+     `dateReservation` renseignée (sinon rien à partir de quoi émettre
+     cette phase).
+  4. **Ordre d'affichage = celui du barème** (`Programme.parametres`), pas
+     l'ordre de création. `AppelDeFonds.phase` gagne un champ `ordre`,
+     **figé** au moment de la génération (même principe que `nom`/
+     `pourcentage`) — le tri front (`Lot puis phase.ordre`) s'appuie
+     dessus. Script ponctuel pour rattraper les 18 appels déjà en base
+     (ordre ajouté par correspondance de nom, phase "Réservation"
+     auto-émise rétroactivement pour A01/C01).
+  5. **Export PDF par lot** : reporté par Nicolas lui-même ("on verra plus
+     tard"), noté dans `docs/demandes.md` comme travail futur.
+- Tout testé en ligne de commande avant de passer au navigateur (attestation
+  en masse sur 3 lots d'un coup, ordre/auto-émission vérifiés sur les
+  données rattrapées).
+
+**Prochaine étape**
+
+Tester l'ensemble dans le navigateur avec Nicolas.
+
+---
+
+## 2026-07-11 (suite 2) — Second PDF de remarques + bug de données corrompues
+
+**Ce qui a été fait**
+
+Nicolas a testé la version précédente et transmis un second PDF, marquant
+les 5 premiers points comme faits et ajoutant 7 nouvelles remarques
+(`docs/demandes.md`, #91 à #97).
+
+- **Bug trouvé en creusant la remarque sur les totaux (point 97)** : les
+  cartes de stats ne correspondaient pas au décompte manuel de Nicolas (3
+  logements, 2 phases émises chacun → 6 attendu). Diagnostic via une
+  requête directe en base : la phase "Réservation" de plusieurs lots avait
+  `dateEmission: null` alors que `dateReglement` était bien renseigné —
+  incohérent, seul explicable si "Modifier" avait effacé une émission déjà
+  posée. Cause confirmée : `FormulaireAppelDeFonds.jsx` soumettait encore
+  un champ `dateAttestationMOE` (toujours vide pour "Réservation", qui n'a
+  jamais de vraie attestation), et le serveur traitait ce vide comme "on
+  retire l'attestation" — effaçant au passage l'émission calculée. Détail
+  complet dans `docs/bugs.md`. **Corrigé à la source** : `dateAttestationMOE`
+  retiré du formulaire individuel et de `PATCH /api/appels-de-fonds/:id`
+  (qui n'accepte plus que `dateReglement`) — implémente au passage le
+  point 93 du PDF. Données déjà corrompues (A01, A02, C01) réparées via un
+  script ponctuel, supprimé après exécution.
+- **Nouvelle carte de stats "Émis (au total)"** (point 97) : distingue le
+  compte cumulatif (a été émis au moins une fois, quel que soit le
+  sous-statut ensuite) du sous-statut strict "Émis" (ni en retard, ni
+  réglé) — c'est le premier que Nicolas attendait en lisant "6".
+- **Filtre par lot** (point 91) : nouveau composant générique
+  `FiltreMultiple.jsx` (remplace `FiltrePhases.jsx`, devenu un cas
+  particulier), avec une case "Tout". Réutilisé pour le filtre par phase
+  **et** le nouveau filtre par lot (`référencesLots`, dérivé des appels
+  chargés).
+- **Alignement du bouton d'attestation en masse** (point 92) : bouton
+  englobé dans `.boutons-alignes-champs` (classe déjà utilisée pour
+  `FormulaireCreationTma.jsx`).
+- **"Réservation" retirée du menu déroulant d'attestation en masse**
+  (point 94) : `nomsPhasesAttestables = nomsPhases.slice(1)`, cette phase
+  ne se saisissant jamais à la main.
+- **Règle de cascade (point 95)** : dans `genererAppelsDeFonds()`
+  (`server/routes/lots.js`), si une phase du barème (au-delà de la
+  première) a déjà été attestée pour un autre lot du même programme, elle
+  est immédiatement auto-émise pour le nouveau lot Acté, avec la même date
+  d'attestation — traduit la remarque de Nicolas : une attestation MOE
+  constate l'avancement du chantier dans son ensemble, pas lot par lot.
+- **Point 96 (règlement personnalisé) noté comme question ouverte**, sans
+  implémentation — Nicolas lui-même : *"je ne sais pas encore comment
+  faire"*. Consigné dans `docs/schema-donnees.md`.
+
+**Prochaine étape**
+
+Nicolas doit recharger `/appels-de-fonds` et tester : filtre par lot,
+bouton d'attestation aligné, formulaire "Modifier" simplifié (règlement
+seul), phase "Réservation" absente du menu d'attestation en masse, règle
+de cascade, et la nouvelle carte "Émis (au total)". Aucun commit fait
+pour l'instant sur l'ensemble du travail "Appels de fonds" (construction
+initiale + deux rounds de remarques) — message de commit à fournir quand
+Nicolas sera prêt.
+
+---
+
+## 2026-07-13 — Affinage de la règle "réglé à l'acte"
+
+**Ce qui a été fait**
+
+Nicolas a testé la règle de cascade du 13/07 et signalé qu'elle ne
+fonctionnait pas comme prévu, avec 3 remarques précises :
+
+1. La phase "Réservation" doit être réglée automatiquement à la date de
+   réservation (factuel : le dépôt de garantie est payé à la signature de
+   la réservation), pas seulement émise.
+2. Bug repéré sur B02 (Acté) : sa phase "Réservation" restait à "Émis".
+3. Les 4 logements Actés (11/07/2026) ont tous une date d'acte postérieure
+   à l'attestation MOE de "Achèvement des fondations" (01/06/2026) — leurs
+   appels de cette phase auraient dû être réglés, or seul B02 (généré
+   après le premier correctif) l'était, pas A01/A02/C01 (Actés avant que
+   la phase ne soit attestée, donc rattrapés par la route d'attestation en
+   masse, pas par la génération d'un nouveau lot).
+
+**Cause identifiée** : la règle "réglé à l'acte" n'avait été codée que
+dans `genererAppelsDeFonds()` (nouveau lot Acté rattrapant une phase déjà
+attestée ailleurs), pas dans `emettreAttestation()` (attestation en masse
+appliquée à des lots déjà Actés) ni dans l'auto-émission de la 1ʳᵉ phase
+("Réservation", qui ne posait jamais `dateReglement`). Détail complet dans
+`docs/bugs.md`.
+
+**Correction** : logique extraite dans une fonction partagée
+`calculerEmissionAppel()` (`server/utils/appelsDeFonds.js`), appelée par
+les deux routes concernées — compare `lot.dateActe` à la date
+d'attestation à chaque émission possible, plus la 1ʳᵉ phase qui pose
+maintenant `dateReglement = lot.dateReservation` directement. Règle
+documentée dans `docs/schema-donnees.md` ("Règlement automatique").
+
+**Réparation des données** : script ponctuel exécuté (WSL, `node
+_temp-reparation-cascade.mjs`, supprimé ensuite) pour corriger les appels
+déjà en base (Achèvement des fondations réglée pour A01/A02/C01/B02,
+Réservation réglée pour B02). Un second point a été explicitement soumis
+à Nicolas via question (les dates de règlement de "Réservation" de
+A01/A02/C01 avaient été saisies à la main pendant les tests, différentes
+de la vraie date de réservation) — confirmé, alignées par un second script
+ponctuel.
+
+**Point de méthode** : deux scripts `node` de réparation ont dû être
+lancés via `wsl.exe -e bash -lc '...'` depuis l'outil Bash — le `node` du
+Bash "Git Bash" de l'environnement Windows n'est pas dans le PATH,
+contrairement au `node` de WSL (conforme à la préférence de Nicolas pour
+WSL comme terminal de référence).
+
+**Prochaine étape**
+
+Nicolas doit revérifier la page `/appels-de-fonds` : Réservation et
+Achèvement des fondations de A01/A02/B02/C01 doivent maintenant afficher
+"Réglé". Toujours aucun commit fait sur l'ensemble "Appels de fonds".

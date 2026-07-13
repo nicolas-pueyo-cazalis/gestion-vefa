@@ -335,6 +335,78 @@ qui ont persisté dans la version finale.
 
 ---
 
+## Remarques PDF — "Remarque sur interface Clients" (11/07/2026)
+
+77. Mettre "Clients" après "Lots", avant "TMA" dans le menu.
+78. Agrandir les lignes en réduisant les marges, même principe qu'ailleurs
+    (1 retour à la ligne maximum).
+79. Mettre le n° du logement en premier (colonne).
+80. Téléphone français affiché en "06 XX XX XX XX" (pas "+33..."), format
+    international conservé pour l'étranger.
+81. Agrandir les colonnes Nom client, Adresse, et un peu Email.
+82. **Bug** : modifier un nom de client dans l'interface Lots créait une
+    nouvelle ligne dans Clients au lieu de corriger l'existante, laissant
+    une fiche fantôme (voir `bugs.md`).
+83. Signalement complémentaire : après une modification, la liste
+    déroulante des clients existants ne se rafraîchissait pas (bug, voir
+    `bugs.md`).
+84. *"Il faut quand même rapprocher... marges trop réduites, il faut un
+    entre-deux"* — ajustement de la largeur après le premier essai.
+85. *"Profites-en pour supprimer les noms qui étaient marqués en dur à
+    l'origine, je vais en noter des nouveaux"* — remise à zéro complète de
+    Clients et TMA (TMA supprimées car `acquereur` y est obligatoire).
+
+---
+
+## Remarques PDF — "Remarques sur interface Appels de fonds" (11/07/2026)
+
+86. Filtre par phase à cases à cocher (plusieurs phases sélectionnables,
+    ou aucune = toutes), pensé pour rester lisible avec beaucoup de lots.
+87. Un champ en haut de page pour saisir une seule attestation MOE et
+    l'appliquer à tous les lots d'une même phase en une fois, plutôt
+    qu'un par un.
+88. Règle métier : un lot Acté a nécessairement une date de réservation
+    déjà connue — la phase "Réservation" du barème doit donc être générée
+    automatiquement, sans attestation MOE (la seule phase dans ce cas).
+89. L'ordre d'affichage des appels de fonds doit suivre celui défini dans
+    Paramètres > Barème.
+90. **Reporté** ("on verra plus tard") : export PDF par lot, détail par
+    phase avec solde en fonction de ce qui est payé — à construire quand
+    Nicolas le redemandera explicitement.
+
+---
+
+## Remarques PDF — "Nouvelles remarques" sur Appels de fonds (11/07/2026)
+
+91. Pouvoir filtrer aussi par lot (en plus de la phase), avec une option
+    pour tous les sélectionner.
+92. Aligner le bouton "Appliquer à tous les lots de cette phase" avec le
+    champ "Date attestation MOE".
+93. Dans "Modifier", retirer le champ "Attestation MOE" puisque sa saisie
+    se fait désormais en haut de page (en masse) — a révélé un bug de
+    fond (voir `bugs.md`, "Modifier effaçait silencieusement
+    l'émission").
+94. Retirer "Réservation" de la liste déroulante des phases attestables en
+    masse, puisque cette phase s'émet automatiquement depuis la date de
+    réservation du lot.
+95. Règle métier : si un client signe l'acte au moment où une phase a déjà
+    été attestée pour d'autres lots du même programme (ex: fondations
+    achevées), cette phase doit être considérée comme déjà réglée jusqu'à
+    cette date pour lui aussi — implémentée comme une auto-émission en
+    cascade (même date d'attestation) dès la génération des appels du
+    nouveau lot Acté.
+96. **Question ouverte, non résolue** : cas d'un client négociant un autre
+    système de règlement (ex: tout payé à l'acte) — pas de piste actée,
+    voir `docs/schema-donnees.md` ("Plan de règlement négocié").
+97. Incompréhension des totaux des cartes de stats (ex: 3 logements × 2
+    phases émises chacun devrait afficher "6") — a mené à distinguer
+    explicitement "émis au total" (cumulatif, quel que soit le sous-statut
+    ensuite) du sous-statut "Émis" strict (ni en retard, ni réglé) ; carte
+    "Émis (au total)" ajoutée. A aussi révélé le bug du point 93 (données
+    corrompues expliquant en partie l'écart constaté).
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

@@ -4,6 +4,7 @@ import Acquereur from '../models/Acquereur.js'
 import Programme from '../models/Programme.js'
 import Tma from '../models/Tma.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
+import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
 
 const router = Router()
 
@@ -22,6 +23,13 @@ function validerDatesCoherentesAvecStatut(lot) {
   }
   if (index < 3 && lot.dateActe) {
     return 'La date d\'acte ne peut être renseignée que si le statut est "Acté".'
+  }
+  // Sens inverse (11/07/2026) : un lot Acté a nécessairement été Réservé
+  // avant — sans quoi la phase "Réservation" des appels de fonds (voir
+  // genererAppelsDeFonds) n'aurait aucune date à partir de laquelle
+  // s'auto-émettre.
+  if (lot.statut === 'acte' && !lot.dateReservation) {
+    return 'La date de réservation doit être renseignée avant de passer un lot à "Acté".'
   }
   return null
 }
@@ -48,6 +56,72 @@ async function validerNumerosUniques(programmeId, lotIdAIgnorer, champ, valeurs)
     return `numéro(s) déjà utilisé(s) par un autre lot : ${conflits.join(', ')}`
   }
   return null
+}
+
+// Génère les appels de fonds d'un lot (un par phase du barème), au moment
+// précis où il passe "Acté" — décision du 11/07/2026, voir docs/decisions.md.
+// Avant "Acté", un appel de fonds n'a de toute façon aucun sens (règle
+// métier n°2 de l'analyse Excel), donc rien n'est créé plus tôt. Le
+// pourcentage de chaque phase est **figé** au moment de la génération
+// (copié depuis `programme.parametres.baremePhases`) : si le barème du
+// programme est corrigé après coup, ça ne doit pas changer rétroactivement
+// un appel déjà généré — même principe que `TmaEntreprise.corpsDeTravaux`.
+async function genererAppelsDeFonds(lot) {
+  const dejaGeneres = await AppelDeFonds.countDocuments({ lot: lot._id })
+  if (dejaGeneres > 0) return // sécurité anti-doublon (déjà générés)
+
+  const programme = await Programme.findById(lot.programme)
+  const phases = [...programme.parametres.baremePhases].sort((a, b) => a.ordre - b.ordre)
+  const delai = programme.parametres.delaiReglementAppelJours
+
+  // Remarque du 11/07/2026 (point 5) : une attestation MOE constate
+  // l'avancement du chantier dans son ensemble, pas lot par lot — si une
+  // phase a déjà été attestée pour d'autres lots du même programme (ex:
+  // "Achèvement des fondations" déjà constaté avant que ce lot ne soit
+  // vendu), ce nouveau lot "rattrape" directement cette phase, sans
+  // attendre une réattestation qui n'aurait pas de sens.
+  const autresLots = await Lot.find({ programme: lot.programme }, '_id')
+  const appelsAttestesDuProgramme = await AppelDeFonds.find({
+    lot: { $in: autresLots.map((l) => l._id) },
+    dateAttestationMOE: { $ne: null },
+  })
+  const attestationParPhase = Object.fromEntries(
+    appelsAttestesDuProgramme.map((appel) => [appel.phase.nom, appel.dateAttestationMOE]),
+  )
+
+  await AppelDeFonds.insertMany(
+    phases.map((phase, index) => {
+      const document = {
+        lot: lot._id,
+        phase: { nom: phase.nom, pourcentage: phase.pourcentage, ordre: phase.ordre },
+        montant: lot.prixTTC * phase.pourcentage,
+      }
+      if (index === 0) {
+        // 1ère phase du barème (ex: "Réservation") : ne demande jamais
+        // d'attestation MOE — un lot Acté a nécessairement déjà une date
+        // de réservation (voir validerDatesCoherentesAvecStatut
+        // ci-dessus). Le dépôt de garantie de cette phase est réglé au
+        // moment même de la réservation, factuellement, pas plus tard —
+        // remarque du 13/07/2026 : `dateReglement` se déduit donc
+        // automatiquement, comme `dateEmission`, pas seulement l'échéance.
+        document.dateEmission = lot.dateReservation
+        document.dateReglement = lot.dateReservation
+        const dateLimite = new Date(lot.dateReservation)
+        dateLimite.setDate(dateLimite.getDate() + delai)
+        document.dateLimiteReglement = dateLimite
+      } else if (attestationParPhase[phase.nom]) {
+        // Remarque du 13/07/2026 : si l'acte de ce lot est postérieur (ou
+        // égal) à la date à laquelle cette phase a déjà été attestée pour
+        // d'autres lots du programme, l'appel est déjà dû au moment de la
+        // signature — voir calculerEmissionAppel(). Reste modifiable à la
+        // main ensuite (bouton "Modifier", en vidant la date de règlement)
+        // si ce n'était en réalité pas le cas.
+        document.dateAttestationMOE = attestationParPhase[phase.nom]
+        Object.assign(document, calculerEmissionAppel(lot, attestationParPhase[phase.nom], delai))
+      }
+      return document
+    }),
+  )
 }
 
 // GET /api/lots — liste de tous les lots, triés par référence
@@ -165,6 +239,14 @@ router.patch('/:id', async (req, res) => {
     }
 
     await lot.save()
+
+    // Pas seulement "vient de passer à Acté" : un lot déjà Acté (ex: dans
+    // les données de seed) mais sans appels de fonds encore générés doit
+    // aussi être rattrapé — genererAppelsDeFonds() ne fait rien si des
+    // appels existent déjà pour ce lot (sécurité anti-doublon).
+    if (lot.statut === 'acte') {
+      await genererAppelsDeFonds(lot)
+    }
 
     if (nouvelAcquereurId !== ancienAcquereurId) {
       if (ancienAcquereurId) {

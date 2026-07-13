@@ -320,3 +320,129 @@ jamais touché. Tester avec `== null` (au lieu de `=== null` ou
 `=== undefined`) est un moyen simple de couvrir les deux cas à la fois,
 plutôt que de devoir se souvenir laquelle des deux valeurs s'applique
 précisément à tel champ.
+
+---
+
+## Des lots "Acté" n'avaient aucun appel de fonds généré
+
+**Symptôme** : deux lots (A01, C01) affichaient bien le statut "Acté" mais
+n'apparaissaient jamais dans la page "Appels de fonds", alors qu'un
+troisième lot passé "Acté" pendant les tests fonctionnait correctement.
+
+**Cause** : la génération automatique des appels de fonds
+(`genererAppelsDeFonds()`, `server/routes/lots.js`) ne se déclenchait que
+sur une **transition** de statut détectée dans `PATCH /api/lots/:id`
+(`ancienStatut !== 'acte' && lot.statut === 'acte'`). Or A01 et C01
+étaient "Acté" **dès les données de seed** (`LOTS_DATA` dans `seed.js`) —
+créés directement à ce statut via `Lot.insertMany()`, sans jamais passer
+par une transition PATCH. La condition ne s'est donc jamais déclenchée
+pour eux.
+
+**Correction** : la condition ne compare plus l'ancien statut — elle
+vérifie simplement `lot.statut === 'acte'` à chaque `PATCH`, quelle que
+soit la raison de la modification (même un simple changement de
+commentaire sur un lot déjà Acté). `genererAppelsDeFonds()` a déjà sa
+propre sécurité anti-doublon (ne fait rien si des appels existent déjà
+pour ce lot), donc appeler la fonction "à chaque fois qu'un lot est Acté"
+plutôt que "seulement à la transition" est à la fois plus simple et plus
+robuste — ça couvre aussi bien la transition normale que le rattrapage
+d'un lot déjà Acté par un autre moyen (seed, script, futur import...).
+Les deux lots concernés ont été rattrapés manuellement (un `PATCH` forcé
+sur leur statut actuel, qui a déclenché la génération).
+
+**Leçon** : une règle "à l'arrivée dans un état" est plus fiable quand
+elle est écrite comme "si l'état final est X, assure-toi que Y existe"
+(idempotent, se corrige tout seul) plutôt que "si on vient de *passer* à
+X" (dépend de l'historique, et suppose à tort que le document a toujours
+transité par le code qui gère cette transition — faux dès qu'une donnée
+peut arriver dans cet état autrement, ex: un seed, un script, une
+migration).
+
+---
+
+## "Modifier" sur un appel de fonds effaçait silencieusement son émission
+
+**Symptôme** : ouvrir "Modifier" sur la ligne "Réservation" d'un lot (pour
+saisir uniquement une date de règlement) faisait disparaître sa
+`dateEmission`/`dateLimiteReglement` déjà calculées — repéré indirectement
+via une remarque de Nicolas sur des totaux de cartes de stats qui ne
+correspondaient pas à son décompte manuel (3 logements, 2 phases émises
+chacun → 6 attendu, moins affiché).
+
+**Cause** : `FormulaireAppelDeFonds.jsx` soumettait systématiquement un
+champ `dateAttestationMOE` (à `null` quand vide) en plus de
+`dateReglement` — hérité d'une version antérieure du formulaire, avant que
+l'attestation MOE ne passe en saisie groupée par phase
+(`FormulaireAttestationMasse.jsx`). Pour la phase "Réservation", qui n'a
+jamais de vraie attestation à afficher (elle s'auto-émet depuis
+`lot.dateReservation`), ce champ était **toujours** vide. Côté serveur,
+`emettreAttestation()` traitait `dateAttestationMOE` vide comme "on
+retire l'attestation" et effaçait `dateEmission`/`dateLimiteReglement` en
+conséquence — exécuté à chaque fois qu'on ouvrait "Modifier" sur cette
+ligne juste pour saisir un règlement, sans rapport avec l'intention réelle
+de l'utilisateur.
+
+**Correction** : `dateAttestationMOE` retiré du formulaire individuel et
+de la route `PATCH /api/appels-de-fonds/:id`, qui n'accepte plus que
+`dateReglement` — l'attestation MOE ne se saisit désormais **que** via la
+saisie groupée par phase, cohérent avec la remarque de Nicolas
+(*"dans Modifier, on peut enlever attestation MOE puisque cela se fait en
+haut maintenant"*). Données déjà corrompues (A01, A02, C01) réparées via
+un script ponctuel comparant `dateEmission` manquante malgré
+`dateReglement` déjà présent.
+
+**Leçon** : quand un champ change de mode de saisie (ici : passage
+d'individuel à groupé), il faut vérifier que **tous** les formulaires qui
+soumettaient encore ce champ ont bien été mis à jour — un champ orphelin
+soumis "par habitude" avec une valeur vide peut déclencher une branche de
+nettoyage/reset qui n'a plus lieu d'être, et le symptôme (des totaux qui
+ne collent pas) peut apparaître loin de la vraie cause (un formulaire de
+règlement qui efface une émission).
+
+---
+
+## Règle "réglé à l'acte" appliquée à un seul des deux points d'émission
+
+**Symptôme** : après avoir ajouté la règle "un appel déjà attesté ailleurs
+au moment de l'acte est réglé d'office" (remarque du 13/07/2026), Nicolas a
+constaté que ça ne marchait toujours pas : la phase "Réservation" restait
+à "Émis" au lieu de "Réglé" pour un lot Acté (B02), et la phase
+"Achèvement des fondations" de trois lots déjà Actés avant même la
+remarque (A01, A02, C01) restait aussi à "Émis" malgré une date d'acte
+postérieure à l'attestation.
+
+**Cause** : la règle n'avait été codée qu'à **un seul** des deux endroits
+où un appel de fonds peut être émis :
+1. `genererAppelsDeFonds()` (`server/routes/lots.js`), pour un **nouveau**
+   lot qui devient Acté après qu'une phase a déjà été attestée pour
+   d'autres lots — corrigé, mais oubliait aussi de traiter la 1ʳᵉ phase du
+   barème ("Réservation"), qui ne passe jamais par cette branche
+   d'attestation (elle s'auto-émet séparément depuis
+   `lot.dateReservation`, sans jamais poser `dateReglement`).
+2. `emettreAttestation()` (`server/routes/appelsDeFonds.js`), utilisée par
+   la route d'attestation **en masse** — pour des lots **déjà** Actés au
+   moment où une phase est attestée après coup (le cas exact de A01/A02/
+   C01, Actés avant que "Achèvement des fondations" ne soit constaté pour
+   le programme). Cette fonction posait `dateEmission` = maintenant sans
+   jamais comparer à `lot.dateActe`, donc sans jamais poser `dateReglement`.
+
+**Correction** : logique extraite dans une fonction partagée
+`calculerEmissionAppel()` (`server/utils/appelsDeFonds.js`), appelée par
+les deux points d'entrée, qui compare systématiquement `lot.dateActe` à la
+date d'attestation pour décider si l'appel est déjà réglé. La 1ʳᵉ phase du
+barème pose maintenant aussi `dateReglement = lot.dateReservation`
+directement (paiement factuel à la réservation, jamais différé). Données
+déjà en base réparées par script ponctuel (A01/A02/C01/B02 pour
+"Achèvement des fondations", B02 pour "Réservation"), et les dates de
+règlement de "Réservation" saisies manuellement pendant les tests
+(différentes de la vraie date de réservation) réalignées après
+confirmation de Nicolas.
+
+**Leçon** : quand une règle métier doit s'appliquer "à chaque fois qu'un
+appel est émis", il faut recenser **tous** les endroits du code où une
+émission peut avoir lieu avant de considérer la règle terminée — ici il y
+en avait discrètement trois (génération d'un nouveau lot Acté, attestation
+en masse d'une phase déjà existante, auto-émission de la 1ʳᵉ phase), et la
+correction précédente n'en avait couvert qu'un seul. Extraire la règle
+dans une fonction partagée, appelée par tous les points d'entrée, évite
+que ce genre d'oubli se reproduise à la prochaine évolution de la règle.

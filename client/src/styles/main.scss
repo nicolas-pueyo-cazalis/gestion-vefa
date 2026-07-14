@@ -12,10 +12,16 @@ body {
 }
 
 header {
-  position: relative;
-  padding: 1.5rem 2rem;
+  padding: 1.5rem 2rem 0;
   background: $couleur-carte;
   border-bottom: 1px solid $couleur-bordure;
+
+  .bandeau-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
 
   .bandeau-nom {
     margin: 0 0 0.25rem;
@@ -29,14 +35,12 @@ header {
   }
 
   .bandeau-utilisateur {
-    position: absolute;
-    top: 1.5rem;
-    right: 2rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     font-size: 0.85rem;
     color: #52606d;
+    white-space: nowrap;
 
     button {
       border: 1px solid $couleur-bordure;
@@ -55,12 +59,53 @@ header {
   .bandeau-role {
     text-transform: capitalize;
   }
+
+  // Ruban de repères (13/07/2026) : maître d'ouvrage / nombre de
+  // logements / date de livraison, distinct de l'adresse via un fin
+  // trait plutôt que des cadres — maquetté et validé avant implémentation
+  // (docs/demandes.md #111).
+  .bandeau-reperes {
+    display: flex;
+    gap: 2.25rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    padding: 0.85rem 0;
+    border-top: 1px solid $couleur-bordure;
+  }
+
+  .bandeau-repere {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-left: 1.25rem;
+    border-left: 2px solid #eaf1fd;
+
+    &:first-child {
+      padding-left: 0;
+      border-left: none;
+    }
+
+    .label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #52606d;
+    }
+
+    .valeur {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: $couleur-texte;
+      font-variant-numeric: tabular-nums;
+    }
+  }
 }
 
 .nav {
   display: flex;
   gap: 1rem;
-  margin-top: 0.75rem;
+  padding-bottom: 1rem;
 
   a {
     color: #52606d;
@@ -135,6 +180,31 @@ main {
     font-size: 0.95rem;
   }
 
+  // Champ mot de passe + bouton "Afficher/Masquer" (13/07/2026) superposé
+  // dans le coin droit du champ, plutôt qu'à côté (gagne de la place, et
+  // reste bien aligné avec le champ Email au-dessus).
+  .champ-mot-de-passe {
+    position: relative;
+
+    input {
+      width: 100%;
+      padding-right: 5rem;
+    }
+
+    .bouton-oeil {
+      position: absolute;
+      top: 50%;
+      right: 0.5rem;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+    }
+  }
+
   button[type='submit'] {
     margin-top: 0.5rem;
     background: $couleur-texte;
@@ -159,6 +229,51 @@ main {
   margin: 0.5rem 0 1.5rem;
 }
 
+// Titre + chiffre clé isolé (13/07/2026, point 153, option B) : le titre
+// perd son centrage/sa marge propres pour s'aligner avec le chiffre à
+// droite, sur une seule ligne.
+.entete-avec-cle {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.5rem 0 1.5rem;
+
+  .titre-page {
+    text-align: left;
+    margin: 0;
+  }
+}
+
+.cle-chiffre {
+  text-align: right;
+  padding: 0.5rem 1.1rem;
+  border-left: 2px solid $couleur-bordure;
+
+  .label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #8896a3;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .valeur {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2563eb;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Hiérarchie revue le 13/07/2026 (proposition B validée) : liseré de
+// couleur à gauche (neutre par défaut, coloré si `statut` est fourni à
+// StatCard), alignement à gauche, chiffre nettement plus gros que le
+// libellé — pour que les cartes attirent moins l'œil que le tableau
+// en dessous.
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -168,19 +283,38 @@ main {
   .carte {
     background: $couleur-carte;
     border: 1px solid $couleur-bordure;
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-
-    .valeur {
-      display: block;
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
+    border-left: 3px solid $couleur-bordure;
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    text-align: left;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    display: flex;
+    flex-direction: column;
 
     .libelle {
-      font-size: 0.85rem;
-      color: #52606d;
+      order: 1;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #8896a3;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .valeur {
+      order: 2;
+      font-size: 1.53rem; // 1.7rem - 10% (remarque du 13/07/2026)
+      font-weight: 700;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  // Réutilise les couleurs déjà définies pour les badges de statut
+  // ($couleurs-statut, _variables.scss) — même logique de correspondance.
+  @each $statut, $couleur in $couleurs-statut {
+    .carte--#{$statut} {
+      border-left-color: $couleur;
     }
   }
 }
@@ -205,6 +339,31 @@ main {
       background: $couleur-texte;
       color: white;
       border-color: $couleur-texte;
+    }
+
+    // Couleur par statut visible directement, même non sélectionné
+    // (13/07/2026, point 154) : réutilise la même map $couleurs-statut que
+    // les badges/cartes. "Tous" n'y figure pas, couleur noire à part.
+    &.filtre--tous {
+      border-color: $couleur-texte;
+      color: $couleur-texte;
+
+      &.actif {
+        color: white;
+      }
+    }
+
+    @each $statut, $couleur in $couleurs-statut {
+      &.filtre--#{$statut} {
+        border-color: $couleur;
+        color: $couleur;
+      }
+
+      &.filtre--#{$statut}.actif {
+        background: $couleur;
+        color: white;
+        border-color: $couleur;
+      }
     }
   }
 }
@@ -472,17 +631,122 @@ table {
   }
 }
 
+// Remarque du 13/07/2026 : plus de barre de défilement horizontale, même
+// avec des colonnes en plus (ex: plusieurs terrasses) — largeur bloquée à
+// 100% du conteneur, mais en gardant `table-layout: auto` (donc les
+// proportions "naturelles" entre colonnes, comme avant) plutôt que
+// `fixed` (qui les répartissait à l'identique et écrasait la largeur de
+// "Commentaire"). Le texte reste en une seule ligne par défaut ; les
+// colonnes déjà prévues pour revenir à la ligne (.nom-client,
+// .commentaire-cellule) gardent leur propre réglage, plus bas. Priorité
+// donnée à réduire la taille du texte plutôt qu'à forcer plus de colonnes
+// à passer à la ligne.
 table.tableau-lots {
-  width: auto;
-  min-width: 100%;
-  font-size: 0.8rem;
+  width: 100%;
+  font-size: 0.75rem;
 
   th, td {
     white-space: nowrap;
     text-align: center;
-    padding: 0.4rem 0.5rem;
+    padding: 0.3rem 0.4rem;
+    line-height: 1.25;
   }
 
+  // Les intitulés de colonne restent sur une seule ligne (texte encore
+  // plus petit que le corps du tableau) — évite qu'un mot se retrouve
+  // coupé avec une seule lettre esseulée à la ligne suivante.
+  th {
+    font-size: 0.66rem;
+    font-weight: 700;
+  }
+
+  // Seul intitulé volontairement autorisé à revenir à la ligne (2 mots
+  // réellement longs) — au niveau du "/", jamais au milieu d'un mot,
+  // puisque le retour à la ligne "normal" ne coupe qu'aux séparateurs.
+  th.entete-repliable {
+    white-space: normal;
+  }
+
+  // Rappel visuel sous un badge de statut (ex: prêt non reçu sur un lot
+  // Acté, remarque du 13/07/2026) — même rouge que .total-erreur.
+  .avertissement-cellule {
+    margin-top: 0.2rem;
+    color: #dc2626;
+    font-size: 0.62rem;
+    font-weight: 600;
+    white-space: normal;
+    line-height: 1.2;
+  }
+}
+
+// Pied de totaux détaché du tableau (13/07/2026, proposition B validée) :
+// collé au bas du tableau (`margin-top: -1px` recouvre le double trait),
+// aligné à droite comme un ticket de caisse, "Total TTC" mis en avant.
+.pied-totaux {
+  position: relative;
+  background: #eaf1fd;
+  border: 1px solid $couleur-bordure;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 0.9rem 1.5rem;
+  margin-top: -1px;
+  // Hauteur choisie pour que la marge en bas des données (SHAB totale,
+  // Total TTC/TVA/HT, tous positionnés en absolute depuis "top: 0.9rem")
+  // soit visuellement la même que la marge du haut (13/07/2026).
+  min-height: 4.25rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+// Groupe Total TTC/TVA/Total HT.
+.pied-totaux-groupe {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+// SHAB totale / groupe Total TTC (13/07/2026, point 153) : sortis du flux,
+// positionnés à la position réelle (en pixels) de leur colonne dans le
+// tableau au-dessus, mesurée dans le DOM (voir useLayoutEffect dans
+// Lots.jsx) — pas pixel près, le texte peut déborder de la colonne exacte.
+.pied-totaux-flottant {
+  position: absolute;
+  top: 0.9rem;
+  transform: translateX(-50%);
+}
+
+// Le groupe Total TTC/TVA/HT est ancré par son bord gauche (pas centré) :
+// "Total TTC", premier élément du groupe, doit tomber à peu près sous
+// "Prix TTC", TVA et Total HT s'enchaînant ensuite vers la droite.
+.pied-totaux-flottant--gauche {
+  transform: none;
+}
+
+.pied-totaux-ligne {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+
+  .label {
+    font-size: 0.7rem;
+    color: #52606d;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .valeur {
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.pied-totaux-principal .valeur {
+  color: #2563eb;
+  font-size: 1.2rem;
 }
 
 .badge {

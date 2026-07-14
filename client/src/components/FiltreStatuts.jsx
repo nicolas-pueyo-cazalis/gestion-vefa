@@ -4,7 +4,7 @@ function FiltreStatuts({ statuts, actif, onChange }) {
       {statuts.map(({ valeur, libelle }) => (
         <button
           key={valeur}
-          className={valeur === actif ? 'actif' : ''}
+          className={`filtre--${valeur}${valeur === actif ? ' actif' : ''}`}
           onClick={() => onChange(valeur)}
         >
           {libelle}

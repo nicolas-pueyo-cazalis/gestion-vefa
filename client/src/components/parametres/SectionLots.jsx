@@ -4,6 +4,7 @@ import { apiFetch } from '../../utils/api.js'
 import { ORIENTATIONS } from '../../data/lots.js'
 import LigneLot from './LigneLot.jsx'
 import ListeNumeros from './ListeNumeros.jsx'
+import ListeSurfaces from './ListeSurfaces.jsx'
 
 function SectionLots({ programme, lots, onChangement }) {
   const etagesDisponibles = programme.parametres.listeEtages
@@ -13,7 +14,7 @@ function SectionLots({ programme, lots, onChangement }) {
   const [type, setType] = useState('')
   const [orientation, setOrientation] = useState('')
   const [surfaceHabitable, setSurfaceHabitable] = useState('')
-  const [surfaceTerrasse, setSurfaceTerrasse] = useState('')
+  const [surfacesTerrasses, setSurfacesTerrasses] = useState([])
   const [surfaceJardin, setSurfaceJardin] = useState('')
   const [parkings, setParkings] = useState([])
   const [caves, setCaves] = useState([])
@@ -53,7 +54,7 @@ function SectionLots({ programme, lots, onChangement }) {
         type: type || null,
         orientation: orientation || null,
         surfaceHabitable: versNombreOuNull(surfaceHabitable),
-        surfaceTerrasse: versNombreOuNull(surfaceTerrasse),
+        surfacesTerrasses,
         surfaceJardin: versNombreOuNull(surfaceJardin),
         parkings,
         caves,
@@ -72,7 +73,7 @@ function SectionLots({ programme, lots, onChangement }) {
     setType('')
     setOrientation('')
     setSurfaceHabitable('')
-    setSurfaceTerrasse('')
+    setSurfacesTerrasses([])
     setSurfaceJardin('')
     setParkings([])
     setCaves([])
@@ -166,10 +167,7 @@ function SectionLots({ programme, lots, onChangement }) {
           Surface habitable (m²)
           <input type="number" step="0.01" value={surfaceHabitable} onChange={(e) => setSurfaceHabitable(e.target.value)} />
         </label>
-        <label>
-          Terrasse (m²)
-          <input type="number" step="0.01" value={surfaceTerrasse} onChange={(e) => setSurfaceTerrasse(e.target.value)} />
-        </label>
+        <ListeSurfaces label="Terrasses/Balcons (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
         <label>
           Jardin (m²)
           <input type="number" step="0.01" value={surfaceJardin} onChange={(e) => setSurfaceJardin(e.target.value)} />

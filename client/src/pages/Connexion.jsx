@@ -8,6 +8,7 @@ function Connexion() {
   const emplacement = useLocation()
   const [email, setEmail] = useState('')
   const [motDePasse, setMotDePasse] = useState('')
+  const [motDePasseVisible, setMotDePasseVisible] = useState(false)
   const [erreur, setErreur] = useState(null)
   const [enCours, setEnCours] = useState(false)
 
@@ -48,12 +49,22 @@ function Connexion() {
         </label>
         <label>
           Mot de passe
-          <input
-            type="password"
-            value={motDePasse}
-            onChange={(e) => setMotDePasse(e.target.value)}
-            required
-          />
+          <div className="champ-mot-de-passe">
+            <input
+              type={motDePasseVisible ? 'text' : 'password'}
+              value={motDePasse}
+              onChange={(e) => setMotDePasse(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="bouton-oeil"
+              onClick={() => setMotDePasseVisible((v) => !v)}
+              aria-label={motDePasseVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            >
+              {motDePasseVisible ? 'Masquer' : 'Afficher'}
+            </button>
+          </div>
         </label>
         {erreur && <p className="erreur-champ">{erreur}</p>}
         <button type="submit" disabled={enCours}>

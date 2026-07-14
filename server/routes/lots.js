@@ -146,7 +146,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const {
       programme, reference, etage, type, orientation,
-      surfaceHabitable, surfaceTerrasse, surfaceJardin,
+      surfaceHabitable, surfacesTerrasses, surfaceJardin,
       parkings, caves, prixTTC,
     } = req.body
 
@@ -174,7 +174,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
 
     const lot = await Lot.create({
       programme, reference, etage, type, orientation,
-      surfaceHabitable, surfaceTerrasse, surfaceJardin,
+      surfaceHabitable, surfacesTerrasses, surfaceJardin,
       parkings, caves, prixTTC,
     })
     res.status(201).json(lot)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatMontant } from '../../utils/formatMontant.js'
 import { ORIENTATIONS } from '../../data/lots.js'
 import ListeNumeros from './ListeNumeros.jsx'
+import ListeSurfaces from './ListeSurfaces.jsx'
 
 function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
   const [enEdition, setEnEdition] = useState(false)
@@ -10,7 +11,7 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
   const [type, setType] = useState(lot.type ?? '')
   const [orientation, setOrientation] = useState(lot.orientation ?? '')
   const [surfaceHabitable, setSurfaceHabitable] = useState(lot.surfaceHabitable ?? '')
-  const [surfaceTerrasse, setSurfaceTerrasse] = useState(lot.surfaceTerrasse ?? '')
+  const [surfacesTerrasses, setSurfacesTerrasses] = useState(lot.surfacesTerrasses ?? [])
   const [surfaceJardin, setSurfaceJardin] = useState(lot.surfaceJardin ?? '')
   const [parkings, setParkings] = useState(lot.parkings ?? [])
   const [caves, setCaves] = useState(lot.caves ?? [])
@@ -32,7 +33,7 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
       type: type || null,
       orientation: orientation || null,
       surfaceHabitable: versNombreOuNull(surfaceHabitable),
-      surfaceTerrasse: versNombreOuNull(surfaceTerrasse),
+      surfacesTerrasses,
       surfaceJardin: versNombreOuNull(surfaceJardin),
       parkings,
       caves,
@@ -76,10 +77,7 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
             Surface habitable (m²)
             <input type="number" step="0.01" value={surfaceHabitable} onChange={(e) => setSurfaceHabitable(e.target.value)} />
           </label>
-          <label>
-            Terrasse (m²)
-            <input type="number" step="0.01" value={surfaceTerrasse} onChange={(e) => setSurfaceTerrasse(e.target.value)} />
-          </label>
+          <ListeSurfaces label="Terrasses/Balcons (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
           <label>
             Jardin (m²)
             <input type="number" step="0.01" value={surfaceJardin} onChange={(e) => setSurfaceJardin(e.target.value)} />
@@ -104,11 +102,11 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
       {lot.reference} — {lot.etage} — {lot.type}
       {lot.orientation && ` — ${lot.orientation}`}
       {lot.surfaceHabitable != null && ` — ${lot.surfaceHabitable} m² habitables`}
-      {lot.surfaceTerrasse != null && ` — ${lot.surfaceTerrasse} m² terrasse`}
+      {lot.surfacesTerrasses?.length > 0 && ` — terrasse${lot.surfacesTerrasses.length > 1 ? 's' : ''}/balcon${lot.surfacesTerrasses.length > 1 ? 's' : ''} : ${lot.surfacesTerrasses.join(', ')} m²`}
       {lot.surfaceJardin != null && ` — ${lot.surfaceJardin} m² jardin`}
       {lot.parkings?.length > 0 && ` — n° de parking : ${lot.parkings.join(', ')}`}
       {lot.caves?.length > 0 && ` — n° de cave/cellier : ${lot.caves.join(', ')}`}
-      {lot.prixTTC != null && ` — ${formatMontant(lot.prixTTC)}`}
+      {lot.prixTTC != null && ` — ${formatMontant(lot.prixTTC, 0)}`}
       <button type="button" onClick={() => setEnEdition(true)}>Modifier</button>
       <button type="button" onClick={() => onSupprimer(lot._id)}>Retirer</button>
     </li>

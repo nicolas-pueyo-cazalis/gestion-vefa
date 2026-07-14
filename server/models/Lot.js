@@ -10,7 +10,12 @@ const lotSchema = new mongoose.Schema({
     enum: ['Nord', 'Nord-Est', 'Est', 'Sud-Est', 'Sud', 'Sud-Ouest', 'Ouest', 'Nord-Ouest'],
   },
   surfaceHabitable: Number,
-  surfaceTerrasse: Number,
+  // Plusieurs terrasses possibles par lot (remarque du 13/07/2026) — une
+  // liste de surfaces plutôt qu'un seul nombre, contrairement à
+  // parkings/caves ci-dessous : ce sont des m², pas des numéros
+  // identifiants, donc pas de contrainte d'unicité (deux terrasses de
+  // même surface sont possibles).
+  surfacesTerrasses: [Number],
   surfaceJardin: Number,
   // Numéros identifiants (ex: place n°10), pas un simple compte — chaque
   // numéro doit être unique sur l'ensemble du programme (remarque du

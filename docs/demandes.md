@@ -470,6 +470,167 @@ qui ont persisté dans la version finale.
 
 ---
 
+## Remarques PDF — "Nouvelles demandes générales" (13/07/2026)
+
+Longue liste transmise d'un coup, à traiter **point par point avec
+validation de Nicolas à chaque étape** (pas de traitement en bloc). Liste
+complète consignée ici pour ne rien perdre ; l'état d'avancement réel de
+chaque point est suivi en conversation, pas dans ce document.
+
+**Connexion**
+109. Œil cliquable à côté du mot de passe pour pouvoir le relire.
+
+**Entête**
+110. Ordre des onglets : Lots, Clients, Prêt, Acte, Appels de fonds, TMA.
+111. Réfléchir à une présentation plus soignée du bandeau (propositions à
+     faire), en y ajoutant maître d'ouvrage, nombre de logements et date
+     de livraison.
+
+**Interface Lots**
+112. Plusieurs terrasses possibles : colonne supplémentaire créée
+     seulement si besoin (une seule colonne par défaut), jusqu'à 3-4 —
+     à prévoir à la fois dans Paramètres et dans Lots.
+113. En cas de colonnes supplémentaires, adapter la taille des lignes/
+     écritures pour que tout reste visible sur un écran plein, sans
+     barre de défilement horizontale.
+114. Message de rappel si un logement passe "Acté" sans date de
+     réception d'offre de prêt renseignée (sauf si "sans prêt").
+115. Rendre la présentation des totaux plus esthétique (propositions à
+     faire).
+116. Statut par défaut "libre" pour tous les logements au démarrage d'un
+     projet.
+117. Bouton "Annuler" qui réinitialise toutes les informations saisies
+     pour un logement.
+118. Nouveau filtre "Annulé" (lots annulés avec leurs informations
+     toujours visibles).
+119. Statut "travaux" : moment de déclenchement pas encore clair pour
+     Nicolas lui-même — à revoir plus tard, aucune action pour l'instant.
+
+**Interface Appels de fonds**
+120. Nouvelle colonne "Envoyé le" ; la date limite de règlement doit se
+     recalculer à partir de cette date + le délai défini dans
+     Paramètres.
+121. Cas des attestations MOE émises avant la signature de l'acte
+     (plusieurs appels considérés comme envoyés et réglés le jour de
+     l'acte) : la date "Envoyé le" doit alors correspondre à la date de
+     signature de l'acte.
+122. Note pour plus tard (exports) : générer les appels de fonds par
+     logement pour envoi direct au client (avec le déjà-réglé et le
+     nouvel appel généré) — à rediscuter le moment venu.
+123. Message d'erreur bloquant si le barème (phase/pourcentage) est
+     modifié dans Paramètres alors que des appels de fonds ont déjà été
+     émis — risque de fausser des montants déjà émis, explicitement
+     signalé comme important.
+124. Bouton ouvrant une fenêtre récapitulative des attestations MOE avec
+     leurs dates.
+125. **Bug** : corriger une date de signature d'acte (ou un statut passé
+     à tort à "Acté") doit remettre "non réglé" un appel de fonds qui
+     avait été marqué payé automatiquement à cause de cette date/statut
+     — sauf si un vrai règlement manuel avait été saisi entre-temps.
+126. Une attestation MOE ne peut être remplie que si celle de la phase
+     précédente l'est déjà (la phase "Réservation" n'entre pas dans ce
+     cadre, elle ne prend jamais d'attestation).
+
+**Interface TMA**
+127. Création d'une TMA possible même si le lot est "Option" ou
+     "Réservé" (pas seulement "Acté"), avec un message d'avertissement
+     rouge sous la TMA ("ce logement n'est pas encore acté").
+128. Bouton "Supprimer" une TMA.
+129. Nouveau filtre "Annulé" (TMA annulées, infos toujours visibles).
+130. Nouveau filtre en liste déroulante regroupant les statuts : "En
+     cours" (demande/étude/chiffré/facturé), "Validé" (validé/travaux/
+     terminé), "Refusé", "Annulé".
+131. Note pour plus tard (exports) : bouton de génération d'un devis à
+     envoyer au client.
+132. Note pour plus tard (exports) : génération d'un envoi de demandes
+     de TMA aux entreprises.
+133. Si un client annule sa réservation/option/acte, la TMA associée ne
+     doit pas s'effacer automatiquement — un message doit indiquer que
+     ce client n'est plus le client actuel (cas d'un promoteur qui
+     proposerait la même TMA au client suivant).
+134. **Bug signalé** : l'alerte de retard entreprise TMA ne se déclenche
+     pas (testé avec un envoi entreprise daté de mars). Demande
+     complémentaire : message rouge sous le statut "étude" affichant
+     "retard entreprise" quand c'est le cas, pour que ce soit visible
+     sans attendre la fenêtre d'alertes.
+135. Empêcher de renseigner une entreprise tant que la date d'envoi
+     n'est pas complétée (avec message explicite).
+136. Nouveau champ "Nombre d'entreprises concernées" à remplir avant
+     d'ajouter les entreprises, pour déterminer objectivement le moment
+     où toutes ont répondu (passage à "chiffré").
+
+**Alerte**
+137. Pouvoir désactiver la fenêtre d'alertes depuis Paramètres — soit
+     toutes les alertes, soit une par une (prêt, appels de fonds, etc.).
+
+**Généralité**
+138. Nouvelle page d'accueil de sélection de programme (choisir un
+     programme existant ou en créer un nouveau en le nommant), avec
+     aussi la possibilité de changer de programme depuis les interfaces
+     (ex: dans l'entête).
+139. Repenser l'esthétique générale de l'application (le thème sombre
+     actuel plaît, mais des améliorations sont possibles — propositions
+     à faire).
+140. Remplissage automatique du code postal à partir de la commune
+     saisie (souhaité, pas obligatoire).
+141. Export Excel (en plus du PDF), à rediscuter au moment des exports.
+142. Vérifier qu'il ne reste plus aucune donnée codée en dur (résidus
+     des tout premiers tests), à l'exception de ce que Nicolas a
+     lui-même saisi depuis.
+143. Repasser en revue l'ensemble du projet à la recherche de bugs pas
+     encore identifiés.
+144. Rendre l'application responsive (toutes tailles d'écran).
+145. Rédiger un topo complet sur ce qu'impliquerait la vente de l'appli
+     (création d'entreprise, faisabilité sans diplôme, assurances,
+     aspects techniques...) avec une estimation des coûts.
+146. Donner une estimation de prix de vente (mise en service +
+     éventuelles mises à jour mensuelles/annuelles).
+147. Étudier la possibilité d'un usage mobile de l'application, et la
+     mettre en place si c'est possible.
+148. Récapitulatif simple de toutes les technologies utilisées, pour que
+     Nicolas puisse se l'approprier et l'expliquer en entretien.
+149. Document récapitulatif de tout ce qui a été fait sur le projet,
+     pour le présenter en entretien.
+150. **Question** : une fois le projet visible sur GitHub pour des
+     recruteurs, comment s'assurer qu'il n'y a pas de risque de vol
+     d'informations ?
+
+---
+
+## Remarques verbales sur l'interface Lots (13/07/2026, en marge du point 115)
+
+Transmises d'un coup pendant les allers-retours sur l'esthétique des
+totaux (point 115) — traitées une par une comme le reste.
+
+151. Cartes de stats trop uniformes, pas assez de hiérarchie visuelle
+     (elles attirent presque autant l'œil que le tableau) — demande
+     explicite de propositions (ombre légère, chiffre plus gros, libellé
+     plus discret).
+152. Retirer les décimales partout où il y en a, sauf sur les totaux
+     TTC/TVA/HT du pied de tableau (précision nécessaire pour la TVA/HT).
+153. Sortir "Prix moyen au m²" du pied de tableau, l'isoler ailleurs
+     (proposition à faire, ex: en haut de page) ; décaler Total TTC/TVA/
+     Total HT vers la gauche, Total TTC à peu près sous la colonne
+     "Prix TTC".
+154. Filtres de statut transformés en vrais boutons colorés, la couleur
+     du statut sélectionné bien marquée (Tous=noir, Libre=gris,
+     Réservé=orange, Acté=vert, Option=bleu).
+155. Remplacer le bouton texte "Modifier" (répété sur chaque ligne) par
+     une icône, pour gagner en largeur.
+156. Nouvelle colonne "Annexes" regroupant Terrasse/Balcon/Loggia/Jardin/
+     Parking/Cave/Cellier empilés verticalement dans une seule cellule.
+     Séparer Terrasse et Balcon (et ajouter Loggia) comme catégories
+     distinctes dans Paramètres, chacune pouvant avoir plusieurs valeurs
+     (comme les terrasses aujourd'hui) ; séparer aussi Cave et Cellier
+     (aujourd'hui fusionnés "Caves/Celliers").
+157. Renommer la colonne "Prix/m²" en "Prix TTC/m² SHAB".
+158. **Idée à creuser plus tard** (suite au point 151, cartes de stats
+     validées) : ajouter une carte "Taux de commercialisation" = (nombre
+     de logements Actés + Réservés) / total, en % — pas encore de
+     décision sur l'emplacement ni le calcul exact des arrondis.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

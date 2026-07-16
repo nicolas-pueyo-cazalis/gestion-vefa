@@ -639,6 +639,19 @@ totaux (point 115) — traitées une par une comme le reste.
      les phases ensemble, contrôle "total = 100%"), pas une édition ligne
      par ligne.
 
+## Remarques verbales sur l'interface TMA (13/07/2026, en marge du point 128)
+
+160. Colonne "Action" retravaillée comme sur la page Lots : un seul bouton
+     crayon, qui déplie en dessous de la ligne "Modifier les dates",
+     "Entreprises", et les boutons "Refuser la TMA"/"Supprimer la TMA" —
+     plus les boutons épars directement sur la ligne.
+161. Pouvoir aussi modifier localisation/description/montant client depuis
+     ce même panneau — le montant client est normalement recalculé
+     automatiquement à partir des devis entreprises, mais une négociation
+     directe avec le client peut aboutir à un montant différent ; le
+     modifier à la main doit afficher un avertissement, et fige ce montant
+     (plus jamais recalculé automatiquement ensuite).
+
 ---
 
 ## Notes

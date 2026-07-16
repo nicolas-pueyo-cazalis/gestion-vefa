@@ -24,7 +24,11 @@ async function recalculerTma(tmaId) {
 
   const tma = await Tma.findById(tmaId)
   tma.montantEntreprises = montantEntreprises
-  tma.montantClient = calculerMontantClient(montantEntreprises)
+  // Montant client figé à la main (13/07/2026) : ne plus jamais l'écraser
+  // automatiquement, même si les devis entreprises changent ensuite.
+  if (!tma.montantClientManuel) {
+    tma.montantClient = calculerMontantClient(montantEntreprises)
+  }
 
   if (!STATUTS_NON_RECALCULABLES.includes(tma.statut)) {
     tma.statut = calculerStatutAutomatique(tma)

@@ -505,7 +505,10 @@ table {
   }
 
   .formulaire-dates form,
-  .detail-entreprises form {
+  .detail-entreprises form,
+  // Panneau d'actions TMA (13/07/2026, point 128) : mêmes boutons, mais
+  // hors <form> (pas de champ à soumettre, juste des actions).
+  .boutons-panneau-tma {
     display: flex;
     flex-wrap: wrap;
     align-items: end;
@@ -544,18 +547,6 @@ table {
       background: $couleur-texte;
       color: white;
       border-color: $couleur-texte;
-    }
-
-    // Action destructrice (13/07/2026, point 117 : réinitialisation d'un
-    // logement) — rouge, bien distinct du bouton "Annuler" juste à côté
-    // qui, lui, ferme le formulaire sans rien modifier.
-    .bouton-danger {
-      color: #dc2626;
-      border-color: #dc2626;
-
-      &:hover {
-        background: #fef2f2;
-      }
     }
   }
 
@@ -769,6 +760,13 @@ table.tableau-lots {
   line-height: 1.2;
 }
 
+// Variante dans un formulaire flex (13/07/2026, FormulaireInfosTma.jsx) :
+// passe sur sa propre ligne plutôt que de s'aligner avec les champs.
+.avertissement-pleine-largeur {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 // Pied de totaux détaché du tableau (13/07/2026, proposition B validée) :
 // collé au bas du tableau (`margin-top: -1px` recouvre le double trait),
 // aligné à droite comme un ticket de caisse, "Total TTC" mis en avant.
@@ -912,6 +910,28 @@ table.tableau-lots {
   dd {
     margin: 0;
   }
+
+  // Récapitulatif des attestations MOE (13/07/2026, point 124) : simple
+  // tableau à 2 colonnes, même esprit que la <dl> ci-dessus.
+  .tableau-recap-attestations {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 1rem;
+
+    th, td {
+      text-align: left;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid $couleur-bordure;
+      font-size: 0.85rem;
+    }
+
+    th {
+      color: #52606d;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+  }
 }
 
 // Fenêtre d'alertes au démarrage (AlerteRetards.jsx, 13/07/2026) : plus
@@ -972,6 +992,37 @@ table.tableau-lots {
   h2 {
     margin: 0 0 1rem;
     font-size: 1.1rem;
+  }
+
+  // En-tête de section avec une action secondaire juste à côté du titre
+  // (13/07/2026, ex: "Voir le récapitulatif" collé à "Attestation MOE par
+  // phase", pas renvoyée à l'autre bout du cadre) — le h2 imbriqué perd sa
+  // marge propre, portée par ce conteneur.
+  .entete-section-avec-action {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  // Action secondaire discrète, pas un bouton plein comme "Enregistrer"
+  // (13/07/2026) : juste du texte souligné au survol, façon lien.
+  .lien-discret {
+    border: none;
+    background: none;
+    padding: 0;
+    color: $couleur-texte;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover {
+      color: #2563eb;
+    }
   }
 
   form {
@@ -1139,6 +1190,31 @@ table.tableau-lots {
 .total-erreur {
   color: #dc2626; // même rouge que .badge.refuse (voir $couleurs-statut)
   font-weight: 600;
+}
+
+// Bouton d'action destructrice (13/07/2026) — global, réutilisé hors
+// formulaire (ex: panneau d'actions d'une TMA) aussi bien que dedans.
+// "button." devant le sélecteur (13/07/2026) : sans ça, sa spécificité
+// (une seule classe) perdait face à ".boutons-panneau-tma button" etc.
+// (classe + élément) — le bouton restait blanc au repos, coloré seulement
+// au survol, où ":hover" lui redonnait l'avantage. ".bouton-plein" pour la
+// variante plus appuyée (fond coloré), réservée aux actions irréversibles.
+button.bouton-danger {
+  color: #dc2626;
+  border-color: #dc2626;
+
+  &:hover {
+    background: #fef2f2;
+  }
+
+  &.bouton-plein {
+    background: #dc2626;
+    color: white;
+
+    &:hover {
+      background: #b91c1c;
+    }
+  }
 }
 
 .telephone-input {

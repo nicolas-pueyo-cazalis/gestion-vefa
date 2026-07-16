@@ -15,6 +15,7 @@ import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireDatesTma from '../components/FormulaireDatesTma.jsx'
 import DetailEntreprisesTma from '../components/DetailEntreprisesTma.jsx'
 import FormulaireCreationTma from '../components/FormulaireCreationTma.jsx'
+import FormulaireInfosTma from '../components/FormulaireInfosTma.jsx'
 
 const NB_COLONNES = 8
 
@@ -46,8 +47,10 @@ function Tma() {
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
-  const [idEnEdition, setIdEnEdition] = useState(null)
-  const [idEntreprisesOuvert, setIdEntreprisesOuvert] = useState(null)
+  // Un seul panneau d'actions par TMA (13/07/2026) — regroupe "Modifier les
+  // dates", "Entreprises" et "Refuser"/"Supprimer" sous un même crayon,
+  // comme sur la page Lots, plutôt que des boutons épars sur la ligne.
+  const [idPanneauOuvert, setIdPanneauOuvert] = useState(null)
   const [creationOuverte, setCreationOuverte] = useState(false)
 
   async function chargerTma() {
@@ -118,6 +121,40 @@ function Tma() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ acquereur: tma.lot.acquereur._id }),
     })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+    await chargerTma()
+  }
+
+  // Localisation/description/montant client (13/07/2026, à la demande de
+  // Nicolas) — voir FormulaireInfosTma.jsx pour l'avertissement affiché
+  // avant l'envoi si le montant client est modifié à la main.
+  async function enregistrerInfos(id, donnees) {
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/infos`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees),
+    })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+    await chargerTma()
+    setIdPanneauOuvert(null)
+  }
+
+  // Suppression (13/07/2026, point 128) — ex: une TMA devenue obsolète
+  // après annulation d'une vente (point 133), que Nicolas décide de ne pas
+  // réattribuer à un nouveau client.
+  async function supprimerTma(tma) {
+    if (!window.confirm(`Supprimer la TMA "${tma.description}" (${tma.lot?.reference ?? '—'}) ? Cette action est irréversible.`)) {
+      return
+    }
+    const reponse = await apiFetch(`${API_URL}/api/tma/${tma._id}`, { method: 'DELETE' })
     if (!reponse.ok) {
       const { message } = await reponse.json()
       alert(message)
@@ -251,6 +288,13 @@ function Tma() {
                       )}
                     </>
                   )}
+                  {/* 13/07/2026, point 127 : une TMA peut être créée dès
+                      Option/Réservé, pas seulement Acté (voir
+                      FormulaireCreationTma.jsx) — simple rappel visuel tant
+                      que la vente n'est pas encore signée. */}
+                  {!tmaObsolete(tma) && tma.lot?.statut && tma.lot.statut !== 'acte' && (
+                    <div className="avertissement-cellule">Ce logement n'est pas encore acté</div>
+                  )}
                 </td>
                 <td>{tma.localisation}</td>
                 <td>{tma.description}</td>
@@ -262,33 +306,56 @@ function Tma() {
                 <td>{tma.montantClient == null ? '—' : formatMontant(tma.montantClient)}</td>
                 <td><Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} /></td>
                 <td className="actions">
-                  {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && (
-                    <button onClick={() => setIdEnEdition(tma._id)}>Modifier les dates</button>
-                  )}
-                  <button onClick={() => setIdEntreprisesOuvert(tma._id)}>Entreprises</button>
-                  {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
-                    <button onClick={() => changerStatut(tma._id, 'refuse')}>Refuser</button>
-                  )}
-                  {tma.statut === 'refuse' && (
-                    <button onClick={() => annulerRefus(tma._id)}>Annuler le refus</button>
-                  )}
+                  <button
+                    type="button"
+                    className="bouton-icone"
+                    title="Modifier"
+                    aria-label="Modifier"
+                    onClick={() => setIdPanneauOuvert(idPanneauOuvert === tma._id ? null : tma._id)}
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                  </button>
                 </td>
               </tr>
-              {idEnEdition === tma._id && (
-                <FormulaireDatesTma
-                  tma={tma}
-                  colonnes={NB_COLONNES}
-                  onEnregistrer={enregistrerDates}
-                  onFermer={() => setIdEnEdition(null)}
-                />
-              )}
-              {idEntreprisesOuvert === tma._id && (
-                <DetailEntreprisesTma
-                  tma={tma}
-                  colonnes={NB_COLONNES}
-                  onChangement={chargerTma}
-                  onFermer={() => setIdEntreprisesOuvert(null)}
-                />
+              {idPanneauOuvert === tma._id && (
+                <>
+                  <FormulaireInfosTma
+                    tma={tma}
+                    colonnes={NB_COLONNES}
+                    onEnregistrer={enregistrerInfos}
+                    onFermer={() => setIdPanneauOuvert(null)}
+                  />
+                  {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && (
+                    <FormulaireDatesTma
+                      tma={tma}
+                      colonnes={NB_COLONNES}
+                      onEnregistrer={enregistrerDates}
+                      onFermer={() => setIdPanneauOuvert(null)}
+                    />
+                  )}
+                  <DetailEntreprisesTma
+                    tma={tma}
+                    colonnes={NB_COLONNES}
+                    onChangement={chargerTma}
+                    onFermer={() => setIdPanneauOuvert(null)}
+                  />
+                  <tr className="formulaire-dates">
+                    <td colSpan={NB_COLONNES}>
+                      <div className="boutons-panneau-tma">
+                        {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
+                          <button type="button" onClick={() => changerStatut(tma._id, 'refuse')}>Refuser la TMA</button>
+                        )}
+                        {tma.statut === 'refuse' && (
+                          <button type="button" onClick={() => annulerRefus(tma._id)}>Annuler le refus</button>
+                        )}
+                        <button type="button" className="bouton-danger bouton-plein" onClick={() => supprimerTma(tma)}>Supprimer la TMA</button>
+                      </div>
+                    </td>
+                  </tr>
+                </>
               )}
             </Fragment>
           ))}

@@ -18,6 +18,14 @@ const appelDeFondsSchema = new mongoose.Schema({
   dateEmission: Date,
   dateLimiteReglement: Date,
   dateReglement: Date,
+  // Distingue un règlement déduit automatiquement (acte signé après
+  // l'attestation MOE, ou 1ère phase réglée à la date de réservation —
+  // voir calculerEmissionAppel()) d'un vrai règlement saisi à la main
+  // (13/07/2026, point 125) : sert à savoir, si la date/le statut du lot
+  // qui a déclenché ce calcul est corrigé après coup, s'il faut annuler ce
+  // règlement (déduction devenue caduque) ou le laisser tel quel (le
+  // client a vraiment payé, peu importe la correction).
+  regleAutomatiquement: { type: Boolean, default: false },
 }, { timestamps: true })
 
 export default mongoose.model('AppelDeFonds', appelDeFondsSchema)

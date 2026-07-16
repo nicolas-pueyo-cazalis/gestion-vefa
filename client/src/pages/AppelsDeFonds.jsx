@@ -10,6 +10,7 @@ import FiltreMultiple from '../components/FiltreMultiple.jsx'
 import FormulaireAppelDeFonds from '../components/FormulaireAppelDeFonds.jsx'
 import FormulaireAttestationMasse from '../components/FormulaireAttestationMasse.jsx'
 import FormulaireBaremeLot from '../components/FormulaireBaremeLot.jsx'
+import FenetreRecapAttestations from '../components/FenetreRecapAttestations.jsx'
 
 const NB_COLONNES = 10
 
@@ -35,6 +36,7 @@ function AppelsDeFonds() {
   const [lotsActifs, setLotsActifs] = useState([])
   const [idEnEdition, setIdEnEdition] = useState(null)
   const [idLotBaremeOuvert, setIdLotBaremeOuvert] = useState(null)
+  const [recapOuvert, setRecapOuvert] = useState(false)
 
   async function chargerAppels() {
     const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds`)
@@ -161,7 +163,18 @@ function AppelsDeFonds() {
         <StatCard valeur={formatMontant(soldeRestant)} libelle="Solde restant dû" />
       </section>
 
-      <FormulaireAttestationMasse phases={nomsPhasesAttestables} onAppliquer={appliquerAttestationMasse} />
+      <FormulaireAttestationMasse
+        phases={nomsPhasesAttestables}
+        onAppliquer={appliquerAttestationMasse}
+        onVoirRecap={() => setRecapOuvert(true)}
+      />
+      {recapOuvert && (
+        <FenetreRecapAttestations
+          phasesTriees={phasesTriees.slice(1)}
+          appels={appels}
+          onFermer={() => setRecapOuvert(false)}
+        />
+      )}
 
       <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
       <FiltreMultiple titre="Phase :" options={nomsPhases} valeursActives={phasesActives} onChange={setPhasesActives} />

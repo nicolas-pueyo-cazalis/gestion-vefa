@@ -3,7 +3,7 @@ import { useState } from 'react'
 // Saisit une seule attestation MOE pour tous les lots d'une même phase en
 // une fois (remarque du 11/07/2026) — plutôt que de rouvrir chaque ligne
 // une par une.
-function FormulaireAttestationMasse({ phases, onAppliquer }) {
+function FormulaireAttestationMasse({ phases, onAppliquer, onVoirRecap }) {
   const [phase, setPhase] = useState('')
   const [dateAttestationMOE, setDateAttestationMOE] = useState('')
 
@@ -16,7 +16,10 @@ function FormulaireAttestationMasse({ phases, onAppliquer }) {
 
   return (
     <section className="section-parametres">
-      <h2>Attestation MOE par phase</h2>
+      <div className="entete-section-avec-action">
+        <h2>Attestation MOE par phase</h2>
+        <button type="button" className="lien-discret" onClick={onVoirRecap}>Voir le récapitulatif</button>
+      </div>
       <form onSubmit={soumettre}>
         <label>
           Phase

@@ -49,6 +49,12 @@ const tmaSchema = new mongoose.Schema({
   priorite: { type: String, enum: ['basse', 'moyenne', 'haute'] },
   montantEntreprises: Number,
   montantClient: Number,
+  // Saisi à la main (13/07/2026) : par défaut, montantClient est recalculé
+  // automatiquement à chaque changement des devis entreprises (voir
+  // recalculerTma, routes/tmaEntreprises.js) — mais une négociation directe
+  // avec le client peut aboutir à un montant différent. Une fois modifié à
+  // la main, ce montant n'est plus jamais recalculé automatiquement.
+  montantClientManuel: { type: Boolean, default: false },
   dateEnvoiFactureClient: Date,
   dateRetourClient: Date,
   statut: {

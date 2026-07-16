@@ -23,5 +23,10 @@ export function calculerEmissionAppel(lot, dateAttestation, delaiJours) {
     dateEmission,
     dateLimiteReglement,
     dateReglement: dejaDu ? new Date(lot.dateActe) : null,
+    // "regleAutomatiquement" (13/07/2026, point 125) : ce règlement est une
+    // déduction (l'acte a été signé après l'attestation), pas une vraie
+    // saisie manuelle — à annuler si la date/le statut source est corrigé
+    // après coup (voir routes/lots.js, PATCH /:id).
+    regleAutomatiquement: dejaDu,
   }
 }

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique } from '../models/Tma.js'
 import Lot from '../models/Lot.js'
+import TmaEntreprise from '../models/TmaEntreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
@@ -176,6 +177,58 @@ router.patch('/:id/annuler-refus', autoriserRoles('admin', 'gestionnaire'), asyn
     tma.statutAvantRefus = undefined
     await tma.save()
     res.json(tma)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// PATCH /api/tma/:id/infos — modifie localisation/description/montant
+// client (13/07/2026, à la demande de Nicolas) — une négociation directe
+// avec le client peut aboutir à un montant différent du calcul automatique
+// (voir calculerMontantClient/recalculerTma). `montantClient` fourni ici
+// fige la valeur (montantClientManuel: true) : elle ne sera plus jamais
+// recalculée automatiquement ensuite, même si les devis entreprises
+// changent — l'avertissement est affiché côté client avant l'envoi.
+router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const { localisation, description, montantClient } = req.body
+    const tma = await Tma.findById(req.params.id)
+    if (!tma) {
+      return res.status(404).json({ message: 'TMA introuvable' })
+    }
+
+    if (localisation !== undefined) tma.localisation = localisation
+    if (description !== undefined) tma.description = description
+    if (montantClient !== undefined) {
+      tma.montantClient = montantClient
+      tma.montantClientManuel = true
+    }
+
+    await tma.save()
+    const tmaPeuplee = await tma.populate([
+      { path: 'lot', select: 'reference statut acquereur', populate: { path: 'acquereur', select: 'civilite prenom nom' } },
+      { path: 'acquereur', select: 'civilite prenom nom' },
+    ])
+    res.json(tmaPeuplee)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// DELETE /api/tma/:id — supprime une TMA (13/07/2026, point 128 — ex: une
+// TMA devenue obsolète après annulation d'une vente, voir point 133, que
+// Nicolas décide de ne pas réattribuer). Supprime aussi les entreprises
+// sollicitées qui la référencent (TmaEntreprise.tma est obligatoire, une
+// référence cassée y provoquerait la même page blanche déjà corrigée pour
+// l'acquéreur, voir Tma.jsx).
+router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const tma = await Tma.findByIdAndDelete(req.params.id)
+    if (!tma) {
+      return res.status(404).json({ message: 'TMA introuvable' })
+    }
+    await TmaEntreprise.deleteMany({ tma: tma._id })
+    res.status(204).end()
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
   }

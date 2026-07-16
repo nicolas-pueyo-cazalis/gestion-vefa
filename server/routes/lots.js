@@ -108,6 +108,7 @@ async function genererAppelsDeFonds(lot) {
         // automatiquement, comme `dateEmission`, pas seulement l'échéance.
         document.dateEmission = lot.dateReservation
         document.dateReglement = lot.dateReservation
+        document.regleAutomatiquement = true
         const dateLimite = new Date(lot.dateReservation)
         dateLimite.setDate(dateLimite.getDate() + delai)
         document.dateLimiteReglement = dateLimite
@@ -247,6 +248,13 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       }
     }
 
+    // Capturés avant modification (13/07/2026, point 125) : pour ne réagir
+    // qu'à une vraie CORRECTION d'un lot déjà Acté, jamais à sa toute
+    // première génération d'appels de fonds (qui, elle, inclut forcément
+    // "dateActe" dans la requête aussi — voir plus bas).
+    const ancienStatut = lot.statut
+    const ancienneDateActe = lot.dateActe?.getTime()
+
     Object.assign(lot, champs)
 
     const erreurDates = validerDatesCoherentesAvecStatut(lot)
@@ -262,6 +270,36 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     // appels existent déjà pour ce lot (sécurité anti-doublon).
     if (lot.statut === 'acte') {
       await genererAppelsDeFonds(lot)
+    }
+
+    // Bug corrigé le 13/07/2026 (point 125), deux cas distincts — tous deux
+    // conditionnés à "ancienStatut === 'acte'" : ne jamais réagir à la toute
+    // première génération d'appels de fonds d'un lot qui vient de passer
+    // Acté pour la première fois (elle inclut forcément "dateActe" dans la
+    // requête elle aussi, et vient tout juste de calculer les bonnes
+    // valeurs via genererAppelsDeFonds ci-dessus — les écraser serait le
+    // bug inverse).
+    if (ancienStatut === 'acte' && lot.statut !== 'acte') {
+      // 1) Le lot n'est plus "Acté" (ex: statut passé à tort à "Acté",
+      // corrigé en arrière) : les appels de fonds n'ont alors plus aucun
+      // sens du tout, pas seulement leur règlement — mêmes règles que
+      // "Annuler la vente" (voir POST /:id/annuler ci-dessous), sinon un
+      // futur retour à "Acté" ne regénérerait jamais rien (sécurité
+      // anti-doublon de genererAppelsDeFonds).
+      await AppelDeFonds.deleteMany({ lot: lot._id })
+    } else if (ancienStatut === 'acte' && lot.statut === 'acte'
+      && 'dateActe' in champs && lot.dateActe?.getTime() !== ancienneDateActe) {
+      // 2) Le lot reste "Acté" mais sa date d'acte est corrigée (valeur
+      // réellement différente de l'ancienne) : les règlements déduits
+      // automatiquement de cette même date (voir calculerEmissionAppel)
+      // deviennent caducs, ils repassent "non réglé". Un vrai règlement
+      // saisi à la main (regleAutomatiquement à `false`, voir
+      // routes/appelsDeFonds.js) n'est lui jamais touché — le client a
+      // vraiment payé, peu importe la correction.
+      await AppelDeFonds.updateMany(
+        { lot: lot._id, regleAutomatiquement: true },
+        { dateReglement: null, regleAutomatiquement: false },
+      )
     }
 
     if (nouvelAcquereurId !== ancienAcquereurId) {

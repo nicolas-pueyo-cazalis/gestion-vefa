@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import AppelDeFonds from '../models/AppelDeFonds.js'
 import Lot from '../models/Lot.js'
+import Programme from '../models/Programme.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
 import { autoriserRoles } from '../middleware/auth.js'
 
@@ -35,10 +36,13 @@ function emettreAttestation(appel, dateAttestationMOE) {
   appel.dateAttestationMOE = dateAttestationMOE
   if (dateAttestationMOE && !appel.dateEmission) {
     const delai = appel.lot.programme.parametres.delaiReglementAppelJours
-    const { dateEmission, dateLimiteReglement, dateReglement } = calculerEmissionAppel(appel.lot, dateAttestationMOE, delai)
+    const { dateEmission, dateLimiteReglement, dateReglement, regleAutomatiquement } = calculerEmissionAppel(appel.lot, dateAttestationMOE, delai)
     appel.dateEmission = dateEmission
     appel.dateLimiteReglement = dateLimiteReglement
-    if (dateReglement) appel.dateReglement = dateReglement
+    if (dateReglement) {
+      appel.dateReglement = dateReglement
+      appel.regleAutomatiquement = regleAutomatiquement
+    }
   }
   if (!dateAttestationMOE) {
     appel.dateEmission = null
@@ -59,6 +63,26 @@ router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res)
     const { phase, dateAttestationMOE } = req.body
     if (!phase || !dateAttestationMOE) {
       return res.status(400).json({ message: 'Les champs "phase" et "dateAttestationMOE" sont requis' })
+    }
+
+    // Point 126 (13/07/2026) : une phase ne peut être attestée que si celle
+    // juste avant l'est déjà — sauf la toute première phase attestable
+    // (juste après "Réservation", index 0, qui elle n'est jamais attestée,
+    // auto-émise dès la réservation, voir genererAppelsDeFonds).
+    const programme = await Programme.findOne()
+    const phasesTriees = [...programme.parametres.baremePhases].sort((a, b) => a.ordre - b.ordre)
+    const index = phasesTriees.findIndex((p) => p.nom === phase)
+    if (index > 1) {
+      const nomPhasePrecedente = phasesTriees[index - 1].nom
+      const phasePrecedenteAttestee = await AppelDeFonds.exists({
+        'phase.nom': nomPhasePrecedente,
+        dateAttestationMOE: { $ne: null },
+      })
+      if (!phasePrecedenteAttestee) {
+        return res.status(400).json({
+          message: `Impossible d'attester "${phase}" : la phase précédente ("${nomPhasePrecedente}") n'est pas encore attestée.`,
+        })
+      }
     }
 
     const appels = await AppelDeFonds.find({ 'phase.nom': phase, dateAttestationMOE: null })
@@ -137,6 +161,11 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
 
     if (dateReglement !== undefined) {
       appel.dateReglement = dateReglement
+      // Saisie manuelle (13/07/2026, point 125) : même vidée (`null`), une
+      // correction volontaire ici prime sur la déduction automatique — le
+      // flag ne doit plus être vrai, sans quoi une future correction de
+      // date/statut du lot (routes/lots.js) écraserait cette saisie.
+      appel.regleAutomatiquement = false
     }
 
     // "Envoyé le" (13/07/2026, point 120) : corriger cette date recalcule

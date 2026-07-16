@@ -1,4 +1,4 @@
-# Demandes de Nicolas — Gestion VEFA
+(# Demandes de Nicolas — Gestion VEFA
 
 Liste chronologique de toutes les demandes, remarques et décisions
 exprimées par Nicolas depuis le début du projet — hors détails
@@ -628,6 +628,16 @@ totaux (point 115) — traitées une par une comme le reste.
      validées) : ajouter une carte "Taux de commercialisation" = (nombre
      de logements Actés + Réservés) / total, en % — pas encore de
      décision sur l'emplacement ni le calcul exact des arrondis.
+
+## Remarques verbales sur l'interface Appels de fonds (13/07/2026, en marge du point 123)
+
+159. Pouvoir modifier le barème d'UN logement en particulier, à la main,
+     même après que des appels de fonds y aient déjà été émis (cas d'une
+     négociation directe avec le client, différente du barème général du
+     programme) — contrairement au barème général, verrouillé par le point
+     123 dès qu'un appel est émis. Formulaire dédié par logement (toutes
+     les phases ensemble, contrôle "total = 100%"), pas une édition ligne
+     par ligne.
 
 ---
 

@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import AppelDeFonds from '../models/AppelDeFonds.js'
+import Lot from '../models/Lot.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
 import { autoriserRoles } from '../middleware/auth.js'
 
@@ -74,6 +75,49 @@ router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res)
   }
 })
 
+// PATCH /api/appels-de-fonds/lot/:lotId/bareme — ajuste le barème d'UN
+// logement en particulier (13/07/2026, à la demande de Nicolas : une
+// négociation directe avec un client peut donner un découpage différent du
+// barème général du programme, verrouillé côté Paramètres dès qu'un appel
+// est émis — voir point 123). `phases` : tableau `{ id, pourcentage }`, un
+// par appel de fonds déjà généré pour ce lot ; le montant de chacun est
+// recalculé à partir du prix TTC du lot. Doit être déclarée AVANT "/:id"
+// ci-dessous, sinon Express interprète "lot" comme une valeur de :id.
+router.patch('/lot/:lotId/bareme', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const { phases } = req.body
+    if (!Array.isArray(phases) || phases.length === 0) {
+      return res.status(400).json({ message: 'Aucune phase fournie.' })
+    }
+
+    const totalPourcent = phases.reduce((somme, p) => somme + p.pourcentage, 0)
+    if (Math.abs(totalPourcent - 1) > 0.001) {
+      return res.status(400).json({
+        message: `La somme des pourcentages doit faire 100% (actuellement ${Math.round(totalPourcent * 100)}%).`,
+      })
+    }
+
+    const lot = await Lot.findById(req.params.lotId)
+    if (!lot) {
+      return res.status(404).json({ message: 'Lot introuvable' })
+    }
+
+    await Promise.all(phases.map(({ id, pourcentage }) =>
+      AppelDeFonds.updateOne(
+        { _id: id, lot: lot._id },
+        { 'phase.pourcentage': pourcentage, montant: lot.prixTTC * pourcentage },
+      ),
+    ))
+
+    const appelsMisAJour = await AppelDeFonds.find({ lot: lot._id })
+      .populate('lot', 'reference prixTTC')
+      .sort({ 'phase.ordre': 1 })
+    res.json(appelsMisAJour)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
 // PATCH /api/appels-de-fonds/:id — saisie du règlement pour un seul appel.
 // L'attestation MOE ne se saisit plus qu'en masse, par phase (route
 // "/phase" ci-dessus, remarque du 11/07/2026) — volontairement absente
@@ -84,14 +128,28 @@ router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res)
 // silencieusement l'émission déjà calculée.
 router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { dateReglement } = req.body
+    const { dateEmission, dateReglement } = req.body
     const appel = await AppelDeFonds.findById(req.params.id)
+      .populate({ path: 'lot', populate: { path: 'programme' } })
     if (!appel) {
       return res.status(404).json({ message: 'Appel de fonds introuvable' })
     }
 
     if (dateReglement !== undefined) {
       appel.dateReglement = dateReglement
+    }
+
+    // "Envoyé le" (13/07/2026, point 120) : corriger cette date recalcule
+    // la date limite de règlement (+ délai défini dans Paramètres), pour
+    // qu'elle reste cohérente avec la nouvelle date d'envoi — même calcul
+    // que calculerEmissionAppel() (utils/appelsDeFonds.js), appliqué ici à
+    // une correction manuelle plutôt qu'à une émission automatique.
+    if (dateEmission) {
+      appel.dateEmission = dateEmission
+      const delai = appel.lot.programme.parametres.delaiReglementAppelJours
+      const dateLimite = new Date(dateEmission)
+      dateLimite.setDate(dateLimite.getDate() + delai)
+      appel.dateLimiteReglement = dateLimite
     }
 
     await appel.save()

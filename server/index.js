@@ -15,6 +15,7 @@ import './models/Tma.js'
 import './models/TmaEntreprise.js'
 import './models/Entreprise.js'
 import './models/Utilisateur.js'
+import './models/HistoriqueAnnulation.js'
 
 import programmeRouter from './routes/programme.js'
 import lotsRouter from './routes/lots.js'
@@ -25,6 +26,7 @@ import acquereursRouter from './routes/acquereurs.js'
 import appelsDeFondsRouter from './routes/appelsDeFonds.js'
 import authRouter from './routes/auth.js'
 import utilisateursRouter from './routes/utilisateurs.js'
+import historiqueAnnulationsRouter from './routes/historiqueAnnulations.js'
 import { verifierToken } from './middleware/auth.js'
 
 const app = express()
@@ -51,6 +53,7 @@ app.use('/api/tma-entreprises', tmaEntreprisesRouter)
 app.use('/api/entreprises', entreprisesRouter)
 app.use('/api/acquereurs', acquereursRouter)
 app.use('/api/appels-de-fonds', appelsDeFondsRouter)
+app.use('/api/historique-annulations', historiqueAnnulationsRouter)
 
 mongoose
   .connect(process.env.MONGODB_URI)

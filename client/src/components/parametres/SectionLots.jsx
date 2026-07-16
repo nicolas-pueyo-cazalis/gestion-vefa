@@ -15,13 +15,17 @@ function SectionLots({ programme, lots, onChangement }) {
   const [orientation, setOrientation] = useState('')
   const [surfaceHabitable, setSurfaceHabitable] = useState('')
   const [surfacesTerrasses, setSurfacesTerrasses] = useState([])
+  const [surfacesBalcons, setSurfacesBalcons] = useState([])
+  const [surfacesLoggias, setSurfacesLoggias] = useState([])
   const [surfaceJardin, setSurfaceJardin] = useState('')
   const [parkings, setParkings] = useState([])
   const [caves, setCaves] = useState([])
+  const [celliers, setCelliers] = useState([])
   const [prixTTC, setPrixTTC] = useState('')
   const [erreur, setErreur] = useState('')
   const [erreurParkings, setErreurParkings] = useState('')
   const [erreurCaves, setErreurCaves] = useState('')
+  const [erreurCelliers, setErreurCelliers] = useState('')
 
   const maximumAtteint = programme.nombreLogements != null && lots.length >= programme.nombreLogements
   const logementsManquants = programme.nombreLogements != null && lots.length < programme.nombreLogements
@@ -44,6 +48,7 @@ function SectionLots({ programme, lots, onChangement }) {
     setErreur('')
     setErreurParkings('')
     setErreurCaves('')
+    setErreurCelliers('')
     const reponse = await apiFetch(`${API_URL}/api/lots`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,9 +60,12 @@ function SectionLots({ programme, lots, onChangement }) {
         orientation: orientation || null,
         surfaceHabitable: versNombreOuNull(surfaceHabitable),
         surfacesTerrasses,
+        surfacesBalcons,
+        surfacesLoggias,
         surfaceJardin: versNombreOuNull(surfaceJardin),
         parkings,
         caves,
+        celliers,
         prixTTC: versNombreOuNull(prixTTC),
       }),
     })
@@ -65,6 +73,7 @@ function SectionLots({ programme, lots, onChangement }) {
       const donnees = await reponse.json()
       if (donnees.champ === 'parkings') setErreurParkings(donnees.message)
       else if (donnees.champ === 'caves') setErreurCaves(donnees.message)
+      else if (donnees.champ === 'celliers') setErreurCelliers(donnees.message)
       else setErreur(donnees.message)
       return
     }
@@ -74,9 +83,12 @@ function SectionLots({ programme, lots, onChangement }) {
     setOrientation('')
     setSurfaceHabitable('')
     setSurfacesTerrasses([])
+    setSurfacesBalcons([])
+    setSurfacesLoggias([])
     setSurfaceJardin('')
     setParkings([])
     setCaves([])
+    setCelliers([])
     setPrixTTC('')
     onChangement()
   }
@@ -167,14 +179,17 @@ function SectionLots({ programme, lots, onChangement }) {
           Surface habitable (m²)
           <input type="number" step="0.01" value={surfaceHabitable} onChange={(e) => setSurfaceHabitable(e.target.value)} />
         </label>
-        <ListeSurfaces label="Terrasses/Balcons (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
+        <ListeSurfaces label="Terrasses (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
+        <ListeSurfaces label="Balcons (m²)" valeurs={surfacesBalcons} onChange={setSurfacesBalcons} />
+        <ListeSurfaces label="Loggias (m²)" valeurs={surfacesLoggias} onChange={setSurfacesLoggias} />
         <label>
           Jardin (m²)
           <input type="number" step="0.01" value={surfaceJardin} onChange={(e) => setSurfaceJardin(e.target.value)} />
         </label>
         <div className="groupe-numeros">
           <ListeNumeros label="N° de parking" valeurs={parkings} onChange={setParkings} erreur={erreurParkings} />
-          <ListeNumeros label="N° de cave/cellier" valeurs={caves} onChange={setCaves} erreur={erreurCaves} />
+          <ListeNumeros label="N° de cave" valeurs={caves} onChange={setCaves} erreur={erreurCaves} />
+          <ListeNumeros label="N° de cellier" valeurs={celliers} onChange={setCelliers} erreur={erreurCelliers} />
         </div>
         <label>
           Prix TTC (€)

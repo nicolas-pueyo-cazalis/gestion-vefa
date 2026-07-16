@@ -12,12 +12,16 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
   const [orientation, setOrientation] = useState(lot.orientation ?? '')
   const [surfaceHabitable, setSurfaceHabitable] = useState(lot.surfaceHabitable ?? '')
   const [surfacesTerrasses, setSurfacesTerrasses] = useState(lot.surfacesTerrasses ?? [])
+  const [surfacesBalcons, setSurfacesBalcons] = useState(lot.surfacesBalcons ?? [])
+  const [surfacesLoggias, setSurfacesLoggias] = useState(lot.surfacesLoggias ?? [])
   const [surfaceJardin, setSurfaceJardin] = useState(lot.surfaceJardin ?? '')
   const [parkings, setParkings] = useState(lot.parkings ?? [])
   const [caves, setCaves] = useState(lot.caves ?? [])
+  const [celliers, setCelliers] = useState(lot.celliers ?? [])
   const [prixTTC, setPrixTTC] = useState(lot.prixTTC ?? '')
   const [erreurParkings, setErreurParkings] = useState('')
   const [erreurCaves, setErreurCaves] = useState('')
+  const [erreurCelliers, setErreurCelliers] = useState('')
 
   function versNombreOuNull(valeur) {
     return valeur === '' ? null : Number(valeur)
@@ -27,6 +31,7 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
     evenement.preventDefault()
     setErreurParkings('')
     setErreurCaves('')
+    setErreurCelliers('')
     const erreur = await onEnregistrer(lot._id, {
       reference,
       etage: etage || null,
@@ -34,14 +39,18 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
       orientation: orientation || null,
       surfaceHabitable: versNombreOuNull(surfaceHabitable),
       surfacesTerrasses,
+      surfacesBalcons,
+      surfacesLoggias,
       surfaceJardin: versNombreOuNull(surfaceJardin),
       parkings,
       caves,
+      celliers,
       prixTTC: versNombreOuNull(prixTTC),
     })
     if (erreur) {
       if (erreur.champ === 'parkings') setErreurParkings(erreur.message)
       else if (erreur.champ === 'caves') setErreurCaves(erreur.message)
+      else if (erreur.champ === 'celliers') setErreurCelliers(erreur.message)
       return
     }
     setEnEdition(false)
@@ -77,14 +86,17 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
             Surface habitable (m²)
             <input type="number" step="0.01" value={surfaceHabitable} onChange={(e) => setSurfaceHabitable(e.target.value)} />
           </label>
-          <ListeSurfaces label="Terrasses/Balcons (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
+          <ListeSurfaces label="Terrasses (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
+          <ListeSurfaces label="Balcons (m²)" valeurs={surfacesBalcons} onChange={setSurfacesBalcons} />
+          <ListeSurfaces label="Loggias (m²)" valeurs={surfacesLoggias} onChange={setSurfacesLoggias} />
           <label>
             Jardin (m²)
             <input type="number" step="0.01" value={surfaceJardin} onChange={(e) => setSurfaceJardin(e.target.value)} />
           </label>
           <div className="groupe-numeros">
             <ListeNumeros label="N° de parking" valeurs={parkings} onChange={setParkings} erreur={erreurParkings} />
-            <ListeNumeros label="N° de cave/cellier" valeurs={caves} onChange={setCaves} erreur={erreurCaves} />
+            <ListeNumeros label="N° de cave" valeurs={caves} onChange={setCaves} erreur={erreurCaves} />
+            <ListeNumeros label="N° de cellier" valeurs={celliers} onChange={setCelliers} erreur={erreurCelliers} />
           </div>
           <label>
             Prix TTC (€)
@@ -102,10 +114,13 @@ function LigneLot({ lot, etagesDisponibles, onEnregistrer, onSupprimer }) {
       {lot.reference} — {lot.etage} — {lot.type}
       {lot.orientation && ` — ${lot.orientation}`}
       {lot.surfaceHabitable != null && ` — ${lot.surfaceHabitable} m² habitables`}
-      {lot.surfacesTerrasses?.length > 0 && ` — terrasse${lot.surfacesTerrasses.length > 1 ? 's' : ''}/balcon${lot.surfacesTerrasses.length > 1 ? 's' : ''} : ${lot.surfacesTerrasses.join(', ')} m²`}
+      {lot.surfacesTerrasses?.length > 0 && ` — terrasse${lot.surfacesTerrasses.length > 1 ? 's' : ''} : ${lot.surfacesTerrasses.join(', ')} m²`}
+      {lot.surfacesBalcons?.length > 0 && ` — balcon${lot.surfacesBalcons.length > 1 ? 's' : ''} : ${lot.surfacesBalcons.join(', ')} m²`}
+      {lot.surfacesLoggias?.length > 0 && ` — loggia${lot.surfacesLoggias.length > 1 ? 's' : ''} : ${lot.surfacesLoggias.join(', ')} m²`}
       {lot.surfaceJardin != null && ` — ${lot.surfaceJardin} m² jardin`}
       {lot.parkings?.length > 0 && ` — n° de parking : ${lot.parkings.join(', ')}`}
-      {lot.caves?.length > 0 && ` — n° de cave/cellier : ${lot.caves.join(', ')}`}
+      {lot.caves?.length > 0 && ` — n° de cave : ${lot.caves.join(', ')}`}
+      {lot.celliers?.length > 0 && ` — n° de cellier : ${lot.celliers.join(', ')}`}
       {lot.prixTTC != null && ` — ${formatMontant(lot.prixTTC, 0)}`}
       <button type="button" onClick={() => setEnEdition(true)}>Modifier</button>
       <button type="button" onClick={() => onSupprimer(lot._id)}>Retirer</button>

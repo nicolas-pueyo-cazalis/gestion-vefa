@@ -4,6 +4,7 @@ import Acquereur from '../models/Acquereur.js'
 import Programme from '../models/Programme.js'
 import Tma from '../models/Tma.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
+import HistoriqueAnnulation from '../models/HistoriqueAnnulation.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
 import { autoriserRoles } from '../middleware/auth.js'
 
@@ -146,8 +147,8 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const {
       programme, reference, etage, type, orientation,
-      surfaceHabitable, surfacesTerrasses, surfaceJardin,
-      parkings, caves, prixTTC,
+      surfaceHabitable, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
+      parkings, caves, celliers, prixTTC,
     } = req.body
 
     // Vérification côté serveur (pas seulement dans le formulaire React) :
@@ -171,11 +172,15 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     if (erreurCaves) {
       return res.status(400).json({ champ: 'caves', message: erreurCaves })
     }
+    const erreurCelliers = await validerNumerosUniques(programme, null, 'celliers', celliers)
+    if (erreurCelliers) {
+      return res.status(400).json({ champ: 'celliers', message: erreurCelliers })
+    }
 
     const lot = await Lot.create({
       programme, reference, etage, type, orientation,
-      surfaceHabitable, surfacesTerrasses, surfaceJardin,
-      parkings, caves, prixTTC,
+      surfaceHabitable, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
+      parkings, caves, celliers, prixTTC,
     })
     res.status(201).json(lot)
   } catch (erreur) {
@@ -209,6 +214,12 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       const erreurCaves = await validerNumerosUniques(lot.programme, lot._id, 'caves', champs.caves)
       if (erreurCaves) {
         return res.status(400).json({ champ: 'caves', message: erreurCaves })
+      }
+    }
+    if (champs.celliers) {
+      const erreurCelliers = await validerNumerosUniques(lot.programme, lot._id, 'celliers', champs.celliers)
+      if (erreurCelliers) {
+        return res.status(400).json({ champ: 'celliers', message: erreurCelliers })
       }
     }
 
@@ -264,6 +275,99 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
 
     const lotPeuple = await lot.populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
     res.json(lotPeuple)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// POST /api/lots/:id/annuler — bouton client "Annuler la vente" (points
+// 117+118, 2e refonte du 13/07/2026 : un premier essai gardait un statut
+// "annule" sur le lot lui-même, mais Nicolas a précisé vouloir que le lot
+// reparte à zéro sur l'interface principale — "de nouveau à la vente" —
+// et que l'historique de la vente annulée vive sur une page à part,
+// jamais mélangé aux pages actives). Copie tout ce qui était rattaché à
+// cette vente (statut/dates, client, prêt, acte, appels de fonds) dans
+// HistoriqueAnnulation, PUIS vide/supprime ces informations des pages
+// concernées — sauf les TMA (point 133), volontairement laissées telles
+// quelles (avec un avertissement, voir routes/tma.js et Tma.jsx) plutôt
+// que déplacées ou supprimées : Nicolas veut pouvoir décider lui-même de
+// les garder (le prochain acquéreur reprend la demande) ou de les
+// supprimer (bouton à venir, point 128).
+router.post('/:id/annuler', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const lot = await Lot.findById(req.params.id).populate('acquereur')
+    if (!lot) {
+      return res.status(404).json({ message: 'Lot introuvable' })
+    }
+    if (lot.statut === 'libre') {
+      return res.status(400).json({ message: 'Ce logement est déjà libre, il n\'y a pas de vente à annuler.' })
+    }
+
+    const appels = await AppelDeFonds.find({ lot: lot._id })
+    const acquereur = lot.acquereur
+
+    await HistoriqueAnnulation.create({
+      lot: lot._id,
+      programme: lot.programme,
+      referenceLot: lot.reference,
+      statutAvantAnnulation: lot.statut,
+      dateOption: lot.dateOption,
+      dateReservation: lot.dateReservation,
+      dateActe: lot.dateActe,
+      commentaire: lot.commentaire,
+      civiliteClient: acquereur?.civilite,
+      nomClient: acquereur?.nom,
+      prenomClient: acquereur?.prenom,
+      banque: acquereur?.banque,
+      courtier: acquereur?.courtier,
+      dateOffrePretRecue: acquereur?.dateOffrePretRecue,
+      sansPret: acquereur?.sansPret,
+      notaire: acquereur?.notaire,
+      appelsDeFonds: appels.map((appel) => ({
+        phase: appel.phase,
+        montant: appel.montant,
+        dateEmission: appel.dateEmission,
+        dateAttestationMOE: appel.dateAttestationMOE,
+        dateLimiteReglement: appel.dateLimiteReglement,
+        dateReglement: appel.dateReglement,
+      })),
+    })
+
+    // Les appels de fonds n'ont plus lieu d'être sur un lot redevenu
+    // "Libre" — et il faut les supprimer pour qu'une revente future de ce
+    // même lot puisse en regénérer (genererAppelsDeFonds ci-dessus est une
+    // sécurité anti-doublon qui, sinon, ne créerait plus jamais rien).
+    await AppelDeFonds.deleteMany({ lot: lot._id })
+
+    if (acquereur) {
+      acquereur.lots = acquereur.lots.filter((idLot) => idLot.toString() !== lot._id.toString())
+      // Cet acquéreur n'existait que pour cette vente (aucun autre lot
+      // après retrait de celui-ci) : sa fiche est supprimée, plutôt que de
+      // laisser une entrée fantôme sur la page Clients (13/07/2026, point
+      // 3) — ses informations restent de toute façon dans l'historique
+      // ci-dessus. S'il a d'autres lots, c'est un vrai client par ailleurs :
+      // sa fiche reste. Exception : une TMA vivante qui le référence encore
+      // (`Tma.acquereur` est obligatoire, jamais vidé — voir point 133) a
+      // besoin que cette fiche continue d'exister, sans quoi la référence
+      // devient invalide et la TMA ne peut plus jamais être réattribuée
+      // correctement (le comparatif tmaObsolete() de Tma.jsx s'appuie dessus).
+      const nombreTmaLiees = await Tma.countDocuments({ acquereur: acquereur._id })
+      if (acquereur.lots.length === 0 && nombreTmaLiees === 0) {
+        await Acquereur.findByIdAndDelete(acquereur._id)
+      } else {
+        await acquereur.save()
+      }
+    }
+
+    lot.statut = 'libre'
+    lot.dateOption = null
+    lot.dateReservation = null
+    lot.dateActe = null
+    lot.acquereur = null
+    lot.commentaire = null
+    await lot.save()
+
+    res.json(lot)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
   }

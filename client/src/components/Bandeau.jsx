@@ -62,6 +62,7 @@ function Bandeau() {
         <NavLink to="/signature-acte">Signature acte</NavLink>
         <NavLink to="/appels-de-fonds">Appels de fonds</NavLink>
         <NavLink to="/tma">TMA</NavLink>
+        <NavLink to="/annules">Annulés</NavLink>
         <NavLink to="/parametres" className="nav-parametres">Paramètres</NavLink>
       </nav>
     </header>

@@ -8,6 +8,7 @@ import Clients from './pages/Clients.jsx'
 import AppelsDeFonds from './pages/AppelsDeFonds.jsx'
 import SuiviPret from './pages/SuiviPret.jsx'
 import SignatureActe from './pages/SignatureActe.jsx'
+import HistoriqueAnnulations from './pages/HistoriqueAnnulations.jsx'
 import Parametres from './pages/Parametres.jsx'
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="appels-de-fonds" element={<AppelsDeFonds />} />
           <Route path="suivi-pret" element={<SuiviPret />} />
           <Route path="signature-acte" element={<SignatureActe />} />
+          <Route path="annules" element={<HistoriqueAnnulations />} />
           <Route path="parametres" element={<Parametres />} />
         </Route>
       </Route>

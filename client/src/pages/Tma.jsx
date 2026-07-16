@@ -23,8 +23,21 @@ const STATUTS_FILTRE = [
   ...Object.entries(STATUTS_TMA).map(([valeur, libelle]) => ({ valeur, libelle })),
 ]
 
+// Garde contre un acquéreur manquant (13/07/2026) : `tma.acquereur` est une
+// référence, pas une copie — si la fiche client venait à disparaître, le
+// populate() renvoie `null` plutôt que de planter la page.
 function nomAcquereur(acquereur) {
+  if (!acquereur) return '—'
   return [acquereur.civilite, acquereur.prenom, acquereur.nom].filter(Boolean).join(' ')
+}
+
+// TMA obsolète (13/07/2026, point 133) : son client d'origine (figé au
+// moment de la création, voir server/routes/tma.js) ne correspond plus à
+// l'acquéreur ACTUEL du lot — soit le lot est repassé "Libre" (vente
+// annulée, lot.acquereur absent), soit il a été revendu à quelqu'un
+// d'autre sans que la TMA n'ait encore été réattribuée.
+function tmaObsolete(tma) {
+  return (tma.lot?.acquereur?._id ?? null) !== (tma.acquereur?._id ?? null)
 }
 
 function Tma() {
@@ -92,6 +105,25 @@ function Tma() {
     setTmaList((liste) =>
       liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
     )
+  }
+
+  // Réattribution (13/07/2026, point 133) : le lot d'une TMA obsolète a
+  // été revendu, ce nouveau client accepte de reprendre la demande — on
+  // recharge toute la liste (pas juste cette TMA) puisque `tma.lot`
+  // (utilisé par tmaObsolete) vient d'un populate imbriqué qu'il est plus
+  // simple de refaire en entier que de reconstruire à la main.
+  async function reattribuerClient(tma) {
+    const reponse = await apiFetch(`${API_URL}/api/tma/${tma._id}/acquereur`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acquereur: tma.lot.acquereur._id }),
+    })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+    await chargerTma()
   }
 
   async function annulerRefus(id) {
@@ -199,7 +231,27 @@ function Tma() {
             <Fragment key={tma._id}>
               <tr>
                 <td>{tma.lot?.reference ?? '—'}</td>
-                <td>{nomAcquereur(tma.acquereur)}</td>
+                <td>
+                  {/* Client d'origine obsolète (13/07/2026, point 133) : la
+                      vente qui a donné lieu à cette TMA a été annulée (et
+                      éventuellement remplacée par une nouvelle) depuis — le
+                      client d'origine n'a plus rien à voir avec le logement,
+                      donc son nom ne s'affiche plus. La TMA elle-même reste
+                      (à garder si le nouveau client la reprend — bouton
+                      ci-dessous — ou à supprimer soi-même, voir point 128),
+                      simplement signalée tant qu'elle n'a pas été réattribuée. */}
+                  {tmaObsolete(tma) ? '—' : nomAcquereur(tma.acquereur)}
+                  {tmaObsolete(tma) && (
+                    <>
+                      <div className="avertissement-cellule">Attention, ce logement a été annulé</div>
+                      {tma.lot?.acquereur && (
+                        <button type="button" onClick={() => reattribuerClient(tma)}>
+                          Réattribuer à {nomAcquereur(tma.lot.acquereur)}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </td>
                 <td>{tma.localisation}</td>
                 <td>{tma.description}</td>
                 {/* "==" (pas "===") : capture aussi bien `null` que

@@ -229,6 +229,14 @@ main {
   margin: 0.5rem 0 1.5rem;
 }
 
+// Sous-titre explicatif sous .titre-page (13/07/2026, page "Annulés").
+.sous-titre-page {
+  text-align: center;
+  color: #52606d;
+  font-size: 0.85rem;
+  margin: -1rem 0 1.5rem;
+}
+
 // Titre + chiffre clé isolé (13/07/2026, point 153, option B) : le titre
 // perd son centrage/sa marge propres pour s'aligner avec le chiffre à
 // droite, sur une seule ligne.
@@ -473,6 +481,22 @@ table {
         background: #eef2f6;
       }
     }
+
+    // Bouton "Modifier" en icône seule (13/07/2026, point 155) : gagne en
+    // largeur par rapport au texte répété sur chaque ligne.
+    .bouton-icone {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.9rem;
+      height: 1.9rem;
+      padding: 0;
+      color: #52606d;
+
+      &:hover {
+        color: $couleur-texte;
+      }
+    }
   }
 
   .formulaire-dates td,
@@ -521,6 +545,27 @@ table {
       color: white;
       border-color: $couleur-texte;
     }
+
+    // Action destructrice (13/07/2026, point 117 : réinitialisation d'un
+    // logement) — rouge, bien distinct du bouton "Annuler" juste à côté
+    // qui, lui, ferme le formulaire sans rien modifier.
+    .bouton-danger {
+      color: #dc2626;
+      border-color: #dc2626;
+
+      &:hover {
+        background: #fef2f2;
+      }
+    }
+  }
+
+  // Barème négocié pour un logement (13/07/2026, FormulaireBaremeLot.jsx) :
+  // une ligne par phase déjà générée, % éditable + aperçu du montant
+  // recalculé en direct à côté.
+  .formulaire-bareme-lot .apercu-montant {
+    color: #52606d;
+    font-size: 0.8rem;
+    margin-left: 0.3rem;
   }
 
   // Un ou plusieurs contacts (banque/courtier/notaire) à l'intérieur d'un
@@ -603,6 +648,43 @@ table {
       font-size: 0.8rem;
     }
   }
+
+  // Détail dépliable d'une vente annulée (13/07/2026, page "Annulés") :
+  // 4 blocs (Prêt/Acte/Appels de fonds/TMA) en grille, même principe que
+  // .detail-entreprises ci-dessus pour les listes internes.
+  .detail-annulation {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    text-align: left;
+    padding: 0.5rem 0;
+  }
+
+  .detail-annulation-bloc {
+    h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      color: #52606d;
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: #52606d;
+      font-style: italic;
+      margin: 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+    }
+  }
 }
 
 // Tableau large (page Lots) : plutôt que de forcer le texte à la ligne
@@ -660,23 +742,31 @@ table.tableau-lots {
     font-weight: 700;
   }
 
-  // Seul intitulé volontairement autorisé à revenir à la ligne (2 mots
-  // réellement longs) — au niveau du "/", jamais au milieu d'un mot,
-  // puisque le retour à la ligne "normal" ne coupe qu'aux séparateurs.
-  th.entete-repliable {
-    white-space: normal;
+  // Colonne "Annexes" (13/07/2026, point 156) : une ligne par catégorie
+  // présente (Terrasse/Balcon/Loggia/Jardin/Parking/Cave/Cellier), les
+  // cellules concernées devenant plus hautes que les autres — acceptable,
+  // c'est le compromis du regroupement en une seule colonne.
+  .annexes-cellule {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
   }
 
-  // Rappel visuel sous un badge de statut (ex: prêt non reçu sur un lot
-  // Acté, remarque du 13/07/2026) — même rouge que .total-erreur.
-  .avertissement-cellule {
-    margin-top: 0.2rem;
-    color: #dc2626;
-    font-size: 0.62rem;
-    font-weight: 600;
-    white-space: normal;
-    line-height: 1.2;
-  }
+}
+
+// Rappel visuel sous un badge de statut (ex: prêt non reçu sur un lot
+// Acté ; TMA devenue obsolète après annulation d'une vente) — même rouge
+// que .total-erreur. Volontairement HORS de `table.tableau-lots`
+// (13/07/2026) : utilisé aussi sur la page TMA, dont le tableau n'a pas
+// cette classe.
+.avertissement-cellule {
+  margin-top: 0.2rem;
+  color: #dc2626;
+  font-size: 0.62rem;
+  font-weight: 600;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 // Pied de totaux détaché du tableau (13/07/2026, proposition B validée) :
@@ -1036,15 +1126,19 @@ table.tableau-lots {
     }
   }
 
-  .total-ok {
-    color: #16a34a; // même vert que .badge.acte (voir $couleurs-statut)
-    font-weight: 600;
-  }
+}
 
-  .total-erreur {
-    color: #dc2626; // même rouge que .badge.refuse (voir $couleurs-statut)
-    font-weight: 600;
-  }
+// Contrôle "total = 100%" (13/07/2026) : sorti de `.section-parametres`
+// pour être réutilisable ailleurs (ex: FormulaireBaremeLot.jsx, sur la
+// page Appels de fonds, en dehors de Paramètres).
+.total-ok {
+  color: #16a34a; // même vert que .badge.acte (voir $couleurs-statut)
+  font-weight: 600;
+}
+
+.total-erreur {
+  color: #dc2626; // même rouge que .badge.refuse (voir $couleurs-statut)
+  font-weight: 600;
 }
 
 .telephone-input {

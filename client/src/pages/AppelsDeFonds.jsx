@@ -9,8 +9,9 @@ import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FiltreMultiple from '../components/FiltreMultiple.jsx'
 import FormulaireAppelDeFonds from '../components/FormulaireAppelDeFonds.jsx'
 import FormulaireAttestationMasse from '../components/FormulaireAttestationMasse.jsx'
+import FormulaireBaremeLot from '../components/FormulaireBaremeLot.jsx'
 
-const NB_COLONNES = 9
+const NB_COLONNES = 10
 
 const LIBELLES_STATUT = {
   attente: 'En attente',
@@ -33,6 +34,7 @@ function AppelsDeFonds() {
   const [phasesActives, setPhasesActives] = useState([])
   const [lotsActifs, setLotsActifs] = useState([])
   const [idEnEdition, setIdEnEdition] = useState(null)
+  const [idLotBaremeOuvert, setIdLotBaremeOuvert] = useState(null)
 
   async function chargerAppels() {
     const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds`)
@@ -67,6 +69,24 @@ function AppelsDeFonds() {
     }
     await chargerAppels()
     setIdEnEdition(null)
+  }
+
+  // Barème négocié pour UN logement (13/07/2026) : contrairement au barème
+  // général (Paramètres, verrouillé dès qu'un appel est émis — point 123),
+  // ce cas particulier reste volontairement modifiable même après émission.
+  async function enregistrerBaremeLot(lotId, phases) {
+    const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds/lot/${lotId}/bareme`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phases }),
+    })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+    await chargerAppels()
+    setIdLotBaremeOuvert(null)
   }
 
   async function appliquerAttestationMasse(donnees) {
@@ -155,6 +175,7 @@ function AppelsDeFonds() {
             <th>%</th>
             <th>Montant</th>
             <th>Attestation MOE</th>
+            <th>Envoyé le</th>
             <th>Limite règlement</th>
             <th>Réglé le</th>
             <th>Statut</th>
@@ -169,31 +190,56 @@ function AppelsDeFonds() {
               </td>
             </tr>
           )}
-          {appelsFiltres.map((appel) => (
-            <Fragment key={appel._id}>
-              <tr>
-                <td>{appel.lot?.reference ?? '—'}</td>
-                <td>{appel.phase.nom}</td>
-                <td>{Math.round(appel.phase.pourcentage * 100)}%</td>
-                <td>{formatMontant(appel.montant)}</td>
-                <td>{formatDate(appel.dateAttestationMOE)}</td>
-                <td>{formatDate(appel.dateLimiteReglement)}</td>
-                <td>{formatDate(appel.dateReglement)}</td>
-                <td><Badge statut={statutAppel(appel)} texte={LIBELLES_STATUT[statutAppel(appel)]} /></td>
-                <td className="actions">
-                  <button type="button" onClick={() => setIdEnEdition(appel._id)}>Modifier</button>
-                </td>
-              </tr>
-              {idEnEdition === appel._id && (
-                <FormulaireAppelDeFonds
-                  appel={appel}
-                  colonnes={NB_COLONNES}
-                  onEnregistrer={enregistrer}
-                  onFermer={() => setIdEnEdition(null)}
-                />
-              )}
-            </Fragment>
-          ))}
+          {appelsFiltres.map((appel, index) => {
+            // Une ligne par phase, mais le barème se négocie par LOGEMENT
+            // (13/07/2026) : le bouton/panneau n'apparaît qu'une fois, sur
+            // la dernière ligne de chaque lot (la liste est déjà triée par
+            // lot puis par phase.ordre, voir appelsTries plus haut).
+            const dernierDuLot = index === appelsFiltres.length - 1
+              || appelsFiltres[index + 1].lot?._id !== appel.lot?._id
+            const appelsDuLot = appelsFiltres.filter((a) => a.lot?._id === appel.lot?._id)
+            return (
+              <Fragment key={appel._id}>
+                <tr>
+                  <td>{appel.lot?.reference ?? '—'}</td>
+                  <td>{appel.phase.nom}</td>
+                  <td>{Math.round(appel.phase.pourcentage * 100)}%</td>
+                  <td>{formatMontant(appel.montant)}</td>
+                  <td>{formatDate(appel.dateAttestationMOE)}</td>
+                  <td>{formatDate(appel.dateEmission)}</td>
+                  <td>{formatDate(appel.dateLimiteReglement)}</td>
+                  <td>{formatDate(appel.dateReglement)}</td>
+                  <td><Badge statut={statutAppel(appel)} texte={LIBELLES_STATUT[statutAppel(appel)]} /></td>
+                  <td className="actions">
+                    <button type="button" onClick={() => setIdEnEdition(appel._id)}>Modifier</button>
+                    {dernierDuLot && appel.lot && (
+                      <button type="button" onClick={() => setIdLotBaremeOuvert(appel.lot._id)}>
+                        Barème du lot
+                      </button>
+                    )}
+                  </td>
+                </tr>
+                {idEnEdition === appel._id && (
+                  <FormulaireAppelDeFonds
+                    appel={appel}
+                    colonnes={NB_COLONNES}
+                    onEnregistrer={enregistrer}
+                    onFermer={() => setIdEnEdition(null)}
+                  />
+                )}
+                {dernierDuLot && idLotBaremeOuvert === appel.lot?._id && (
+                  <FormulaireBaremeLot
+                    lotId={appel.lot._id}
+                    prixTTC={appel.lot.prixTTC}
+                    appels={appelsDuLot}
+                    colonnes={NB_COLONNES}
+                    onEnregistrer={enregistrerBaremeLot}
+                    onFermer={() => setIdLotBaremeOuvert(null)}
+                  />
+                )}
+              </Fragment>
+            )
+          })}
         </tbody>
       </table>
     </>

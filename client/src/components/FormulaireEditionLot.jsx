@@ -9,7 +9,7 @@ function versDateInput(valeur) {
 
 const NOUVEL_ACQUEREUR = '__nouveau__'
 
-function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFermer }) {
+function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnulerVente, onFermer }) {
   const [statut, setStatut] = useState(lot.statut)
   const [dateOption, setDateOption] = useState(versDateInput(lot.dateOption))
   const [dateReservation, setDateReservation] = useState(versDateInput(lot.dateReservation))
@@ -70,6 +70,19 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFerm
       }
     }
     onEnregistrer(lot._id, donnees)
+  }
+
+  // Remarque du 13/07/2026 (points 117+118, 2e refonte) : le logement
+  // repart à zéro ("Libre", comme neuf, de nouveau à la vente) — tout ce
+  // qui était renseigné (statut, dates, client, commentaire) est déplacé
+  // vers la page "Annulés" (historique), pas mélangé au tableau des lots
+  // actifs. Distinct du bouton "Annuler" ci-dessous, qui lui ferme
+  // simplement le formulaire sans rien modifier (juste "revenir en
+  // arrière" sur l'édition en cours, sans toucher au logement).
+  function annulerVente() {
+    if (window.confirm(`Annuler la vente du logement ${lot.reference} ? Il repassera "Libre" (de nouveau à la vente) ; le statut, les dates, le client et le commentaire actuels seront conservés dans l'historique des annulations.`)) {
+      onAnnulerVente(lot._id)
+    }
   }
 
   return (
@@ -148,6 +161,9 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onFerm
           </label>
           <button type="submit">Enregistrer</button>
           <button type="button" onClick={onFermer}>Annuler</button>
+          {statut !== 'libre' && (
+            <button type="button" className="bouton-danger" onClick={annulerVente}>Annuler la vente</button>
+          )}
         </form>
       </td>
     </tr>

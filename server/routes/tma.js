@@ -7,11 +7,21 @@ const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
 const router = Router()
 
-// GET /api/tma — liste de toutes les TMA, avec le lot et l'acquéreur liés
+// GET /api/tma — liste de toutes les TMA, avec le lot et l'acquéreur liés.
+// `lot.acquereur` (13/07/2026, en plus de `lot.statut`) : permet au client
+// de détecter une TMA devenue obsolète en comparant le client d'origine de
+// la TMA à l'acquéreur ACTUEL du lot — plus fiable qu'un simple
+// `statut === 'libre'` (couvre aussi le cas où le lot a été revendu à un
+// nouveau client sans que la TMA n'ait encore été réattribuée, voir PATCH
+// /:id/acquereur ci-dessous).
 router.get('/', async (req, res) => {
   try {
     const tmaList = await Tma.find()
-      .populate('lot', 'reference')
+      .populate({
+        path: 'lot',
+        select: 'reference statut acquereur',
+        populate: { path: 'acquereur', select: 'civilite prenom nom' },
+      })
       .populate('acquereur', 'civilite prenom nom')
       .sort({ createdAt: 1 })
     res.json(tmaList)
@@ -53,6 +63,35 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
       { path: 'acquereur', select: 'civilite prenom nom' },
     ])
     res.status(201).json(tmaPeuplee)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// PATCH /api/tma/:id/acquereur — réattribue une TMA devenue obsolète
+// (13/07/2026, suite au point 133) au client ACTUEL du lot, une fois que
+// celui-ci a été revendu après une annulation : Nicolas choisit lui-même
+// de la maintenir (le nouveau client la reprend) plutôt que de la vider
+// automatiquement. L'avertissement "logement annulé" disparaît de lui-même
+// ensuite, dès que `tma.acquereur` correspond de nouveau à `lot.acquereur`
+// (voir la comparaison faite côté client, Tma.jsx).
+router.patch('/:id/acquereur', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const { acquereur } = req.body
+    const tma = await Tma.findByIdAndUpdate(
+      req.params.id,
+      { acquereur },
+      { new: true, runValidators: true },
+    ).populate({
+      path: 'lot',
+      select: 'reference statut acquereur',
+      populate: { path: 'acquereur', select: 'civilite prenom nom' },
+    }).populate('acquereur', 'civilite prenom nom')
+
+    if (!tma) {
+      return res.status(404).json({ message: 'TMA introuvable' })
+    }
+    res.json(tma)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
   }

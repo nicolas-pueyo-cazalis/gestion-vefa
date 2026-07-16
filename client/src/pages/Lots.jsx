@@ -8,12 +8,12 @@ import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireEditionLot from '../components/FormulaireEditionLot.jsx'
 
-// Nombre de colonnes fixes (hors terrasses, comptées 1 par défaut) — sert
-// à calculer NB_COLONNES et les colSpan du tableau une fois le nombre
-// réel de colonnes "Terrasse" connu (remarque du 13/07/2026 : plusieurs
-// terrasses possibles par lot, colonnes supplémentaires seulement si
-// besoin réel, sinon une seule comme avant).
-const NB_COLONNES_FIXES = 15
+// Lot, Étage, Type, Orientation, SHAB, Annexes, Prix TTC, Prix/m², Statut,
+// Date, Client, Commentaire, Action (13/07/2026, point 156 : Terrasse(s),
+// Balcon(s), Loggia(s), Jardin, Parkings, Caves, Celliers sont regroupés
+// dans la seule colonne "Annexes" — plus besoin de colonnes dynamiques
+// selon le nombre de terrasses).
+const NB_COLONNES = 13
 
 const STATUTS_FILTRE = [
   { valeur: 'tous', libelle: 'Tous' },
@@ -33,13 +33,38 @@ function prixParM2(lot) {
 // Remarque du 13/07/2026 : contrairement aux montants (plus de décimales),
 // les surfaces gardent toujours 2 décimales, même quand la valeur est un
 // nombre rond (45 m² s'affiche "45,00 m²").
-function afficheSurface(valeur) {
-  if (valeur == null) return '—'
-  return `${new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valeur)} m²`
+function formatteDecimales(valeur) {
+  return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valeur)
 }
 
-function afficheNumeros(valeurs) {
-  return valeurs?.length > 0 ? valeurs.join(', ') : '—'
+function afficheSurface(valeur) {
+  return valeur == null ? '—' : `${formatteDecimales(valeur)} m²`
+}
+
+// Colonne "Annexes" (13/07/2026, point 156) : regroupe Terrasse(s)/
+// Balcon(s)/Loggia(s)/Jardin/Parkings/Caves/Celliers dans une seule
+// cellule, une ligne par catégorie présente (les catégories vides sont
+// omises plutôt que d'afficher des "—" qui alourdiraient la cellule).
+function ligneSurfaces(mot, valeurs) {
+  if (!valeurs?.length) return null
+  return `${mot}${valeurs.length > 1 ? 's' : ''} : ${valeurs.map((v) => `${formatteDecimales(v)} m²`).join(', ')}`
+}
+
+function ligneNumeros(mot, valeurs) {
+  if (!valeurs?.length) return null
+  return `${mot}${valeurs.length > 1 ? 's' : ''} n° ${valeurs.join(', ')}`
+}
+
+function afficheAnnexes(lot) {
+  return [
+    ligneSurfaces('Terrasse', lot.surfacesTerrasses),
+    ligneSurfaces('Balcon', lot.surfacesBalcons),
+    ligneSurfaces('Loggia', lot.surfacesLoggias),
+    lot.surfaceJardin != null ? `Jardin : ${afficheSurface(lot.surfaceJardin)}` : null,
+    ligneNumeros('Parking', lot.parkings),
+    ligneNumeros('Cave', lot.caves),
+    ligneNumeros('Cellier', lot.celliers),
+  ].filter(Boolean)
 }
 
 // Affiche la date correspondant à l'étape la plus avancée déjà atteinte
@@ -149,6 +174,17 @@ function Lots() {
     setIdEnEdition(null)
   }
 
+  async function annulerVenteLot(id) {
+    const reponse = await apiFetch(`${API_URL}/api/lots/${id}/annuler`, { method: 'POST' })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+    await Promise.all([chargerLots(), chargerAcquereurs()])
+    setIdEnEdition(null)
+  }
+
   if (chargement) return <p>Chargement des lots...</p>
   if (erreur) return <p>Erreur : {erreur}</p>
 
@@ -179,13 +215,6 @@ function Lots() {
   // de chaque lot, comme calculé jusqu'ici).
   const totalSurface = lotsFiltres.reduce((somme, lot) => somme + (lot.surfaceHabitable ?? 0), 0)
   const moyennePrixM2 = totalSurface > 0 ? totalTTC / totalSurface : null
-
-  // Une seule colonne "Terrasse" par défaut ; plusieurs seulement si au
-  // moins un lot en a réellement plusieurs (remarque du 13/07/2026) — sur
-  // l'ensemble des lots, pas seulement ceux affichés par le filtre actif,
-  // pour que le nombre de colonnes ne bouge pas en changeant de filtre.
-  const nbTerrasses = Math.max(1, ...lots.map((lot) => lot.surfacesTerrasses?.length ?? 0))
-  const nbColonnes = NB_COLONNES_FIXES + nbTerrasses
 
   return (
     <>
@@ -225,15 +254,10 @@ function Lots() {
               <th>Étage</th>
               <th>Type</th>
               <th>Orientation</th>
-              <th ref={refTheadShab}>SHAB</th>
-              {Array.from({ length: nbTerrasses }).map((_, i) => (
-                <th key={i}>{nbTerrasses > 1 ? `Terrasse/Balcon ${i + 1}` : 'Terrasse/Balcon'}</th>
-              ))}
-              <th>Jardin</th>
-              <th>Parkings</th>
-              <th className="entete-repliable">Caves/Celliers</th>
+              <th ref={refTheadShab}>Surface SHAB</th>
+              <th>Annexes</th>
               <th ref={refTheadPrixTTC}>Prix TTC</th>
-              <th>Prix/m²</th>
+              <th>Prix TTC/m² SHAB</th>
               <th>Statut</th>
               <th>Date</th>
               <th>Client</th>
@@ -242,46 +266,62 @@ function Lots() {
             </tr>
           </thead>
           <tbody>
-            {lotsFiltres.map((lot) => (
-              <Fragment key={lot._id}>
-                <tr>
-                  <td>{lot.reference}</td>
-                  <td>{lot.etage}</td>
-                  <td>{lot.type}</td>
-                  <td>{lot.orientation}</td>
-                  <td>{afficheSurface(lot.surfaceHabitable)}</td>
-                  {Array.from({ length: nbTerrasses }).map((_, i) => (
-                    <td key={i}>{afficheSurface(lot.surfacesTerrasses?.[i])}</td>
-                  ))}
-                  <td>{afficheSurface(lot.surfaceJardin)}</td>
-                  <td>{afficheNumeros(lot.parkings)}</td>
-                  <td>{afficheNumeros(lot.caves)}</td>
-                  <td>{formatMontant(lot.prixTTC, 0)}</td>
-                  <td>{prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}</td>
-                  <td>
-                    <Badge statut={lot.statut} texte={STATUTS_LOT[lot.statut]} />
-                    {offrePretManquante(lot) && (
-                      <div className="avertissement-cellule">Offre de prêt non reçue</div>
-                    )}
-                  </td>
-                  <td>{dateActuelle(lot)}</td>
-                  <td><span className="nom-client">{nomAcquereur(lot.acquereur)}</span></td>
-                  <td><span className="commentaire-cellule">{lot.commentaire || '—'}</span></td>
-                  <td className="actions">
-                    <button type="button" onClick={() => setIdEnEdition(lot._id)}>Modifier</button>
-                  </td>
-                </tr>
-                {idEnEdition === lot._id && (
-                  <FormulaireEditionLot
-                    lot={lot}
-                    acquereurs={acquereurs}
-                    colonnes={nbColonnes}
-                    onEnregistrer={enregistrerLot}
-                    onFermer={() => setIdEnEdition(null)}
-                  />
-                )}
-              </Fragment>
-            ))}
+            {lotsFiltres.map((lot) => {
+              const lignesAnnexes = afficheAnnexes(lot)
+              return (
+                <Fragment key={lot._id}>
+                  <tr>
+                    <td>{lot.reference}</td>
+                    <td>{lot.etage}</td>
+                    <td>{lot.type}</td>
+                    <td>{lot.orientation}</td>
+                    <td>{afficheSurface(lot.surfaceHabitable)}</td>
+                    <td>
+                      {lignesAnnexes.length > 0 ? (
+                        <div className="annexes-cellule">
+                          {lignesAnnexes.map((ligne, i) => <div key={i}>{ligne}</div>)}
+                        </div>
+                      ) : '—'}
+                    </td>
+                    <td>{formatMontant(lot.prixTTC, 0)}</td>
+                    <td>{prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}</td>
+                    <td>
+                      <Badge statut={lot.statut} texte={STATUTS_LOT[lot.statut]} />
+                      {offrePretManquante(lot) && (
+                        <div className="avertissement-cellule">Offre de prêt non reçue</div>
+                      )}
+                    </td>
+                    <td>{dateActuelle(lot)}</td>
+                    <td><span className="nom-client">{nomAcquereur(lot.acquereur)}</span></td>
+                    <td><span className="commentaire-cellule">{lot.commentaire || '—'}</span></td>
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="bouton-icone"
+                        title="Modifier"
+                        aria-label="Modifier"
+                        onClick={() => setIdEnEdition(lot._id)}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                  {idEnEdition === lot._id && (
+                    <FormulaireEditionLot
+                      lot={lot}
+                      acquereurs={acquereurs}
+                      colonnes={NB_COLONNES}
+                      onEnregistrer={enregistrerLot}
+                      onAnnulerVente={annulerVenteLot}
+                      onFermer={() => setIdEnEdition(null)}
+                    />
+                  )}
+                </Fragment>
+              )
+            })}
           </tbody>
         </table>
 

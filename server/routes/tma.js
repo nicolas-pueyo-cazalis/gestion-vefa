@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
 // fil de l'eau et font avancer le statut automatiquement.
 router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { lot, localisation, description, dateDemande } = req.body
+    const { lot, localisation, description, dateDemande, nombreEntreprisesConcernees } = req.body
 
     const lotDoc = await Lot.findById(lot)
     if (!lotDoc) {
@@ -57,6 +57,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     // React (`formatMontant(undefined)` → "NaN €").
     const tma = await Tma.create({
       lot, acquereur: lotDoc.acquereur, localisation, description, dateDemande,
+      nombreEntreprisesConcernees: nombreEntreprisesConcernees ?? undefined,
       montantEntreprises: null, montantClient: null,
     })
     const tmaPeuplee = await tma.populate([
@@ -116,10 +117,13 @@ router.patch('/:id/statut', autoriserRoles('admin', 'gestionnaire'), async (req,
       })
     }
 
-    // On mémorise l'étape quittée avant de passer à "refuse", pour pouvoir
-    // y revenir exactement avec /annuler-refus.
+    // On mémorise l'étape quittée avant de passer à "refuse"/"annule", pour
+    // pouvoir y revenir exactement avec /annuler-refus ou /annuler-annulation.
     if (statut === 'refuse') {
       tma.statutAvantRefus = tma.statut
+    }
+    if (statut === 'annule') {
+      tma.statutAvantAnnulation = tma.statut
     }
 
     tma.statut = statut
@@ -146,7 +150,17 @@ router.patch('/:id/dates', autoriserRoles('admin', 'gestionnaire'), async (req, 
       return res.status(404).json({ message: 'TMA introuvable' })
     }
 
-    if (dateEnvoiEntreprises !== undefined) tma.dateEnvoiEntreprises = dateEnvoiEntreprises
+    // Répercute la date d'envoi entreprises sur les lignes déjà créées
+    // (17/07/2026, point 134) : sinon ce champ ne sert à rien pour les
+    // entreprises déjà ajoutées, qui restent bloquées sur leur date de
+    // création. Reste modifiable ensuite ligne par ligne (LigneEntreprise.jsx)
+    // si une entreprise en particulier est contactée à une autre date.
+    if (dateEnvoiEntreprises !== undefined) {
+      tma.dateEnvoiEntreprises = dateEnvoiEntreprises
+      if (dateEnvoiEntreprises) {
+        await TmaEntreprise.updateMany({ tma: tma._id }, { dateEnvoi: dateEnvoiEntreprises })
+      }
+    }
     if (dateEnvoiFactureClient !== undefined) tma.dateEnvoiFactureClient = dateEnvoiFactureClient
     if (dateRetourClient !== undefined) tma.dateRetourClient = dateRetourClient
 
@@ -182,6 +196,28 @@ router.patch('/:id/annuler-refus', autoriserRoles('admin', 'gestionnaire'), asyn
   }
 })
 
+// PATCH /api/tma/:id/annuler-annulation — restaure le statut précédent une
+// annulation (13/07/2026, point 129) — même principe que /annuler-refus.
+router.patch('/:id/annuler-annulation', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const tma = await Tma.findById(req.params.id)
+
+    if (!tma) {
+      return res.status(404).json({ message: 'TMA introuvable' })
+    }
+    if (tma.statut !== 'annule' || !tma.statutAvantAnnulation) {
+      return res.status(400).json({ message: 'Cette TMA n\'a pas été annulée, rien à annuler' })
+    }
+
+    tma.statut = tma.statutAvantAnnulation
+    tma.statutAvantAnnulation = undefined
+    await tma.save()
+    res.json(tma)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
 // PATCH /api/tma/:id/infos — modifie localisation/description/montant
 // client (13/07/2026, à la demande de Nicolas) — une négociation directe
 // avec le client peut aboutir à un montant différent du calcul automatique
@@ -191,7 +227,7 @@ router.patch('/:id/annuler-refus', autoriserRoles('admin', 'gestionnaire'), asyn
 // changent — l'avertissement est affiché côté client avant l'envoi.
 router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { localisation, description, montantClient } = req.body
+    const { localisation, description, commentaire, montantClient, nombreEntreprisesConcernees } = req.body
     const tma = await Tma.findById(req.params.id)
     if (!tma) {
       return res.status(404).json({ message: 'TMA introuvable' })
@@ -199,10 +235,19 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
 
     if (localisation !== undefined) tma.localisation = localisation
     if (description !== undefined) tma.description = description
+    if (commentaire !== undefined) tma.commentaire = commentaire
+    // Bug corrigé (17/07/2026) : le formulaire renvoie toujours ce champ,
+    // même quand seule la localisation ou le nombre d'entreprises
+    // concernées est modifié — figer montantClientManuel dans tous les cas
+    // bloquait le recalcul automatique dès qu'on rouvrait ce panneau, même
+    // sans toucher au montant. Ne fige que si la valeur change réellement.
     if (montantClient !== undefined) {
+      if (montantClient !== (tma.montantClient ?? null)) {
+        tma.montantClientManuel = true
+      }
       tma.montantClient = montantClient
-      tma.montantClientManuel = true
     }
+    if (nombreEntreprisesConcernees !== undefined) tma.nombreEntreprisesConcernees = nombreEntreprisesConcernees
 
     await tma.save()
     const tmaPeuplee = await tma.populate([
@@ -210,25 +255,6 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
       { path: 'acquereur', select: 'civilite prenom nom' },
     ])
     res.json(tmaPeuplee)
-  } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
-  }
-})
-
-// DELETE /api/tma/:id — supprime une TMA (13/07/2026, point 128 — ex: une
-// TMA devenue obsolète après annulation d'une vente, voir point 133, que
-// Nicolas décide de ne pas réattribuer). Supprime aussi les entreprises
-// sollicitées qui la référencent (TmaEntreprise.tma est obligatoire, une
-// référence cassée y provoquerait la même page blanche déjà corrigée pour
-// l'acquéreur, voir Tma.jsx).
-router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
-  try {
-    const tma = await Tma.findByIdAndDelete(req.params.id)
-    if (!tma) {
-      return res.status(404).json({ message: 'TMA introuvable' })
-    }
-    await TmaEntreprise.deleteMany({ tma: tma._id })
-    res.status(204).end()
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
   }

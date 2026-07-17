@@ -16,13 +16,19 @@ const router = Router()
 // garder la TMA en "étude", même si les autres ont déjà répondu.
 async function recalculerTma(tmaId) {
   const lignes = await TmaEntreprise.find({ tma: tmaId })
+  const tma = await Tma.findById(tmaId)
+  // Comparé à tma.nombreEntreprisesConcernees (17/07/2026, point 136), pas
+  // seulement au nombre de lignes déjà ajoutées : sinon, ajouter 2
+  // entreprises sur 3 prévues et obtenir leurs 2 devis faisait basculer la
+  // TMA en "chiffré" à tort, avant même que la troisième soit consultée.
   const toutesRepondu =
-    lignes.length > 0 && lignes.every((ligne) => ligne.montantDevis !== null && ligne.montantDevis !== undefined)
+    lignes.length > 0 &&
+    lignes.length === tma.nombreEntreprisesConcernees &&
+    lignes.every((ligne) => ligne.montantDevis !== null && ligne.montantDevis !== undefined)
   const montantEntreprises = toutesRepondu
     ? lignes.reduce((somme, ligne) => somme + ligne.montantDevis, 0)
     : null
 
-  const tma = await Tma.findById(tmaId)
   tma.montantEntreprises = montantEntreprises
   // Montant client figé à la main (13/07/2026) : ne plus jamais l'écraser
   // automatiquement, même si les devis entreprises changent ensuite.
@@ -57,10 +63,16 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST /api/tma-entreprises — ajoute une ligne, recalcule la TMA parente
+// POST /api/tma-entreprises — ajoute une ligne, recalcule la TMA parente.
+// `dateEnvoi` (13/07/2026, point 134) : bug corrigé — ce champ n'était
+// jamais transmis par le formulaire, il retombait donc toujours sur le
+// défaut du schéma (`Date.now`, l'instant de la création). Résultat :
+// aucune ligne ne pouvait jamais être considérée "en retard" avec une
+// vraie date passée, l'alerte de retard entreprise (estEntrepriseEnRetard,
+// utils/statuts.js) ne se déclenchait donc jamais correctement.
 router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { tma, entreprise, montantDevis, dateRetour } = req.body
+    const { tma, entreprise, montantDevis, dateEnvoi, dateRetour } = req.body
     if (!tma || !entreprise) {
       return res.status(400).json({ message: 'Les champs "tma" et "entreprise" sont requis' })
     }
@@ -76,6 +88,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
       entreprise,
       corpsDeTravaux: entrepriseDoc.corpsDeTravaux, // figé au moment de l'ajout
       montantDevis,
+      dateEnvoi: dateEnvoi || undefined, // undefined déclenche le défaut du schéma (aujourd'hui) si vraiment omis
       dateRetour: dateRetour || null,
       statut,
     })
@@ -86,19 +99,24 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   }
 })
 
-// PATCH /api/tma-entreprises/:id — modifie le devis et/ou la date de retour
-// d'une ligne existante (ex: une entreprise en attente qui répond enfin),
-// recalcule la TMA parente. Aucun champ n'est déduit automatiquement : les
-// deux se renseignent explicitement, comme les autres dates de l'appli.
+// PATCH /api/tma-entreprises/:id — modifie la date d'envoi, le devis et/ou
+// la date de retour d'une ligne existante (ex: une entreprise en attente
+// qui répond enfin, ou une correction de la date d'envoi — 13/07/2026,
+// point 134), recalcule la TMA parente. Aucun champ n'est déduit
+// automatiquement : chacun se renseigne explicitement, comme les autres
+// dates de l'appli.
 router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { montantDevis, dateRetour } = req.body
+    const { dateEnvoi, montantDevis, dateRetour } = req.body
     const ligne = await TmaEntreprise.findById(req.params.id)
 
     if (!ligne) {
       return res.status(404).json({ message: 'Ligne introuvable' })
     }
 
+    if (dateEnvoi !== undefined) {
+      ligne.dateEnvoi = dateEnvoi
+    }
     if (montantDevis !== undefined) {
       ligne.montantDevis = montantDevis
       ligne.statut = montantDevis !== null ? 'recu' : 'a_chiffrer'

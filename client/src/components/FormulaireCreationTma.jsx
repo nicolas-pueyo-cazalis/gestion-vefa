@@ -14,10 +14,17 @@ function FormulaireCreationTma({ lots, onCreer, onFermer }) {
   const [localisation, setLocalisation] = useState('')
   const [description, setDescription] = useState('')
   const [dateDemande, setDateDemande] = useState('')
+  const [nombreEntreprisesConcernees, setNombreEntreprisesConcernees] = useState('')
 
   function soumettre(evenement) {
     evenement.preventDefault()
-    onCreer({ lot, localisation, description, dateDemande: dateDemande || null })
+    onCreer({
+      lot,
+      localisation,
+      description,
+      dateDemande: dateDemande || null,
+      nombreEntreprisesConcernees: nombreEntreprisesConcernees === '' ? null : Number(nombreEntreprisesConcernees),
+    })
   }
 
   return (
@@ -54,6 +61,16 @@ function FormulaireCreationTma({ lots, onCreer, onFermer }) {
         <label>
           Date de la demande
           <input type="date" value={dateDemande} onChange={(e) => setDateDemande(e.target.value)} />
+        </label>
+        <label>
+          Nombre d'entreprises concernées
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={nombreEntreprisesConcernees}
+            onChange={(e) => setNombreEntreprisesConcernees(e.target.value)}
+          />
         </label>
         <div className="boutons-alignes-champs">
           <button type="submit">Créer</button>

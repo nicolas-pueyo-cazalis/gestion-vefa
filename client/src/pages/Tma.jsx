@@ -9,20 +9,34 @@ import {
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
 import { formatMontant } from '../utils/formatMontant.js'
+import { estEntrepriseEnRetard, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
-import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireDatesTma from '../components/FormulaireDatesTma.jsx'
 import DetailEntreprisesTma from '../components/DetailEntreprisesTma.jsx'
 import FormulaireCreationTma from '../components/FormulaireCreationTma.jsx'
 import FormulaireInfosTma from '../components/FormulaireInfosTma.jsx'
 
-const NB_COLONNES = 8
+const NB_COLONNES = 13
 
-const STATUTS_FILTRE = [
-  { valeur: 'tous', libelle: 'Tous' },
-  ...Object.entries(STATUTS_TMA).map(([valeur, libelle]) => ({ valeur, libelle })),
-]
+// Filtre en liste déroulante (13/07/2026, point 130) : regroupe les 8
+// statuts détaillés en 4 grandes étapes, plutôt qu'une rangée de boutons
+// par statut (trop nombreux pour rester lisibles) — remplace l'ancien
+// FiltreStatuts (boutons) utilisé ailleurs dans l'appli.
+const GROUPES_FILTRE = {
+  en_cours: STATUTS_EN_COURS,
+  valide: STATUTS_VALIDE,
+  refuse: ['refuse'],
+  annule: ['annule'],
+}
+
+const LIBELLES_GROUPES_FILTRE = {
+  tous: 'Tous',
+  en_cours: 'En cours',
+  valide: 'Validé',
+  refuse: 'Refusé',
+  annule: 'Annulé',
+}
 
 // Garde contre un acquéreur manquant (13/07/2026) : `tma.acquereur` est une
 // référence, pas une copie — si la fiche client venait à disparaître, le
@@ -52,18 +66,40 @@ function Tma() {
   // comme sur la page Lots, plutôt que des boutons épars sur la ligne.
   const [idPanneauOuvert, setIdPanneauOuvert] = useState(null)
   const [creationOuverte, setCreationOuverte] = useState(false)
+  // Retard entreprise (13/07/2026, point 134) : programme (délai) et
+  // tma-entreprises (dateEnvoi/montantDevis) nécessaires pour détecter, sur
+  // CETTE page, une TMA "Étude" dont une entreprise sollicitée n'a pas
+  // répondu à temps — sans attendre la fenêtre d'alertes au démarrage.
+  const [programme, setProgramme] = useState(null)
+  const [tmaEntreprises, setTmaEntreprises] = useState([])
 
   async function chargerTma() {
     const reponse = await apiFetch(`${API_URL}/api/tma`)
     setTmaList(await reponse.json())
   }
 
+  async function chargerTmaEntreprises() {
+    const reponse = await apiFetch(`${API_URL}/api/tma-entreprises`)
+    setTmaEntreprises(await reponse.json())
+  }
+
+  // Rafraîchit les deux à la fois : ajouter/modifier une ligne entreprise
+  // (DetailEntreprisesTma.jsx) peut changer le statut ET la date d'envoi
+  // qui déterminent le message de retard ci-dessous.
+  async function chargerTmaEtEntreprises() {
+    await Promise.all([chargerTma(), chargerTmaEntreprises()])
+  }
+
   useEffect(() => {
     async function chargerTout() {
       try {
-        const reponseLots = await apiFetch(`${API_URL}/api/lots`)
+        const [reponseLots, reponseProgramme] = await Promise.all([
+          apiFetch(`${API_URL}/api/lots`),
+          apiFetch(`${API_URL}/api/programme`),
+        ])
         setLots(await reponseLots.json())
-        await chargerTma()
+        setProgramme(await reponseProgramme.json())
+        await Promise.all([chargerTma(), chargerTmaEntreprises()])
       } catch (e) {
         setErreur(e.message)
       } finally {
@@ -144,27 +180,25 @@ function Tma() {
       return
     }
     await chargerTma()
-    setIdPanneauOuvert(null)
   }
 
-  // Suppression (13/07/2026, point 128) — ex: une TMA devenue obsolète
-  // après annulation d'une vente (point 133), que Nicolas décide de ne pas
-  // réattribuer à un nouveau client.
-  async function supprimerTma(tma) {
-    if (!window.confirm(`Supprimer la TMA "${tma.description}" (${tma.lot?.reference ?? '—'}) ? Cette action est irréversible.`)) {
-      return
-    }
-    const reponse = await apiFetch(`${API_URL}/api/tma/${tma._id}`, { method: 'DELETE' })
+  async function annulerRefus(id) {
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/annuler-refus`, { method: 'PATCH' })
+
     if (!reponse.ok) {
       const { message } = await reponse.json()
       alert(message)
       return
     }
-    await chargerTma()
+
+    const tmaMiseAJour = await reponse.json()
+    setTmaList((liste) =>
+      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+    )
   }
 
-  async function annulerRefus(id) {
-    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/annuler-refus`, { method: 'PATCH' })
+  async function annulerAnnulation(id) {
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/annuler-annulation`, { method: 'PATCH' })
 
     if (!reponse.ok) {
       const { message } = await reponse.json()
@@ -207,11 +241,19 @@ function Tma() {
           : tma,
       ),
     )
-    setIdEnEdition(null)
+  }
+
+  // Retard entreprise (13/07/2026, point 134) : vrai s'il existe au moins
+  // une ligne TmaEntreprise de cette TMA en retard (voir
+  // estEntrepriseEnRetard, utils/statuts.js) — mêmes règles que la fenêtre
+  // d'alertes au démarrage (AlerteRetards.jsx), affiché ici directement.
+  function entrepriseEnRetardPourTma(tma) {
+    const delai = programme.parametres.delaiRetourEntrepriseTmaJours
+    return tmaEntreprises.some((ligne) => ligne.tma?._id === tma._id && estEntrepriseEnRetard(ligne, delai))
   }
 
   const tmaFiltrees =
-    statutActif === 'tous' ? tmaList : tmaList.filter((tma) => tma.statut === statutActif)
+    statutActif === 'tous' ? tmaList : tmaList.filter((tma) => GROUPES_FILTRE[statutActif].includes(tma.statut))
 
   const validees = tmaList.filter((t) => STATUTS_VALIDE.includes(t.statut)).length
   const enCours = tmaList.filter((t) => STATUTS_EN_COURS.includes(t.statut)).length
@@ -233,33 +275,50 @@ function Tma() {
       </section>
 
       <section className="stats">
-        <StatCard valeur={formatMontant(montantValideEntreprises)} libelle="Montant validé (entreprises)" />
-        <StatCard valeur={formatMontant(montantValideClient)} libelle="Montant validé (clients)" />
+        <StatCard valeur={formatMontant(montantValideEntreprises)} libelle="Montant TTC validé (entreprises)" />
+        <StatCard valeur={formatMontant(montantValideClient)} libelle="Montant TTC validé (clients)" />
         <StatCard valeur={formatMontant(marge)} libelle="Marge" />
       </section>
 
-      <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+      <div className="barre-actions-tma">
+        <label className="filtre-liste-deroulante">
+          Statut
+          <select value={statutActif} onChange={(e) => setStatutActif(e.target.value)}>
+            {Object.entries(LIBELLES_GROUPES_FILTRE).map(([valeur, libelle]) => (
+              <option key={valeur} value={valeur}>{libelle}</option>
+            ))}
+          </select>
+        </label>
 
-      {creationOuverte ? (
+        {!creationOuverte && (
+          <button type="button" onClick={() => setCreationOuverte(true)}>Ajouter une TMA</button>
+        )}
+      </div>
+
+      {creationOuverte && (
         <FormulaireCreationTma
           lots={lots}
           onCreer={creerTma}
           onFermer={() => setCreationOuverte(false)}
         />
-      ) : (
-        <button type="button" onClick={() => setCreationOuverte(true)}>Ajouter une TMA</button>
       )}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Lot</th>
+      <div className="tableau-scroll">
+        <table className="tableau-lots tableau-tma">
+          <thead>
+            <tr>
+              <th>Lot</th>
             <th>Client</th>
+            <th><span className="th-etroit">Date de la demande</span></th>
             <th>Localisation</th>
             <th>Description</th>
-            <th>Montant entreprises</th>
-            <th>Montant client</th>
+            <th><span className="th-etroit">Date envoi entreprise</span></th>
+            <th><span className="th-etroit">Montant TTC entreprises</span></th>
+            <th><span className="th-etroit">Montant TTC client</span></th>
+            <th><span className="th-etroit">Facture envoyée le</span></th>
+            <th><span className="th-etroit">Facture validée le</span></th>
             <th>Statut</th>
+            <th>Commentaire</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -277,7 +336,7 @@ function Tma() {
                       (à garder si le nouveau client la reprend — bouton
                       ci-dessous — ou à supprimer soi-même, voir point 128),
                       simplement signalée tant qu'elle n'a pas été réattribuée. */}
-                  {tmaObsolete(tma) ? '—' : nomAcquereur(tma.acquereur)}
+                  <span className="nom-client">{tmaObsolete(tma) ? '—' : nomAcquereur(tma.acquereur)}</span>
                   {tmaObsolete(tma) && (
                     <>
                       <div className="avertissement-cellule">Attention, ce logement a été annulé</div>
@@ -296,15 +355,25 @@ function Tma() {
                     <div className="avertissement-cellule">Ce logement n'est pas encore acté</div>
                   )}
                 </td>
+                <td>{formatDate(tma.dateDemande)}</td>
                 <td>{tma.localisation}</td>
-                <td>{tma.description}</td>
+                <td><span className="description-cellule">{tma.description}</span></td>
+                <td>{formatDate(tma.dateEnvoiEntreprises)}</td>
                 {/* "==" (pas "===") : capture aussi bien `null` que
                     `undefined` — un montant absent du document (jamais
                     renseigné) n'est pas forcément `null` à la lettre, et
                     formatMontant(undefined) affiche "NaN €". */}
                 <td>{tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises)}</td>
-                <td>{tma.montantClient == null ? '—' : formatMontant(tma.montantClient)}</td>
-                <td><Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} /></td>
+                <td>{formatMontant(tma.montantClient ?? 0)}</td>
+                <td>{formatDate(tma.dateEnvoiFactureClient)}</td>
+                <td>{formatDate(tma.dateRetourClient)}</td>
+                <td>
+                  <Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} />
+                  {tma.statut === 'etude' && entrepriseEnRetardPourTma(tma) && (
+                    <div className="avertissement-cellule">Retard entreprise</div>
+                  )}
+                </td>
+                <td><span className="commentaire-cellule">{tma.commentaire || '—'}</span></td>
                 <td className="actions">
                   <button
                     type="button"
@@ -339,7 +408,7 @@ function Tma() {
                   <DetailEntreprisesTma
                     tma={tma}
                     colonnes={NB_COLONNES}
-                    onChangement={chargerTma}
+                    onChangement={chargerTmaEtEntreprises}
                     onFermer={() => setIdPanneauOuvert(null)}
                   />
                   <tr className="formulaire-dates">
@@ -351,7 +420,12 @@ function Tma() {
                         {tma.statut === 'refuse' && (
                           <button type="button" onClick={() => annulerRefus(tma._id)}>Annuler le refus</button>
                         )}
-                        <button type="button" className="bouton-danger bouton-plein" onClick={() => supprimerTma(tma)}>Supprimer la TMA</button>
+                        {TRANSITIONS_AUTORISEES[tma.statut].includes('annule') && (
+                          <button type="button" className="bouton-danger" onClick={() => changerStatut(tma._id, 'annule')}>Annuler la TMA</button>
+                        )}
+                        {tma.statut === 'annule' && (
+                          <button type="button" onClick={() => annulerAnnulation(tma._id)}>Annuler l'annulation</button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -361,6 +435,7 @@ function Tma() {
           ))}
         </tbody>
       </table>
+      </div>
     </>
   )
 }

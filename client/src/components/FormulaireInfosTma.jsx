@@ -9,7 +9,11 @@ import { useState } from 'react'
 function FormulaireInfosTma({ tma, colonnes, onEnregistrer, onFermer }) {
   const [localisation, setLocalisation] = useState(tma.localisation ?? '')
   const [description, setDescription] = useState(tma.description ?? '')
+  const [commentaire, setCommentaire] = useState(tma.commentaire ?? '')
   const [montantClient, setMontantClient] = useState(tma.montantClient ?? '')
+  const [nombreEntreprisesConcernees, setNombreEntreprisesConcernees] = useState(
+    tma.nombreEntreprisesConcernees ?? '',
+  )
 
   function soumettre(evenement) {
     evenement.preventDefault()
@@ -20,7 +24,13 @@ function FormulaireInfosTma({ tma, colonnes, onEnregistrer, onFermer }) {
       )
       if (!confirme) return
     }
-    onEnregistrer(tma._id, { localisation, description, montantClient: nouveauMontant })
+    onEnregistrer(tma._id, {
+      localisation,
+      description,
+      commentaire,
+      montantClient: nouveauMontant,
+      nombreEntreprisesConcernees: nombreEntreprisesConcernees === '' ? null : Number(nombreEntreprisesConcernees),
+    })
   }
 
   return (
@@ -35,13 +45,27 @@ function FormulaireInfosTma({ tma, colonnes, onEnregistrer, onFermer }) {
             Description
             <input value={description} onChange={(e) => setDescription(e.target.value)} />
           </label>
+          <label className="champ-description">
+            Commentaire
+            <input value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
+          </label>
           <label>
-            Montant client (€)
+            Montant TTC client (€)
             <input
               type="number"
               step="0.01"
               value={montantClient}
               onChange={(e) => setMontantClient(e.target.value)}
+            />
+          </label>
+          <label>
+            Nombre d'entreprises concernées
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={nombreEntreprisesConcernees}
+              onChange={(e) => setNombreEntreprisesConcernees(e.target.value)}
             />
           </label>
           <button type="submit">Enregistrer</button>

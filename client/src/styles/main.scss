@@ -376,6 +376,60 @@ main {
   }
 }
 
+// Ligne "Statut / Ajouter une TMA" (13/07/2026, page TMA) : filtre et
+// action principale sur une même ligne aérée, plutôt que deux éléments
+// bruts empilés sans respiration ni alignement.
+.barre-actions-tma {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+  border-top: 1px solid $couleur-bordure;
+  border-bottom: 1px solid $couleur-bordure;
+
+  // Bouton d'action principale de la page (13/07/2026) : plein, comme
+  // button[type='submit'] dans les formulaires, pour se distinguer des
+  // boutons secondaires à contour.
+  > button {
+    background: $couleur-texte;
+    color: white;
+    border: 1px solid $couleur-texte;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    &:hover {
+      background: #0f172a;
+    }
+  }
+}
+
+.filtre-liste-deroulante {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #52606d;
+
+  select {
+    border: 1px solid $couleur-bordure;
+    border-radius: 6px;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: $couleur-texte;
+    background: $couleur-carte;
+    min-width: 10rem;
+    cursor: pointer;
+  }
+}
+
 .filtres-phases {
   display: flex;
   align-items: center;
@@ -407,9 +461,22 @@ table {
 
   th, td {
     text-align: left;
-    padding: 0.6rem 0.8rem;
+    // Resserré (13/07/2026, page TMA) mais pas trop : un peu moins généreux
+    // qu'avant (0.6rem 0.8rem) tout en gardant une marge visible.
+    padding: 0.5rem 0.75rem;
     border-bottom: 1px solid $couleur-bordure;
     font-size: 0.9rem;
+
+    // Marge extérieure plus généreuse sur les bords du tableau (13/07/2026) :
+    // la 1ère colonne ("Lot") et la dernière ("Actions") ne doivent pas
+    // coller au bord, contrairement aux colonnes intermédiaires.
+    &:first-child {
+      padding-left: 1.25rem;
+    }
+
+    &:last-child {
+      padding-right: 1.25rem;
+    }
   }
 
   th {
@@ -444,6 +511,16 @@ table {
   .commentaire-cellule {
     display: inline-block;
     min-width: 14rem;
+    white-space: normal;
+  }
+
+  // Description (page TMA) : même principe que .commentaire-cellule, mais
+  // pas de contrainte de largeur MINIMALE — ce texte est souvent une
+  // courte phrase (17/07/2026, remarque de Nicolas), une largeur maximale
+  // suffit à lui laisser de la place sans écraser les colonnes voisines.
+  .description-cellule {
+    display: inline-block;
+    max-width: 16rem;
     white-space: normal;
   }
 
@@ -744,6 +821,43 @@ table.tableau-lots {
     gap: 0.15rem;
   }
 
+}
+
+// Page TMA (17/07/2026) : beaucoup de colonnes (dates, montants...) tenues
+// sur une seule ligne par .tableau-lots ci-dessus — Client et Description
+// ont besoin d'un peu plus de place que les 13rem/16rem par défaut pour
+// rester lisibles, quitte à réduire un peu Commentaire en contrepartie.
+.tableau-tma {
+  // Contrairement à .tableau-lots (où les en-têtes restent sur une seule
+  // ligne), les intitulés sont ici souvent plus longs que leur colonne
+  // (ex: "Date envoi entreprise" vs des dates courtes en dessous). Un
+  // max-width posé directement sur <th> est ignoré par l'algorithme de
+  // table-layout:auto (le texte déborde sur les cellules voisines au lieu
+  // de passer à la ligne) — comme pour .nom-client/.description-cellule,
+  // il faut l'appliquer à un span interne en inline-block pour que le
+  // texte se plie réellement (17/07/2026, remarque de Nicolas).
+  th {
+    white-space: normal;
+  }
+
+  .th-etroit {
+    display: inline-block;
+    max-width: 5.5rem;
+    white-space: normal;
+  }
+
+  .nom-client {
+    max-width: 15rem;
+  }
+
+  .description-cellule {
+    max-width: 18rem;
+  }
+
+  .commentaire-cellule {
+    min-width: 9rem;
+    max-width: 12rem;
+  }
 }
 
 // Rappel visuel sous un badge de statut (ex: prêt non reçu sur un lot
@@ -1052,6 +1166,21 @@ table.tableau-lots {
 
     input {
       width: 100%;
+    }
+  }
+
+  // Case à cocher (17/07/2026, ex: SectionAlertes) : contrairement aux
+  // autres champs, le libellé se lit naturellement à côté de la case, pas
+  // au-dessus — la disposition en colonne héritée de `label` ci-dessus ne
+  // convient pas ici.
+  .champ-case-a-cocher {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    flex-basis: 100%;
+
+    input[type='checkbox'] {
+      width: auto;
     }
   }
 

@@ -1,4 +1,4 @@
-(# Demandes de Nicolas — Gestion VEFA
+('# Demandes de Nicolas — Gestion VEFA
 
 Liste chronologique de toutes les demandes, remarques et décisions
 exprimées par Nicolas depuis le début du projet — hors détails
@@ -651,6 +651,16 @@ totaux (point 115) — traitées une par une comme le reste.
      directe avec le client peut aboutir à un montant différent ; le
      modifier à la main doit afficher un avertissement, et fige ce montant
      (plus jamais recalculé automatiquement ensuite).
+162. **Revient sur le point 128** : le bouton "Supprimer la TMA" est
+     retiré (route serveur incluse) — il faut toujours garder une trace,
+     "Annuler la TMA" (point 129) suffit pour ce besoin. "Annuler la TMA"
+     passe en rouge (bouton-danger) pour bien marquer que c'est une action
+     à ne pas prendre à la légère, même si elle reste réversible.
+163. Nouvelle colonne "Commentaire" (texte libre) sur le tableau des TMA,
+     modifiable depuis le même panneau (crayon) que localisation/
+     description/montant client — positionnée après la colonne "Statut".
+     Tableau élargi (largeur "moyenne", comme la page Clients) pour
+     accueillir cette colonne supplémentaire sans être trop compressé.
 
 ---
 

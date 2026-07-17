@@ -186,7 +186,7 @@ function AppelsDeFonds() {
             <th>Lot</th>
             <th>Phase</th>
             <th>%</th>
-            <th>Montant</th>
+            <th>Montant TTC</th>
             <th>Attestation MOE</th>
             <th>Envoyé le</th>
             <th>Limite règlement</th>

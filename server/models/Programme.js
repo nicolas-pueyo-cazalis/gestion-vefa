@@ -37,6 +37,18 @@ const parametresSchema = new mongoose.Schema({
     type: [String],
     default: () => (['R-1', 'RDJ', 'RDC', 'R+1', 'R+2', 'R+3', 'R+4', 'R+5', 'R+6', 'R+7', 'R+8']),
   },
+  // Fenêtre d'alertes au démarrage (AlerteRetards.jsx, 17/07/2026, point
+  // 137) : un interrupteur général, plus un par type de retard — coupé
+  // globalement OU juste sur un type, sans jamais supprimer le suivi
+  // sous-jacent (les pages concernées restent inchangées).
+  alertesActivees: { type: Boolean, default: true },
+  alertesActivesParType: {
+    pret: { type: Boolean, default: true },
+    signature: { type: Boolean, default: true },
+    appelsDeFonds: { type: Boolean, default: true },
+    entreprisesTma: { type: Boolean, default: true },
+    facturesTma: { type: Boolean, default: true },
+  },
 }, { _id: false })
 
 const programmeSchema = new mongoose.Schema({

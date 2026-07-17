@@ -3,11 +3,24 @@ import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
 import LigneEntreprise from './LigneEntreprise.jsx'
 
+// Même conversion que les autres formulaires de dates de l'appli.
+function versDateInput(valeur) {
+  return valeur ? valeur.slice(0, 10) : ''
+}
+
 function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   const [lignes, setLignes] = useState([])
   const [entreprisesDisponibles, setEntreprisesDisponibles] = useState([])
   const [chargement, setChargement] = useState(true)
   const [entrepriseChoisie, setEntrepriseChoisie] = useState('')
+  // Bug corrigé le 13/07/2026 (point 134) : ce champ n'existait pas du
+  // tout ici — dateEnvoi retombait donc toujours sur le défaut du schéma
+  // (l'instant de la création), jamais une vraie date choisie, et l'alerte
+  // de retard entreprise ne pouvait donc jamais se déclencher correctement.
+  // Pré-rempli avec la date d'envoi entreprises de la TMA (généralement
+  // toutes les entreprises sont sollicitées en même temps), reste modifiable
+  // au cas où une entreprise en particulier est contactée plus tard.
+  const [dateEnvoi, setDateEnvoi] = useState(versDateInput(tma.dateEnvoiEntreprises) || new Date().toISOString().slice(0, 10))
   const [montantDevis, setMontantDevis] = useState('')
   const [dateRetour, setDateRetour] = useState('')
 
@@ -22,7 +35,16 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
       setChargement(false)
     }
     chargerDonnees()
-  }, [tma._id])
+    // tma.dateEnvoiEntreprises (17/07/2026, point 134) : la date d'envoi
+    // entreprises se répercute côté serveur sur les lignes déjà créées
+    // (routes/tma.js), mais `lignes` est un état local chargé une seule
+    // fois au montage — sans cette dépendance, l'affichage restait figé sur
+    // l'ancienne date tant que la page n'était pas rechargée. Le champ par
+    // défaut du formulaire d'ajout (`dateEnvoi`) a le même problème : son
+    // état initial n'est lu qu'au montage, il faut donc aussi le resynchroniser
+    // ici pour qu'il propose la bonne date à la prochaine entreprise ajoutée.
+    setDateEnvoi(versDateInput(tma.dateEnvoiEntreprises) || new Date().toISOString().slice(0, 10))
+  }, [tma._id, tma.dateEnvoiEntreprises])
 
   async function ajouterLigne(evenement) {
     evenement.preventDefault()
@@ -32,6 +54,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
       body: JSON.stringify({
         tma: tma._id,
         entreprise: entrepriseChoisie,
+        dateEnvoi,
         montantDevis: montantDevis === '' ? null : Number(montantDevis),
         dateRetour: dateRetour || null,
       }),
@@ -45,6 +68,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
     const entrepriseDetail = entreprisesDisponibles.find((e) => e._id === entrepriseChoisie)
     setLignes((liste) => [...liste, { ...nouvelleLigne, entreprise: entrepriseDetail }])
     setEntrepriseChoisie('')
+    setDateEnvoi(versDateInput(tma.dateEnvoiEntreprises) || new Date().toISOString().slice(0, 10))
     setMontantDevis('')
     setDateRetour('')
     onChangement()
@@ -105,15 +129,38 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
         <form onSubmit={ajouterLigne}>
           <label>
             Entreprise
-            <select value={entrepriseChoisie} onChange={(e) => setEntrepriseChoisie(e.target.value)} required>
+            <select
+              value={entrepriseChoisie}
+              onChange={(e) => setEntrepriseChoisie(e.target.value)}
+              disabled={!tma.dateEnvoiEntreprises || !tma.nombreEntreprisesConcernees}
+              required
+            >
               <option value="" disabled>Choisir...</option>
               {entreprisesDisponibles.map((e) => (
                 <option key={e._id} value={e._id}>{e.corpsDeTravaux} — {e.nom}</option>
               ))}
             </select>
           </label>
+          {/* Bloque l'ajout d'une entreprise tant que ces deux champs de la
+              TMA ne sont pas remplis (17/07/2026, points 135 et 136) : le
+              champ "Date d'envoi" de ce formulaire se pré-remplit toujours,
+              il ne suffit donc pas à lui seul à empêcher un ajout. */}
+          {!tma.dateEnvoiEntreprises && (
+            <p className="avertissement-cellule">
+              Complétez la "Date envoi entreprises" ci-dessus avant d'ajouter une entreprise.
+            </p>
+          )}
+          {tma.dateEnvoiEntreprises && !tma.nombreEntreprisesConcernees && (
+            <p className="avertissement-cellule">
+              Complétez le "Nombre d'entreprises concernées" avant d'ajouter une entreprise.
+            </p>
+          )}
           <label>
-            Montant devis (€)
+            Date d'envoi
+            <input type="date" value={dateEnvoi} onChange={(e) => setDateEnvoi(e.target.value)} required />
+          </label>
+          <label>
+            Montant TTC devis (€)
             <input
               type="number"
               step="0.01"

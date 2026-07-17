@@ -133,7 +133,12 @@ async function genererAppelsDeFonds(lot) {
 // acquéreurs) pour avoir accès à `dateReservation` en même temps.
 router.get('/', async (req, res) => {
   try {
-    const lots = await Lot.find().sort({ reference: 1 })
+    // `?programme=<id>` (17/07/2026, point 138) : filtre sur le programme
+    // actif — sans ce paramètre, tous les lots de tous les programmes
+    // seraient mélangés dans une même liste.
+    const { programme } = req.query
+    const filtre = programme ? { programme } : {}
+    const lots = await Lot.find(filtre).sort({ reference: 1 })
       .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
     res.json(lots)
   } catch (erreur) {

@@ -40,11 +40,16 @@ function AlerteRetards() {
   const { programme, lots, appels, tmaList, tmaEntreprises } = donnees
   const { delaiObtentionPretJours, delaiSignatureNotaireMois, delaiRetourEntrepriseTmaJours, delaiReponseFactureTmaJours } = programme.parametres
 
-  const lotsRetardPret = lots.filter((l) => statutPret(l, delaiObtentionPretJours) === 'retard')
-  const lotsRetardSignature = lots.filter((l) => statutSignature(l, delaiSignatureNotaireMois) === 'retard')
-  const appelsRetard = appels.filter((a) => statutAppel(a) === 'retard')
-  const entreprisesRetard = tmaEntreprises.filter((l) => estEntrepriseEnRetard(l, delaiRetourEntrepriseTmaJours))
-  const facturesRetard = tmaList.filter((t) => estFactureTmaEnRetard(t, delaiReponseFactureTmaJours))
+  // Désactivable depuis Paramètres (17/07/2026, point 137) : globalement,
+  // ou type de retard par type de retard.
+  if (!programme.parametres.alertesActivees) return null
+  const actif = programme.parametres.alertesActivesParType ?? {}
+
+  const lotsRetardPret = actif.pret === false ? [] : lots.filter((l) => statutPret(l, delaiObtentionPretJours) === 'retard')
+  const lotsRetardSignature = actif.signature === false ? [] : lots.filter((l) => statutSignature(l, delaiSignatureNotaireMois) === 'retard')
+  const appelsRetard = actif.appelsDeFonds === false ? [] : appels.filter((a) => statutAppel(a) === 'retard')
+  const entreprisesRetard = actif.entreprisesTma === false ? [] : tmaEntreprises.filter((l) => estEntrepriseEnRetard(l, delaiRetourEntrepriseTmaJours))
+  const facturesRetard = actif.facturesTma === false ? [] : tmaList.filter((t) => estFactureTmaEnRetard(t, delaiReponseFactureTmaJours))
 
   const total = lotsRetardPret.length + lotsRetardSignature.length + appelsRetard.length
     + entreprisesRetard.length + facturesRetard.length

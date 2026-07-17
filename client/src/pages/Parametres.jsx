@@ -9,6 +9,7 @@ import SectionEntreprises from '../components/parametres/SectionEntreprises.jsx'
 import SectionBareme from '../components/parametres/SectionBareme.jsx'
 import SectionLots from '../components/parametres/SectionLots.jsx'
 import SectionUtilisateurs from '../components/parametres/SectionUtilisateurs.jsx'
+import SectionAlertes from '../components/parametres/SectionAlertes.jsx'
 
 function Parametres() {
   const { utilisateur } = useAuth()
@@ -71,6 +72,7 @@ function Parametres() {
 
       <SectionInfosProgramme programme={programme} onEnregistrer={enregistrer} />
       <SectionDelaisEtTaux programme={programme} onEnregistrer={enregistrer} />
+      <SectionAlertes programme={programme} onEnregistrer={enregistrer} />
       <SectionBareme programme={programme} onEnregistrer={enregistrer} />
       <SectionEtages programme={programme} onEnregistrer={enregistrer} />
       <SectionLots programme={programme} lots={lots} onChangement={chargerLots} />

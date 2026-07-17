@@ -4,15 +4,20 @@ import mongoose from 'mongoose'
 // actuel, la liste des statuts vers lesquels on a le droit de passer — un
 // enum Mongoose seul ne suffit pas à empêcher de sauter une étape, cette
 // règle doit être vérifiée explicitement dans les routes.
+// "annule" (13/07/2026, point 129) : le client renonce à cette TMA (pas
+// forcément un refus du promoteur, ex: il change d'avis) — infos toujours
+// visibles, jamais effacées, même logique que "refuse". Mêmes étapes de
+// départ possibles que "refuse".
 export const TRANSITIONS_AUTORISEES = {
-  demande: ['etude', 'refuse'],
-  etude: ['chiffre', 'refuse'],
-  chiffre: ['facture', 'refuse'],
-  facture: ['valide', 'refuse'],
+  demande: ['etude', 'refuse', 'annule'],
+  etude: ['chiffre', 'refuse', 'annule'],
+  chiffre: ['facture', 'refuse', 'annule'],
+  facture: ['valide', 'refuse', 'annule'],
   valide: ['travaux'],
   travaux: ['termine'],
   refuse: [],
   termine: [],
+  annule: [],
 }
 
 // Calcule automatiquement le statut d'une TMA à partir de ses dates et de
@@ -44,8 +49,18 @@ const tmaSchema = new mongoose.Schema({
   acquereur: { type: mongoose.Schema.Types.ObjectId, ref: 'Acquereur', required: true },
   localisation: String,
   description: String,
+  // 13/07/2026 : libre, modifiable depuis le même panneau que localisation/
+  // description/montant client.
+  commentaire: String,
   dateDemande: Date,
   dateEnvoiEntreprises: Date,
+  // Renseigné avant l'ajout des entreprises (17/07/2026, point 136) : sert
+  // de référence objective pour savoir quand "toutes ont répondu" (voir
+  // recalculerTma, routes/tmaEntreprises.js) — sans ce champ, ajouter 2
+  // entreprises sur les 3 prévues et obtenir leurs 2 devis faisait
+  // basculer la TMA en "chiffré" à tort, alors qu'une troisième entreprise
+  // restait à consulter.
+  nombreEntreprisesConcernees: Number,
   priorite: { type: String, enum: ['basse', 'moyenne', 'haute'] },
   montantEntreprises: Number,
   montantClient: Number,
@@ -59,13 +74,18 @@ const tmaSchema = new mongoose.Schema({
   dateRetourClient: Date,
   statut: {
     type: String,
-    enum: ['demande', 'etude', 'chiffre', 'facture', 'valide', 'refuse', 'travaux', 'termine'],
+    enum: ['demande', 'etude', 'chiffre', 'facture', 'valide', 'refuse', 'travaux', 'termine', 'annule'],
     default: 'demande',
   },
   // Mémorise le statut juste avant un refus, pour pouvoir y revenir
   // exactement (ex: annuler un refus par erreur au stade "facture" doit
   // ramener à "facture", pas repartir de zéro).
   statutAvantRefus: {
+    type: String,
+    enum: ['demande', 'etude', 'chiffre', 'facture'],
+  },
+  // Même principe pour une annulation (13/07/2026, point 129).
+  statutAvantAnnulation: {
     type: String,
     enum: ['demande', 'etude', 'chiffre', 'facture'],
   },

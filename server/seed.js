@@ -152,7 +152,7 @@ async function seed() {
       localisation: tma.localisation,
       description: tma.description,
       montantEntreprises: tma.montantEntreprises,
-      montantClient: calculerMontantClient(tma.montantEntreprises),
+      montantClient: calculerMontantClient(tma.montantEntreprises, programme.parametres),
       statut: tma.statut,
       dateEnvoiEntreprises: tma.dateEnvoiEntreprises,
       dateEnvoiFactureClient: tma.dateEnvoiFactureClient,

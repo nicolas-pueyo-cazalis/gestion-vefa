@@ -6,6 +6,7 @@ import Tma from '../models/Tma.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
 import HistoriqueAnnulation from '../models/HistoriqueAnnulation.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
+import { getIdsLotsDuProgramme } from '../utils/programme.js'
 import { autoriserRoles } from '../middleware/auth.js'
 
 const router = Router()
@@ -82,9 +83,9 @@ async function genererAppelsDeFonds(lot) {
   // "Achèvement des fondations" déjà constaté avant que ce lot ne soit
   // vendu), ce nouveau lot "rattrape" directement cette phase, sans
   // attendre une réattestation qui n'aurait pas de sens.
-  const autresLots = await Lot.find({ programme: lot.programme }, '_id')
+  const idsLotsDuProgramme = await getIdsLotsDuProgramme(lot.programme)
   const appelsAttestesDuProgramme = await AppelDeFonds.find({
-    lot: { $in: autresLots.map((l) => l._id) },
+    lot: { $in: idsLotsDuProgramme },
     dateAttestationMOE: { $ne: null },
   })
   const attestationParPhase = Object.fromEntries(

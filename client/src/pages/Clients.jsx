@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import StatCard from '../components/StatCard.jsx'
 import FormulaireEditionClient from '../components/FormulaireEditionClient.jsx'
 
@@ -48,13 +49,14 @@ function comparerParLogement(a, b) {
 }
 
 function Clients() {
+  const { programmeActif } = useProgramme()
   const [acquereurs, setAcquereurs] = useState([])
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerAcquereurs() {
-    const reponse = await apiFetch(`${API_URL}/api/acquereurs`)
+    const reponse = await apiFetch(`${API_URL}/api/acquereurs?programme=${programmeActif._id}`)
     setAcquereurs(await reponse.json())
   }
 

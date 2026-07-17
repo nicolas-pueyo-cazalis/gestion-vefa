@@ -1,14 +1,28 @@
 import { Router } from 'express'
 import Acquereur from '../models/Acquereur.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { getIdsLotsDuProgramme } from '../utils/programme.js'
 
 const router = Router()
 
-// GET /api/acquereurs — liste complète, triée par nom (page Clients,
-// listes déroulantes de liaison sur la page Lots)
+// GET /api/acquereurs — liste triée par nom (page Clients, listes
+// déroulantes de liaison sur la page Lots). `?programme=<id>` (17/07/2026,
+// point 138, affiné suite à la remarque de Nicolas) : Acquereur n'a pas de
+// champ `programme` direct — ne garder QUE ceux ayant un lot dans ce
+// programme, c'est-à-dire les clients "actifs" (visibles dans le tableau
+// des Lots). Un acquéreur créé uniquement depuis la page Lots (jamais
+// autrement, voir POST ci-dessous), il n'y a donc aucune raison légitime
+// d'en lister un sans lot — s'il en existe, c'est un résidu (ex: vente
+// annulée) qu'on ne veut plus voir ici, même s'il reste gardé en base pour
+// ne pas casser une TMA qui le référence encore (voir routes/lots.js).
 router.get('/', async (req, res) => {
   try {
-    const acquereurs = await Acquereur.find().sort({ nom: 1, prenom: 1 }).populate('lots', 'reference')
+    const { programme } = req.query
+    let filtre = {}
+    if (programme) {
+      filtre = { lots: { $in: await getIdsLotsDuProgramme(programme) } }
+    }
+    const acquereurs = await Acquereur.find(filtre).sort({ nom: 1, prenom: 1 }).populate('lots', 'reference')
     res.json(acquereurs)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })

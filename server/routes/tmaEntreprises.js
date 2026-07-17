@@ -3,6 +3,7 @@ import Tma, { calculerMontantClient, calculerStatutAutomatique } from '../models
 import TmaEntreprise from '../models/TmaEntreprise.js'
 import Entreprise from '../models/Entreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { getIdsLotsDuProgramme } from '../utils/programme.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
@@ -16,7 +17,12 @@ const router = Router()
 // garder la TMA en "étude", même si les autres ont déjà répondu.
 async function recalculerTma(tmaId) {
   const lignes = await TmaEntreprise.find({ tma: tmaId })
-  const tma = await Tma.findById(tmaId)
+  // Peuple lot.programme (17/07/2026) : calculerMontantClient a besoin de
+  // tauxMargeTma/regleMontantNegatifTma, propres à CE programme — un bug
+  // trouvé lors de la revue générale (point 142) les avait jusqu'ici en
+  // dur (1.3, "montant_zero"), rendant ces deux réglages de Paramètres
+  // inopérants.
+  const tma = await Tma.findById(tmaId).populate({ path: 'lot', populate: { path: 'programme' } })
   // Comparé à tma.nombreEntreprisesConcernees (17/07/2026, point 136), pas
   // seulement au nombre de lignes déjà ajoutées : sinon, ajouter 2
   // entreprises sur 3 prévues et obtenir leurs 2 devis faisait basculer la
@@ -33,7 +39,7 @@ async function recalculerTma(tmaId) {
   // Montant client figé à la main (13/07/2026) : ne plus jamais l'écraser
   // automatiquement, même si les devis entreprises changent ensuite.
   if (!tma.montantClientManuel) {
-    tma.montantClient = calculerMontantClient(montantEntreprises)
+    tma.montantClient = calculerMontantClient(montantEntreprises, tma.lot?.programme?.parametres)
   }
 
   if (!STATUTS_NON_RECALCULABLES.includes(tma.statut)) {
@@ -51,8 +57,17 @@ async function recalculerTma(tmaId) {
 // retard sur l'ensemble du programme, pas une TMA à la fois.
 router.get('/', async (req, res) => {
   try {
-    const { tma } = req.query
-    const filtre = tma ? { tma } : {}
+    const { tma, programme } = req.query
+    let filtre = {}
+    if (tma) {
+      filtre = { tma }
+    } else if (programme) {
+      // 17/07/2026, point 138 : TmaEntreprise n'a pas de champ `programme`
+      // direct — passe par tma.lot.programme (deux sauts).
+      const idsLotsDuProgramme = await getIdsLotsDuProgramme(programme)
+      const tmaDuProgramme = await Tma.find({ lot: { $in: idsLotsDuProgramme } }, '_id')
+      filtre = { tma: { $in: tmaDuProgramme.map((t) => t._id) } }
+    }
     const lignes = await TmaEntreprise.find(filtre)
       .populate('entreprise', 'nom corpsDeTravaux')
       .populate({ path: 'tma', select: 'lot statut', populate: { path: 'lot', select: 'reference' } })

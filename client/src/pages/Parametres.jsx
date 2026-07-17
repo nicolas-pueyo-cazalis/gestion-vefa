@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import SectionInfosProgramme from '../components/parametres/SectionInfosProgramme.jsx'
 import SectionDelaisEtTaux from '../components/parametres/SectionDelaisEtTaux.jsx'
 import SectionEtages from '../components/parametres/SectionEtages.jsx'
@@ -13,16 +14,13 @@ import SectionAlertes from '../components/parametres/SectionAlertes.jsx'
 
 function Parametres() {
   const { utilisateur } = useAuth()
-  const [programme, setProgramme] = useState(null)
+  // Programme actif venant du contexte (17/07/2026, point 138) — Paramètres
+  // modifie toujours CE programme-là, jamais un autre.
+  const { programmeActif: programme, setProgrammeActif } = useProgramme()
   const [entreprises, setEntreprises] = useState([])
   const [lots, setLots] = useState([])
   const [utilisateurs, setUtilisateurs] = useState([])
   const [chargement, setChargement] = useState(true)
-
-  async function chargerProgramme() {
-    const reponse = await apiFetch(`${API_URL}/api/programme`)
-    setProgramme(await reponse.json())
-  }
 
   async function chargerEntreprises() {
     const reponse = await apiFetch(`${API_URL}/api/entreprises`)
@@ -30,7 +28,7 @@ function Parametres() {
   }
 
   async function chargerLots() {
-    const reponse = await apiFetch(`${API_URL}/api/lots`)
+    const reponse = await apiFetch(`${API_URL}/api/lots?programme=${programme._id}`)
     setLots(await reponse.json())
   }
 
@@ -44,14 +42,14 @@ function Parametres() {
 
   useEffect(() => {
     async function chargerTout() {
-      await Promise.all([chargerProgramme(), chargerEntreprises(), chargerLots(), chargerUtilisateurs()])
+      await Promise.all([chargerEntreprises(), chargerLots(), chargerUtilisateurs()])
       setChargement(false)
     }
     chargerTout()
   }, [])
 
   async function enregistrer(patch) {
-    const reponse = await apiFetch(`${API_URL}/api/programme`, {
+    const reponse = await apiFetch(`${API_URL}/api/programme/${programme._id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(patch),
@@ -61,7 +59,9 @@ function Parametres() {
       alert(message)
       return
     }
-    setProgramme(await reponse.json())
+    // Met aussi à jour le contexte partagé (bandeau, délais utilisés par
+    // les autres pages...) sans attendre un rechargement de page.
+    setProgrammeActif(await reponse.json())
   }
 
   if (chargement) return <p>Chargement des paramètres...</p>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import TelephoneInput from './TelephoneInput.jsx'
+import { chercherCodePostal } from '../utils/codePostal.js'
 
 // Mêmes règles que le formulaire Entreprises/Client — voir docs/bugs.md,
 // "Numéro de téléphone incomplet silencieusement effacé à la soumission" :
@@ -20,6 +21,17 @@ function ChampsContact({ titre, valeur, onChange, onValiditeChange }) {
 
   function definir(champ, v) {
     onChange({ ...valeur, [champ]: v })
+  }
+
+  // Code postal automatique depuis la commune (17/07/2026, point 140) :
+  // uniquement si le code postal est encore vide — une fois rempli (auto
+  // ou à la main, ex: un CEDEX différent du code postal "normal" de la
+  // commune), il reste modifiable mais ne se fait plus jamais écraser
+  // automatiquement.
+  async function completerCodePostal() {
+    if (valeur.codePostal) return
+    const trouve = await chercherCodePostal(valeur.commune)
+    if (trouve) definir('codePostal', trouve)
   }
 
   const erreurCommune = valeur.commune && !REGEX_COMMUNE.test(valeur.commune)
@@ -53,6 +65,7 @@ function ChampsContact({ titre, valeur, onChange, onValiditeChange }) {
         <input
           value={valeur.commune ?? ''}
           onChange={(e) => definir('commune', e.target.value)}
+          onBlur={completerCodePostal}
           className={erreurCommune ? 'invalide' : ''}
         />
         {erreurCommune && <span className="erreur-champ">{erreurCommune}</span>}

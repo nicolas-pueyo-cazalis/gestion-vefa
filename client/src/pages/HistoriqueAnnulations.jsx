@@ -3,6 +3,7 @@ import { STATUTS_LOT } from '../data/lots.js'
 import { STATUTS_TMA } from '../data/tma.js'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatDate } from '../utils/statuts.js'
 import { formatMontant } from '../utils/formatMontant.js'
 import Badge from '../components/Badge.jsx'
@@ -22,6 +23,7 @@ function derniereDate(entree) {
 }
 
 function HistoriqueAnnulations() {
+  const { programmeActif } = useProgramme()
   const [historique, setHistorique] = useState([])
   const [tmaList, setTmaList] = useState([])
   const [chargement, setChargement] = useState(true)
@@ -32,8 +34,8 @@ function HistoriqueAnnulations() {
     async function charger() {
       try {
         const [reponseHistorique, reponseTma] = await Promise.all([
-          apiFetch(`${API_URL}/api/historique-annulations`),
-          apiFetch(`${API_URL}/api/tma`),
+          apiFetch(`${API_URL}/api/historique-annulations?programme=${programmeActif._id}`),
+          apiFetch(`${API_URL}/api/tma?programme=${programmeActif._id}`),
         ])
         setHistorique(await reponseHistorique.json())
         setTmaList(await reponseTma.json())

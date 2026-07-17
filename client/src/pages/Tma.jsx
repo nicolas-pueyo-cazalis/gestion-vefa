@@ -8,6 +8,7 @@ import {
 } from '../data/tma.js'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatMontant } from '../utils/formatMontant.js'
 import { estEntrepriseEnRetard, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
@@ -56,6 +57,7 @@ function tmaObsolete(tma) {
 }
 
 function Tma() {
+  const { programmeActif: programme } = useProgramme()
   const [tmaList, setTmaList] = useState([])
   const [lots, setLots] = useState([])
   const [chargement, setChargement] = useState(true)
@@ -70,16 +72,15 @@ function Tma() {
   // tma-entreprises (dateEnvoi/montantDevis) nécessaires pour détecter, sur
   // CETTE page, une TMA "Étude" dont une entreprise sollicitée n'a pas
   // répondu à temps — sans attendre la fenêtre d'alertes au démarrage.
-  const [programme, setProgramme] = useState(null)
   const [tmaEntreprises, setTmaEntreprises] = useState([])
 
   async function chargerTma() {
-    const reponse = await apiFetch(`${API_URL}/api/tma`)
+    const reponse = await apiFetch(`${API_URL}/api/tma?programme=${programme._id}`)
     setTmaList(await reponse.json())
   }
 
   async function chargerTmaEntreprises() {
-    const reponse = await apiFetch(`${API_URL}/api/tma-entreprises`)
+    const reponse = await apiFetch(`${API_URL}/api/tma-entreprises?programme=${programme._id}`)
     setTmaEntreprises(await reponse.json())
   }
 
@@ -93,12 +94,8 @@ function Tma() {
   useEffect(() => {
     async function chargerTout() {
       try {
-        const [reponseLots, reponseProgramme] = await Promise.all([
-          apiFetch(`${API_URL}/api/lots`),
-          apiFetch(`${API_URL}/api/programme`),
-        ])
+        const reponseLots = await apiFetch(`${API_URL}/api/lots?programme=${programme._id}`)
         setLots(await reponseLots.json())
-        setProgramme(await reponseProgramme.json())
         await Promise.all([chargerTma(), chargerTmaEntreprises()])
       } catch (e) {
         setErreur(e.message)

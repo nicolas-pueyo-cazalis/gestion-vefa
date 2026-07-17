@@ -1,27 +1,21 @@
-import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { API_URL } from '../config.js'
-import { apiFetch } from '../utils/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatDate } from '../utils/statuts.js'
 
 function Bandeau() {
-  const [programme, setProgramme] = useState(null)
   const { utilisateur, deconnecter } = useAuth()
+  const { programmeActif: programme, changerDeProgramme } = useProgramme()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    async function chargerProgramme() {
-      const reponse = await apiFetch(`${API_URL}/api/programme`)
-      const donnees = await reponse.json()
-      setProgramme(donnees)
-    }
-    chargerProgramme()
-  }, [])
 
   function seDeconnecter() {
     deconnecter()
     navigate('/connexion')
+  }
+
+  function ouvrirChoixProgramme() {
+    changerDeProgramme()
+    navigate('/programmes')
   }
 
   return (
@@ -30,6 +24,7 @@ function Bandeau() {
         <div>
           <p className="bandeau-nom">{programme?.nom}</p>
           <p className="bandeau-adresse">{programme?.adresse}, {programme?.commune}</p>
+          <button type="button" className="lien-discret" onClick={ouvrirChoixProgramme}>Changer de programme</button>
         </div>
         <div className="bandeau-utilisateur">
           <span>{utilisateur?.nom || utilisateur?.email} <span className="bandeau-role">({utilisateur?.role})</span></span>

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { statutSignature, calculerDateLimiteMois, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
@@ -33,23 +34,21 @@ function nomComplet(acquereur) {
 }
 
 function SignatureActe() {
+  const { programmeActif: programme } = useProgramme()
   const [lots, setLots] = useState([])
-  const [programme, setProgramme] = useState(null)
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerLots() {
-    const reponse = await apiFetch(`${API_URL}/api/lots`)
+    const reponse = await apiFetch(`${API_URL}/api/lots?programme=${programme._id}`)
     setLots(await reponse.json())
   }
 
   useEffect(() => {
     async function init() {
       try {
-        const reponseProgramme = await apiFetch(`${API_URL}/api/programme`)
-        setProgramme(await reponseProgramme.json())
         await chargerLots()
       } catch (e) {
         setErreur(e.message)

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import {
   statutPret, statutSignature, statutAppel,
   estEntrepriseEnRetard, estFactureTmaEnRetard, formatDate,
@@ -18,26 +19,26 @@ function nomComplet(acquereur) {
 // remonté en changeant de page, ça ne s'affiche bien qu'"à l'ouverture",
 // pas à chaque navigation.
 function AlerteRetards() {
+  const { programmeActif: programme } = useProgramme()
   const [donnees, setDonnees] = useState(null)
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
     async function charger() {
-      const [programme, lots, appels, tmaList, tmaEntreprises] = await Promise.all([
-        apiFetch(`${API_URL}/api/programme`).then((r) => r.json()),
-        apiFetch(`${API_URL}/api/lots`).then((r) => r.json()),
-        apiFetch(`${API_URL}/api/appels-de-fonds`).then((r) => r.json()),
-        apiFetch(`${API_URL}/api/tma`).then((r) => r.json()),
-        apiFetch(`${API_URL}/api/tma-entreprises`).then((r) => r.json()),
+      const [lots, appels, tmaList, tmaEntreprises] = await Promise.all([
+        apiFetch(`${API_URL}/api/lots?programme=${programme._id}`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/appels-de-fonds?programme=${programme._id}`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/tma?programme=${programme._id}`).then((r) => r.json()),
+        apiFetch(`${API_URL}/api/tma-entreprises?programme=${programme._id}`).then((r) => r.json()),
       ])
-      setDonnees({ programme, lots, appels, tmaList, tmaEntreprises })
+      setDonnees({ lots, appels, tmaList, tmaEntreprises })
     }
     charger()
-  }, [])
+  }, [programme._id])
 
   if (!donnees || !visible) return null
 
-  const { programme, lots, appels, tmaList, tmaEntreprises } = donnees
+  const { lots, appels, tmaList, tmaEntreprises } = donnees
   const { delaiObtentionPretJours, delaiSignatureNotaireMois, delaiRetourEntrepriseTmaJours, delaiReponseFactureTmaJours } = programme.parametres
 
   // Désactivable depuis Paramètres (17/07/2026, point 137) : globalement,

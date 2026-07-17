@@ -2,6 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { STATUTS_LOT } from '../data/lots.js'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatMontant } from '../utils/formatMontant.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
@@ -85,8 +86,8 @@ function offrePretManquante(lot) {
 }
 
 function Lots() {
+  const { programmeActif: programme } = useProgramme()
   const [lots, setLots] = useState([])
-  const [programme, setProgramme] = useState(null)
   const [acquereurs, setAcquereurs] = useState([])
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
@@ -105,25 +106,19 @@ function Lots() {
   const [positionPrixTTC, setPositionPrixTTC] = useState(null)
 
   async function chargerLots() {
-    const reponse = await apiFetch(`${API_URL}/api/lots`)
+    const reponse = await apiFetch(`${API_URL}/api/lots?programme=${programme._id}`)
     setLots(await reponse.json())
   }
 
   async function chargerAcquereurs() {
-    const reponse = await apiFetch(`${API_URL}/api/acquereurs`)
+    const reponse = await apiFetch(`${API_URL}/api/acquereurs?programme=${programme._id}`)
     setAcquereurs(await reponse.json())
   }
 
   useEffect(() => {
     async function chargerTout() {
       try {
-        const [reponseProgramme, reponseAcquereurs] = await Promise.all([
-          apiFetch(`${API_URL}/api/programme`),
-          apiFetch(`${API_URL}/api/acquereurs`),
-        ])
-        setProgramme(await reponseProgramme.json())
-        setAcquereurs(await reponseAcquereurs.json())
-        await chargerLots()
+        await Promise.all([chargerAcquereurs(), chargerLots()])
       } catch (e) {
         setErreur(e.message)
       } finally {

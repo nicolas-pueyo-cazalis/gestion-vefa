@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
+import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatMontant } from '../utils/formatMontant.js'
 import { statutAppel, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
@@ -27,8 +28,8 @@ const STATUTS_FILTRE = [
 ]
 
 function AppelsDeFonds() {
+  const { programmeActif: programme } = useProgramme()
   const [appels, setAppels] = useState([])
-  const [programme, setProgramme] = useState(null)
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
@@ -39,15 +40,13 @@ function AppelsDeFonds() {
   const [recapOuvert, setRecapOuvert] = useState(false)
 
   async function chargerAppels() {
-    const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds`)
+    const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds?programme=${programme._id}`)
     setAppels(await reponse.json())
   }
 
   useEffect(() => {
     async function init() {
       try {
-        const reponseProgramme = await apiFetch(`${API_URL}/api/programme`)
-        setProgramme(await reponseProgramme.json())
         await chargerAppels()
       } catch (e) {
         setErreur(e.message)
@@ -95,7 +94,7 @@ function AppelsDeFonds() {
     const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds/phase`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(donnees),
+      body: JSON.stringify({ ...donnees, programme: programme._id }),
     })
     if (!reponse.ok) {
       const { message } = await reponse.json()

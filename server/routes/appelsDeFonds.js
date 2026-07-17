@@ -3,6 +3,7 @@ import AppelDeFonds from '../models/AppelDeFonds.js'
 import Lot from '../models/Lot.js'
 import Programme from '../models/Programme.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
+import { getIdsLotsDuProgramme } from '../utils/programme.js'
 import { autoriserRoles } from '../middleware/auth.js'
 
 const router = Router()
@@ -12,8 +13,15 @@ const router = Router()
 // lot si besoin plus tard (ex: détail dans une autre page).
 router.get('/', async (req, res) => {
   try {
-    const { lot } = req.query
-    const filtre = lot ? { lot } : {}
+    const { lot, programme } = req.query
+    let filtre = {}
+    if (lot) {
+      filtre = { lot }
+    } else if (programme) {
+      // 17/07/2026, point 138 : AppelDeFonds n'a pas de champ `programme`
+      // direct — passe par lot.programme (un saut).
+      filtre = { lot: { $in: await getIdsLotsDuProgramme(programme) } }
+    }
     const appels = await AppelDeFonds.find(filtre)
       .populate('lot', 'reference prixTTC')
       .sort({ createdAt: 1 })
@@ -60,21 +68,30 @@ function emettreAttestation(appel, dateAttestationMOE) {
 // "phase" comme une valeur de :id.
 router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { phase, dateAttestationMOE } = req.body
-    if (!phase || !dateAttestationMOE) {
-      return res.status(400).json({ message: 'Les champs "phase" et "dateAttestationMOE" sont requis' })
+    const { phase, dateAttestationMOE, programme: programmeId } = req.body
+    if (!phase || !dateAttestationMOE || !programmeId) {
+      return res.status(400).json({ message: 'Les champs "phase", "dateAttestationMOE" et "programme" sont requis' })
     }
+
+    // 17/07/2026, point 138 : une attestation par phase ne concerne que les
+    // lots du programme actif — les autres programmes ont leur propre
+    // barème et leur propre avancement de chantier.
+    const idsLotsDuProgramme = await getIdsLotsDuProgramme(programmeId)
 
     // Point 126 (13/07/2026) : une phase ne peut être attestée que si celle
     // juste avant l'est déjà — sauf la toute première phase attestable
     // (juste après "Réservation", index 0, qui elle n'est jamais attestée,
     // auto-émise dès la réservation, voir genererAppelsDeFonds).
-    const programme = await Programme.findOne()
+    const programme = await Programme.findById(programmeId)
+    if (!programme) {
+      return res.status(404).json({ message: 'Programme introuvable' })
+    }
     const phasesTriees = [...programme.parametres.baremePhases].sort((a, b) => a.ordre - b.ordre)
     const index = phasesTriees.findIndex((p) => p.nom === phase)
     if (index > 1) {
       const nomPhasePrecedente = phasesTriees[index - 1].nom
       const phasePrecedenteAttestee = await AppelDeFonds.exists({
+        lot: { $in: idsLotsDuProgramme },
         'phase.nom': nomPhasePrecedente,
         dateAttestationMOE: { $ne: null },
       })
@@ -85,7 +102,11 @@ router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res)
       }
     }
 
-    const appels = await AppelDeFonds.find({ 'phase.nom': phase, dateAttestationMOE: null })
+    const appels = await AppelDeFonds.find({
+      lot: { $in: idsLotsDuProgramme },
+      'phase.nom': phase,
+      dateAttestationMOE: null,
+    })
       .populate({ path: 'lot', populate: { path: 'programme' } })
 
     for (const appel of appels) {

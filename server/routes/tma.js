@@ -3,6 +3,7 @@ import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique } from '../model
 import Lot from '../models/Lot.js'
 import TmaEntreprise from '../models/TmaEntreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { getIdsLotsDuProgramme } from '../utils/programme.js'
 
 const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
 
@@ -17,7 +18,15 @@ const router = Router()
 // /:id/acquereur ci-dessous).
 router.get('/', async (req, res) => {
   try {
-    const tmaList = await Tma.find()
+    // `?programme=<id>` (17/07/2026, point 138) : Tma n'a pas de champ
+    // `programme` direct — passe par les lots de ce programme (Tma n'existe
+    // que rattachée à un lot).
+    const { programme } = req.query
+    const filtre = {}
+    if (programme) {
+      filtre.lot = { $in: await getIdsLotsDuProgramme(programme) }
+    }
+    const tmaList = await Tma.find(filtre)
       .populate({
         path: 'lot',
         select: 'reference statut acquereur',

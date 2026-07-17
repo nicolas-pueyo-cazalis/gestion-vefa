@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import TelephoneInput from './TelephoneInput.jsx'
+import { chercherCodePostal } from '../utils/codePostal.js'
 
 // Mêmes règles que le formulaire Entreprises (Paramètres) : validées en
 // JS plutôt qu'en attribut HTML "pattern", pour un message d'erreur
@@ -23,6 +24,15 @@ function FormulaireEditionClient({ acquereur, colonnes, onEnregistrer, onFermer 
   function gererTelephone(valeur, estValide) {
     setTelephone(valeur)
     setTelephoneValide(estValide)
+  }
+
+  // Code postal automatique depuis la commune (17/07/2026, point 140) :
+  // uniquement si le code postal est encore vide — reste modifiable à la
+  // main ensuite (ex: un CEDEX différent), sans jamais être réécrasé.
+  async function completerCodePostal() {
+    if (codePostal) return
+    const trouve = await chercherCodePostal(commune)
+    if (trouve) setCodePostal(trouve)
   }
 
   function soumettre(evenement) {
@@ -86,6 +96,7 @@ function FormulaireEditionClient({ acquereur, colonnes, onEnregistrer, onFermer 
             <input
               value={commune}
               onChange={(e) => setCommune(e.target.value)}
+              onBlur={completerCodePostal}
               className={erreurs.commune ? 'invalide' : ''}
             />
             {erreurs.commune && <span className="erreur-champ">{erreurs.commune}</span>}

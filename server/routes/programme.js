@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import Programme from '../models/Programme.js'
-import Lot from '../models/Lot.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { getIdsLotsDuProgramme } from '../utils/programme.js'
 
 const router = Router()
 
@@ -65,9 +65,9 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     const { parametres, ...champsProgramme } = req.body
 
     if (parametres?.baremePhases) {
-      const lotsDuProgramme = await Lot.find({ programme: req.params.id }, '_id')
+      const idsLots = await getIdsLotsDuProgramme(req.params.id)
       const nombreAppelsEmis = await AppelDeFonds.countDocuments({
-        lot: { $in: lotsDuProgramme.map((l) => l._id) },
+        lot: { $in: idsLots },
         dateEmission: { $ne: null },
       })
       if (nombreAppelsEmis > 0) {

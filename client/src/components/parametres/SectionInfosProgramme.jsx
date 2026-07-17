@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { chercherCodePostal } from '../../utils/codePostal.js'
 
 function versDateInput(valeur) {
   return valeur ? valeur.slice(0, 10) : ''
@@ -12,6 +13,15 @@ function SectionInfosProgramme({ programme, onEnregistrer }) {
   const [codePostal, setCodePostal] = useState(programme.codePostal ?? '')
   const [nombreLogements, setNombreLogements] = useState(programme.nombreLogements ?? '')
   const [dateLivraison, setDateLivraison] = useState(versDateInput(programme.dateLivraison))
+
+  // Code postal automatique depuis la commune (17/07/2026, point 140) :
+  // uniquement si le code postal est encore vide — reste modifiable à la
+  // main ensuite (ex: un CEDEX différent), sans jamais être réécrasé.
+  async function completerCodePostal() {
+    if (codePostal) return
+    const trouve = await chercherCodePostal(commune)
+    if (trouve) setCodePostal(trouve)
+  }
 
   function soumettre(evenement) {
     evenement.preventDefault()
@@ -44,7 +54,7 @@ function SectionInfosProgramme({ programme, onEnregistrer }) {
         </label>
         <label>
           Commune
-          <input value={commune} onChange={(e) => setCommune(e.target.value)} />
+          <input value={commune} onChange={(e) => setCommune(e.target.value)} onBlur={completerCodePostal} />
         </label>
         <label>
           Code postal

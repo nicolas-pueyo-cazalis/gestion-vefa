@@ -35,13 +35,20 @@ export function calculerStatutAutomatique(tma) {
 }
 
 // Programme.parametres.tauxMargeTma / regleMontantNegatifTma
-// (docs/schema-donnees.md). Simplification actuelle : valeurs par défaut en
-// dur, pas encore lues sur le vrai programme (un seul programme pour
-// l'instant) — à corriger si l'appli devient multi-programmes.
-export function calculerMontantClient(montantEntreprises) {
+// (docs/schema-donnees.md). Bug corrigé le 17/07/2026 (point 142, revue
+// générale) : ces deux réglages étaient jusqu'ici ignorés (valeurs en dur
+// 1.3 / "montant_zero"), rendant les champs correspondants de Paramètres
+// inopérants — modifiables sans le moindre effet. `parametres` (optionnel,
+// avec les mêmes défauts que le schéma) doit être `programme.parametres`,
+// résolu par l'appelant (ex: tma.lot.programme.parametres).
+export function calculerMontantClient(montantEntreprises, parametres) {
   if (montantEntreprises === null || montantEntreprises === undefined) return null
-  if (montantEntreprises < 0) return 0
-  return montantEntreprises * 1.3
+  const tauxMarge = parametres?.tauxMargeTma ?? 1.3
+  const regleMontantNegatif = parametres?.regleMontantNegatifTma ?? 'montant_zero'
+  if (montantEntreprises < 0) {
+    return regleMontantNegatif === 'avoir_sans_marge' ? montantEntreprises : 0
+  }
+  return montantEntreprises * tauxMarge
 }
 
 const tmaSchema = new mongoose.Schema({

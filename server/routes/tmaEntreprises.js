@@ -5,7 +5,7 @@ import Entreprise from '../models/Entreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
 
-const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
+const STATUTS_NON_RECALCULABLES = ['termine', 'refuse', 'annule']
 
 const router = Router()
 
@@ -38,7 +38,12 @@ async function recalculerTma(tmaId) {
   tma.montantEntreprises = montantEntreprises
   // Montant client figé à la main (13/07/2026) : ne plus jamais l'écraser
   // automatiquement, même si les devis entreprises changent ensuite.
-  if (!tma.montantClientManuel) {
+  // `montantClientSaisiManuellement` (20/07/2026, point 173) : réglage par
+  // programme, désactive complètement le calcul automatique par défaut
+  // (le taux de marge devient alors juste indicatif, jamais appliqué tout
+  // seul) — le gestionnaire saisit chaque montant lui-même via le panneau
+  // "Infos" (PATCH /api/tma/:id/infos), qui fige déjà montantClientManuel.
+  if (!tma.montantClientManuel && !tma.lot?.programme?.parametres?.montantClientSaisiManuellement) {
     tma.montantClient = calculerMontantClient(montantEntreprises, tma.lot?.programme?.parametres)
   }
 

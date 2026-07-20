@@ -601,9 +601,9 @@ table {
     white-space: nowrap;
   }
 
-  // La colonne Client garde tout de même une largeur raisonnable : le nom
-  // peut revenir à la ligne (une seule fois en général), contrairement au
-  // reste du tableau qui est en "nowrap".
+  // La colonne Client garde tout de même une largeur raisonnable (une
+  // seule fois en général), contrairement au reste du tableau qui est
+  // en "nowrap".
   .nom-client {
     display: inline-block;
     max-width: 13rem;
@@ -616,6 +616,7 @@ table {
   .commentaire-cellule {
     display: inline-block;
     min-width: 14rem;
+    max-width: 20rem;
     white-space: normal;
   }
 
@@ -641,6 +642,22 @@ table {
     display: inline-block;
     max-width: 16rem;
     white-space: normal;
+  }
+
+  // Coupure forcée à l'intérieur d'un mot trop long (20/07/2026, point
+  // 175 corrigé) : "white-space: normal" seul ne replie qu'entre les
+  // mots (aux espaces) — un texte SANS espace plus large que max-width
+  // (ex: un identifiant, un collage de caractères) déborde purement et
+  // simplement sur la colonne suivante au lieu de revenir à la ligne, en
+  // gardant la largeur de colonne configurée. "overflow-wrap: break-word"
+  // force la coupure à l'intérieur du mot lui-même si besoin, uniquement
+  // en dernier recours (les espaces restent préférés pour couper).
+  .nom-client,
+  .commentaire-cellule,
+  .description-cellule,
+  .adresse-cellule,
+  .email-cellule {
+    overflow-wrap: break-word;
   }
 
   // Peu de caractères utiles (ex: "A01, B02") : pas besoin de toute la
@@ -730,6 +747,14 @@ table {
       color: white;
       border-color: $couleur-texte;
     }
+  }
+
+  // Espace au-dessus/en dessous des boutons d'action TMA (20/07/2026) : trop
+  // collés aux infos du panneau juste au-dessus sans ça. Règle séparée
+  // plutôt qu'ajoutée au bloc partagé ci-dessus, qui s'applique aussi aux
+  // formulaires Dates/Entreprises (pas concernés par ce resserrement).
+  .boutons-panneau-tma {
+    margin: 1rem 0;
   }
 
   // Barème négocié pour un logement (13/07/2026, FormulaireBaremeLot.jsx) :
@@ -1295,6 +1320,47 @@ table.tableau-lots {
     }
   }
 
+  // Regroupement par page (20/07/2026, point 173, SectionDelaisEtTaux.jsx) :
+  // un groupe = tous les délais/taux d'une seule page de l'appli (Lots,
+  // Suivi de prêt...), sur toute la largeur du formulaire (flex-basis:
+  // 100%) pour bien les séparer visuellement, avec ses propres champs en
+  // ligne à l'intérieur.
+  .groupe-delais-et-taux {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid $couleur-bordure;
+
+    &:first-child {
+      padding-top: 0;
+      border-top: none;
+    }
+
+    h3 {
+      flex-basis: 100%;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    // Case à cocher juste sous "Taux de marge TMA" (20/07/2026, point
+    // 173), pas étalée sur toute la largeur du groupe comme le fait
+    // .champ-case-a-cocher par défaut — un petit conteneur en colonne
+    // les regroupe tous les deux, la case perd son flex-basis: 100%
+    // puisqu'elle n'a plus besoin de forcer un retour à la ligne ici.
+    .champ-taux-marge-tma {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+
+      .champ-case-a-cocher {
+        flex-basis: auto;
+      }
+    }
+  }
+
   // Aligne les boutons sur la ligne des champs (pas sur celle des
   // libellés au-dessus) : "align-self: end" les cale en bas de la ligne
   // flex, comme le bas des <input>. "margin-left: auto" les pousse vers
@@ -1522,6 +1588,26 @@ button.bouton-danger {
     &:hover {
       background: #b91c1c;
     }
+  }
+}
+
+// Bouton d'action "mise en avant" neutre (20/07/2026) — même principe que
+// .bouton-danger.bouton-plein, mais en noir : pour les deux boutons de
+// bascule Terminé/Annuler la fin des travaux, trop discrets en gris par
+// défaut. Classe doublée (".bouton-fonce.bouton-fonce", 20/07/2026) : le
+// simple préfixe "button." (suffisant pour .bouton-danger, qui ne redéfinit
+// que color/border-color) ne suffisait pas ici, `background` étant déjà fixé
+// par la règle ".boutons-panneau-tma button" avec une spécificité plus
+// élevée (elle-même imbriquée dans `table { ... }`) — le noir n'apparaissait
+// donc qu'au survol (où :hover ajoute le point de spécificité manquant),
+// jamais au repos.
+button.bouton-fonce.bouton-fonce {
+  background: $couleur-texte;
+  color: white;
+  border-color: $couleur-texte;
+
+  &:hover {
+    background: darken($couleur-texte, 10%);
   }
 }
 

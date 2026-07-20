@@ -81,7 +81,7 @@ const TMA_DATA = [
   },
   {
     lot: 'A01', acquereur: 'duprat', localisation: 'Terrasse',
-    description: 'Pose de stores extérieurs', montantEntreprises: 900, statut: 'travaux',
+    description: 'Pose de stores extérieurs', montantEntreprises: 900, statut: 'valide',
   },
   {
     lot: 'C01', acquereur: 'ferreira', localisation: 'Cuisine',

@@ -5,7 +5,7 @@ import TmaEntreprise from '../models/TmaEntreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
 
-const STATUTS_NON_RECALCULABLES = ['travaux', 'termine', 'refuse']
+const STATUTS_NON_RECALCULABLES = ['termine', 'refuse', 'annule']
 
 const router = Router()
 
@@ -145,7 +145,7 @@ router.patch('/:id/statut', autoriserRoles('admin', 'gestionnaire'), async (req,
 
 // PATCH /api/tma/:id/dates — met à jour les dates d'une TMA et recalcule
 // automatiquement son statut à partir de ces valeurs (comme Excel), sauf si
-// elle est déjà en travaux/terminée/refusée : dans ce cas, on garde les
+// elle est déjà terminée/refusée/annulée : dans ce cas, on garde les
 // dates modifiables (correction) mais sans faire reculer le statut malgré
 // elles. Ne touche plus à montantEntreprises/montantClient : ces champs
 // sont désormais entièrement pilotés par les lignes TmaEntreprise (voir
@@ -220,6 +220,31 @@ router.patch('/:id/annuler-annulation', autoriserRoles('admin', 'gestionnaire'),
 
     tma.statut = tma.statutAvantAnnulation
     tma.statutAvantAnnulation = undefined
+    await tma.save()
+    res.json(tma)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// PATCH /api/tma/:id/annuler-termine — revient en arrière après un passage
+// (manuel) à "Terminé" par erreur (20/07/2026, point 172). Contrairement à
+// /annuler-refus et /annuler-annulation, pas besoin de mémoriser le statut
+// d'origine (statutAvantX) : "termine" n'est atteignable que depuis "valide"
+// (seule transition prévue, voir TRANSITIONS_AUTORISEES), donc l'origine est
+// toujours la même et n'a pas besoin d'être stockée.
+router.patch('/:id/annuler-termine', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const tma = await Tma.findById(req.params.id)
+
+    if (!tma) {
+      return res.status(404).json({ message: 'TMA introuvable' })
+    }
+    if (tma.statut !== 'termine') {
+      return res.status(400).json({ message: 'Cette TMA n\'est pas terminée, rien à annuler' })
+    }
+
+    tma.statut = 'valide'
     await tma.save()
     res.json(tma)
   } catch (erreur) {

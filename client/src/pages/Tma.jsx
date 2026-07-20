@@ -209,6 +209,21 @@ function Tma() {
     )
   }
 
+  async function annulerTermine(id) {
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/annuler-termine`, { method: 'PATCH' })
+
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      alert(message)
+      return
+    }
+
+    const tmaMiseAJour = await reponse.json()
+    setTmaList((liste) =>
+      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+    )
+  }
+
   async function enregistrerDates(id, donnees) {
     const reponse = await apiFetch(`${API_URL}/api/tma/${id}/dates`, {
       method: 'PATCH',
@@ -391,6 +406,7 @@ function Tma() {
                   <FormulaireInfosTma
                     tma={tma}
                     colonnes={NB_COLONNES}
+                    montantClientSaisiManuellement={programme.parametres.montantClientSaisiManuellement}
                     onEnregistrer={enregistrerInfos}
                     onFermer={() => setIdPanneauOuvert(null)}
                   />
@@ -411,6 +427,12 @@ function Tma() {
                   <tr className="formulaire-dates">
                     <td colSpan={NB_COLONNES}>
                       <div className="boutons-panneau-tma">
+                        {TRANSITIONS_AUTORISEES[tma.statut].includes('termine') && (
+                          <button type="button" className="bouton-fonce" onClick={() => changerStatut(tma._id, 'termine')}>Marquer les travaux comme terminés</button>
+                        )}
+                        {tma.statut === 'termine' && (
+                          <button type="button" className="bouton-fonce" onClick={() => annulerTermine(tma._id)}>Annuler la fin des travaux</button>
+                        )}
                         {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
                           <button type="button" onClick={() => changerStatut(tma._id, 'refuse')}>Refuser la TMA</button>
                         )}

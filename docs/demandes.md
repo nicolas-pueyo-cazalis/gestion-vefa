@@ -710,20 +710,34 @@ totaux (point 115) — traitées une par une comme le reste.
 172. Retirer le statut "Travaux" (ne sert à rien). Pour le statut
      "Terminé", ajouter un bouton permettant d'y passer à la main
      (lorsque le client va sur chantier pointer que les travaux ont bien
-     été réalisés par les entreprises).
+     été réalisés par les entreprises). ✅ fait le 20/07/2026 (avec un
+     bouton "Annuler la fin des travaux" pour revenir en arrière en cas
+     de clic par erreur, ajouté à la demande de Nicolas le jour même).
 
 **Paramètres**
 173. Pour "Délais et taux" : bien séparer les paramètres correspondants
      par page. Rajouter sous la case "Taux de marge TMA" une case à
-     cocher "Montant devis client saisi manuellement".
+     cocher "Montant devis client saisi manuellement". ✅ fait le
+     20/07/2026 (regroupement par page : Lots/Suivi de prêt/Signature
+     acte/Appels de fonds/TMA ; la case désactive le pré-remplissage
+     automatique du montant client par le taux de marge pour tout le
+     programme).
 
 **Généralité**
 174. Pour les colonnes "Action" de chaque page : mettre un crayon à la
-     place des boutons (même principe que TMA ou Lots), partout.
+     place des boutons (même principe que TMA ou Lots), partout. ✅ fait
+     le 20/07/2026 (Clients, Appels de fonds, Signature acte, Suivi de
+     prêt — Lots et TMA l'avaient déjà ; les actions secondaires propres
+     à une ligne, ex: "Barème du lot", "Sans prêt", restent des boutons
+     texte à côté du crayon, pas remplacées).
 175. Sans rien toucher à ce qui est déjà en place, enlever partout où
      elle existe la règle "on ne peut revenir le texte qu'une seule fois
      à la ligne" — présente au moins sur Lots de mémoire, peut-être
-     ailleurs aussi, à vérifier.
+     ailleurs aussi, à vérifier. ✅ fait le 20/07/2026, corrigé le même
+     jour (largeurs de colonnes d'origine conservées comme demandé ;
+     la vraie cause était l'absence de "overflow-wrap: break-word" —
+     un texte sans espace, ex: un mot très long, ne revenait jamais à
+     la ligne et débordait tel quel au lieu de se couper).
 176. Mettre une colonne Commentaire dans chaque tableau de chaque page.
 177. Se renseigner pour voir s'il y a des choses à rajouter dans "Suivi
      de prêt" et "Signature acte".
@@ -737,3 +751,4 @@ totaux (point 115) — traitées une par une comme le reste.
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même
 esprit que `journal.md` et `bugs.md`.
+x

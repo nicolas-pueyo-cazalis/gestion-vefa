@@ -6,7 +6,11 @@ import { useState } from 'react'
 // calculerMontantClient) peut être négocié directement avec le client :
 // le modifier ici le fige définitivement (montantClientManuel côté
 // serveur), d'où l'avertissement avant l'enregistrement.
-function FormulaireInfosTma({ tma, colonnes, onEnregistrer, onFermer }) {
+// `montantClientSaisiManuellement` (20/07/2026, point 173) : réglage du
+// programme qui désactive déjà tout calcul automatique — l'avertissement
+// et la confirmation n'ont alors plus lieu d'être, il n'y a plus rien
+// d'automatique à écraser.
+function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onEnregistrer, onFermer }) {
   const [localisation, setLocalisation] = useState(tma.localisation ?? '')
   const [description, setDescription] = useState(tma.description ?? '')
   const [commentaire, setCommentaire] = useState(tma.commentaire ?? '')
@@ -18,7 +22,7 @@ function FormulaireInfosTma({ tma, colonnes, onEnregistrer, onFermer }) {
   function soumettre(evenement) {
     evenement.preventDefault()
     const nouveauMontant = montantClient === '' ? null : Number(montantClient)
-    if (nouveauMontant !== (tma.montantClient ?? null)) {
+    if (!montantClientSaisiManuellement && nouveauMontant !== (tma.montantClient ?? null)) {
       const confirme = window.confirm(
         'Ce montant client va être modifié à la main : il ne sera plus jamais recalculé automatiquement à partir des devis entreprises. Continuer ?',
       )
@@ -70,10 +74,12 @@ function FormulaireInfosTma({ tma, colonnes, onEnregistrer, onFermer }) {
           </label>
           <button type="submit">Enregistrer</button>
           <button type="button" onClick={onFermer}>Annuler</button>
-          <p className="avertissement-cellule avertissement-pleine-largeur">
-            Modifier le montant client l'écrase définitivement : il ne sera plus recalculé
-            automatiquement à partir des devis entreprises.
-          </p>
+          {!montantClientSaisiManuellement && (
+            <p className="avertissement-cellule avertissement-pleine-largeur">
+              Modifier le montant client l'écrase définitivement : il ne sera plus recalculé
+              automatiquement à partir des devis entreprises.
+            </p>
+          )}
         </form>
       </td>
     </tr>

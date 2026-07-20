@@ -14,7 +14,12 @@ function versDateInput(valeur) {
 // réellement envoyée (différente du jour où l'attestation a été saisie
 // dans l'appli) — la date limite de règlement se recalcule alors
 // automatiquement côté serveur, à partir du délai défini dans Paramètres.
-function FormulaireAppelDeFonds({ appel, colonnes, onEnregistrer, onFermer }) {
+// `onOuvrirBaremeLot` (20/07/2026, point 174) : optionnel, fourni
+// uniquement sur la dernière ligne d'un lot (voir AppelsDeFonds.jsx) — le
+// bouton "Barème du lot" vivait avant dans la colonne Action, à côté du
+// crayon ; déplacé ici pour ne laisser que le crayon dans la colonne,
+// comme sur les autres pages.
+function FormulaireAppelDeFonds({ appel, colonnes, onEnregistrer, onFermer, onOuvrirBaremeLot }) {
   const [dateEmission, setDateEmission] = useState(versDateInput(appel.dateEmission))
   const [dateReglement, setDateReglement] = useState(versDateInput(appel.dateReglement))
 
@@ -52,6 +57,12 @@ function FormulaireAppelDeFonds({ appel, colonnes, onEnregistrer, onFermer }) {
           </label>
           <button type="submit">Enregistrer</button>
           <button type="button" onClick={onFermer}>Annuler</button>
+          {onOuvrirBaremeLot && (
+            // .bouton-danger réutilisée pour le rouge demandé par Nicolas
+            // (20/07/2026) — pas une action destructrice ici, juste besoin
+            // de la faire ressortir des deux boutons voisins.
+            <button type="button" className="bouton-danger" onClick={onOuvrirBaremeLot}>Barème du lot</button>
+          )}
         </form>
       </td>
     </tr>

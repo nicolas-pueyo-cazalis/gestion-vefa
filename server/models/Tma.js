@@ -8,13 +8,16 @@ import mongoose from 'mongoose'
 // forcément un refus du promoteur, ex: il change d'avis) — infos toujours
 // visibles, jamais effacées, même logique que "refuse". Mêmes étapes de
 // départ possibles que "refuse".
+// "travaux" retiré (17/07/2026, point 172) : ne servait à rien (aucun
+// bouton ne permettait même d'y accéder) — le passage à "Terminé" se fait
+// désormais directement depuis "Validé", par une action manuelle (le
+// client va sur chantier pointer que les travaux ont bien été réalisés).
 export const TRANSITIONS_AUTORISEES = {
   demande: ['etude', 'refuse', 'annule'],
   etude: ['chiffre', 'refuse', 'annule'],
   chiffre: ['facture', 'refuse', 'annule'],
   facture: ['valide', 'refuse', 'annule'],
-  valide: ['travaux'],
-  travaux: ['termine'],
+  valide: ['termine'],
   refuse: [],
   termine: [],
   annule: [],
@@ -81,7 +84,7 @@ const tmaSchema = new mongoose.Schema({
   dateRetourClient: Date,
   statut: {
     type: String,
-    enum: ['demande', 'etude', 'chiffre', 'facture', 'valide', 'refuse', 'travaux', 'termine', 'annule'],
+    enum: ['demande', 'etude', 'chiffre', 'facture', 'valide', 'refuse', 'termine', 'annule'],
     default: 'demande',
   },
   // Mémorise le statut juste avant un refus, pour pouvoir y revenir

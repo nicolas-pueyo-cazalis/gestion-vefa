@@ -24,6 +24,10 @@ const parametresSchema = new mongoose.Schema({
   delaiRetourEntrepriseTmaJours: { type: Number, default: 15 },
   delaiReponseFactureTmaJours: { type: Number, default: 15 }, // délai client pour valider/refuser une facture TMA
   tauxMargeTma: { type: Number, default: 1.3 },
+  // 20/07/2026, point 173 : si activé, montantClient ne se pré-remplit plus
+  // automatiquement via tauxMargeTma (voir recalculerTma,
+  // routes/tmaEntreprises.js) — saisi à la main sur chaque TMA à la place.
+  montantClientSaisiManuellement: { type: Boolean, default: false },
   // Tous les montants stockés (prixTTC, montantEntreprises, montantClient...)
   // sont en TTC ; le HT se calcule à la volée (TTC / (1 + tauxTva)) quand
   // besoin, jamais stocké — voir "Convention monétaire" dans schema-donnees.md.

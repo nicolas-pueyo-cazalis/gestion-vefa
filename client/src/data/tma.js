@@ -9,7 +9,6 @@ export const STATUTS_TMA = {
   facture: "Facturé",
   valide: "Validé",
   refuse: "Refusé",
-  travaux: "Travaux",
   termine: "Terminé",
   annule: "Annulé",
 };
@@ -17,7 +16,7 @@ export const STATUTS_TMA = {
 // "facture" est classé "en cours" : le client n'a pas encore donné son
 // accord final (décision du 10/07/2026, révisée par rapport au 09/07).
 export const STATUTS_EN_COURS = ["demande", "etude", "chiffre", "facture"];
-export const STATUTS_VALIDE = ["valide", "travaux", "termine"];
+export const STATUTS_VALIDE = ["valide", "termine"];
 
 // Copie de server/models/Tma.js — uniquement pour savoir quels boutons
 // afficher côté interface. La vraie vérification (celle qui compte pour la
@@ -27,13 +26,16 @@ export const STATUTS_VALIDE = ["valide", "travaux", "termine"];
 // "annule" (13/07/2026, point 129) : le client renonce à cette TMA (pas
 // forcément un refus du promoteur) — infos toujours visibles, jamais
 // effacées, comme "refuse". Mêmes étapes de départ possibles que "refuse".
+// "travaux" retiré (17/07/2026, point 172) : aucun bouton ne permettait d'y
+// accéder — le passage à "Terminé" se fait directement depuis "Validé", par
+// une action manuelle (le client va sur chantier pointer que les travaux ont
+// bien été réalisés par les entreprises).
 export const TRANSITIONS_AUTORISEES = {
   demande: ["etude", "refuse", "annule"],
   etude: ["chiffre", "refuse", "annule"],
   chiffre: ["facture", "refuse", "annule"],
   facture: ["valide", "refuse", "annule"],
-  valide: ["travaux"],
-  travaux: ["termine"],
+  valide: ["termine"],
   refuse: [],
   termine: [],
   annule: [],
@@ -41,4 +43,4 @@ export const TRANSITIONS_AUTORISEES = {
 
 // Statuts pour lesquels modifier les dates n'a plus d'effet sur le statut
 // (copie de server/routes/tma.js, même raison : juste pour l'affichage).
-export const STATUTS_NON_RECALCULABLES = ["travaux", "termine", "refuse", "annule"];
+export const STATUTS_NON_RECALCULABLES = ["termine", "refuse", "annule"];

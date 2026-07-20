@@ -223,12 +223,18 @@ function AppelsDeFonds() {
                   <td>{formatDate(appel.dateReglement)}</td>
                   <td><Badge statut={statutAppel(appel)} texte={LIBELLES_STATUT[statutAppel(appel)]} /></td>
                   <td className="actions">
-                    <button type="button" onClick={() => setIdEnEdition(appel._id)}>Modifier</button>
-                    {dernierDuLot && appel.lot && (
-                      <button type="button" onClick={() => setIdLotBaremeOuvert(appel.lot._id)}>
-                        Barème du lot
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="bouton-icone"
+                      title="Modifier"
+                      aria-label="Modifier"
+                      onClick={() => setIdEnEdition(appel._id)}
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
                 {idEnEdition === appel._id && (
@@ -237,6 +243,9 @@ function AppelsDeFonds() {
                     colonnes={NB_COLONNES}
                     onEnregistrer={enregistrer}
                     onFermer={() => setIdEnEdition(null)}
+                    onOuvrirBaremeLot={
+                      dernierDuLot && appel.lot ? () => setIdLotBaremeOuvert(appel.lot._id) : undefined
+                    }
                   />
                 )}
                 {dernierDuLot && idLotBaremeOuvert === appel.lot?._id && (

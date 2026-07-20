@@ -98,3 +98,70 @@ Suite à la relecture du schéma de données par Nicolas :
   email), réutilisé à l'identique pour les deux.
 
 Détail et exemples de code Mongoose : `docs/schema-donnees.md`.
+
+## Multi-programme (décision du 17/07/2026)
+
+L'application gérait un seul `Programme` en dur (un `findOne()` sans
+filtre). Besoin réel : un utilisateur (agence, gestionnaire) suit
+plusieurs programmes immobiliers en parallèle, pas un seul.
+
+**Décision :** passage à une vraie liste de programmes, avec un
+"programme actif" mémorisé côté client (`ProgrammeContext`, même
+principe que `AuthContext` : `localStorage` + revalidation serveur au
+chargement) plutôt que dans l'URL — évite de préfixer toutes les routes
+par un `:programmeId` et reste cohérent avec le fait qu'on change rarement
+de programme en cours de session. Toutes les routes de liste du serveur
+filtrent sur `?programme=<id>` passé en query string.
+
+**Conséquence sur le modèle de données** : `Lot` a un champ `programme`
+direct, mais `Tma`, `AppelDeFonds`, `TmaEntreprise`, `Acquereur` n'en ont
+pas — ils appartiennent à un programme *indirectement*, via leur lot
+(ou le lot de leur TMA). Plutôt que dupliquer un champ `programme` sur
+chaque collection (risque d'incohérence si un lot change de programme,
+même si ça n'arrive jamais en pratique), le filtrage se fait en
+résolvant d'abord la liste des lots du programme
+(`server/utils/programme.js`, `getIdsLotsDuProgramme`), réutilisée par
+toutes les routes concernées.
+
+`Entreprise` et `Utilisateur` restent des référentiels globaux, non
+rattachés à un programme (une entreprise de travaux ou un utilisateur du
+logiciel peut intervenir sur plusieurs programmes).
+
+## Catalogue d'annexes et vente d'annexe seule (décision du 17/07/2026)
+
+Les parkings/caves/celliers étaient stockés comme de simples tableaux de
+numéros sur le lot (`Lot.parkings: [Number]`, etc.), sans prix ni
+existence propre — juste une liste à cocher sans aucune donnée
+métier derrière.
+
+**Décision :** en faire une vraie collection (`Annexe`) avec son propre
+prix, rattachée à un programme, éventuellement attribuée à un lot. Le
+prix total TTC d'un lot devient une valeur **calculée**
+(`prixLogementSeul` saisi + somme des annexes attribuées), pas une
+valeur ressaisie à la main à chaque fois — évite les incohérences entre
+le prix affiché et la somme réelle de ce qui est vendu.
+
+**Vente d'une annexe seule** (sans logement associé — cas d'un lot déjà
+Acté sur lequel on ne peut plus rien négocier, ou d'un acheteur externe) :
+plutôt que construire un second cycle de vente en parallèle de celui des
+lots (statuts, dates, appels de fonds...), la décision a été de
+réutiliser tel quel le modèle `Lot` avec un indicateur
+`estAnnexeSeule: true`. Un choix délibérément non-"pur" (un lot sans
+logement n'est pas vraiment un lot au sens strict) mais qui évite de
+dupliquer toute la machine à états déjà en place, au prix d'un filtre à
+ajouter à quelques endroits (quota de logements du programme, liste des
+lots dans Paramètres).
+
+## Prix modifiable uniquement depuis la page Lots, avec motif obligatoire (décision du 17/07/2026)
+
+Le prix d'un logement pouvait être modifié aussi bien depuis Paramètres
+que depuis la page Lots, sans trace de qui a changé quoi ni pourquoi.
+Nicolas a recadré le rôle de Paramètres : "sert vraiment à paramétrer le
+projet au départ, c'est tout" — la page Lots est le seul endroit où un
+prix vit et change au fil d'une vente réelle (négociation avant
+signature, par exemple).
+
+**Décision :** modification du prix retirée de Paramètres, centralisée
+sur la page Lots avec un motif obligatoire à chaque changement, et
+historisée (`HistoriqueModificationPrix`). Verrouillée dès que le lot
+est Acté (plus de négociation possible après signature).

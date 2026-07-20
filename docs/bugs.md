@@ -600,3 +600,126 @@ relation "presque jamais interrogée dans son ensemble" (ici : toutes les
 `TmaEntreprise` du programme, tous suivis confondus) est justement le
 genre d'angle mort qu'une nouvelle fonctionnalité transversale (une
 alerte, un export...) finit tôt ou tard par révéler.
+
+---
+
+## Serveur relancé avec `node index.js` : les modifications de code deviennent invisibles
+
+**Symptôme** (13/07/2026) : après plusieurs modifications côté serveur
+pour corriger un bug (montant client TMA), le comportement observé dans
+l'app ne changeait jamais, comme si aucune des corrections n'avait le
+moindre effet — au point de douter du diagnostic lui-même.
+
+**Cause** : le serveur avait été redémarré à un moment avec
+`node index.js` directement (au lieu de `npm run dev`, qui lance
+`nodemon`) — un process Node "figé" sur le code tel qu'il était au
+moment du lancement, qui ne recharge jamais tout seul. Chaque edit
+suivant était donc bien enregistré sur le disque, mais totalement
+ignoré par le process qui répondait réellement aux requêtes.
+
+**Correction** : tuer le process et relancer avec `npm run dev`.
+Diagnostiqué en écrivant un script ponctuel interrogeant directement
+Mongo pour comparer l'état réel en base à ce que le code sensé
+s'exécuter aurait dû produire.
+
+**Leçon** : toujours redémarrer le back-end avec `npm run dev`, jamais
+`node index.js` en direct — la différence est invisible sur le moment
+(le serveur démarre bien, répond bien) et ne se révèle que beaucoup
+plus tard, sous la forme trompeuse d'un bug qui "résiste" à toutes les
+corrections.
+
+---
+
+## `montantClientManuel` figé à `true` dès qu'un champ TMA sans rapport était modifié
+
+**Symptôme** (13/07/2026) : après avoir juste changé le nombre
+d'entreprises concernées sur une TMA (sans toucher au montant client),
+le montant client cessait de se recalculer automatiquement à chaque
+nouvelle réponse d'entreprise, comme s'il avait été saisi à la main.
+
+**Cause** : le formulaire d'infos TMA renvoyait systématiquement
+`montantClient` dans son corps de requête PATCH, même quand seul un
+autre champ avait changé (c'est la valeur affichée à l'écran, calculée
+ou non). Côté serveur, la route figeait
+`montantClientManuel = true` dès que la clé `montantClient` était
+**présente** dans la requête, sans vérifier si sa valeur différait
+réellement de celle déjà enregistrée.
+
+**Correction** : ne figer `montantClientManuel` que si la valeur reçue
+diffère de la valeur actuelle en base
+(`if (montantClient !== (tma.montantClient ?? null))`).
+
+**Leçon** : un formulaire qui renvoie l'intégralité de son state à
+chaque sauvegarde (plus simple à écrire) peut déclencher des effets de
+bord côté serveur sur des champs que l'utilisateur n'a pourtant pas
+touchés — une route qui distingue "présence d'un champ" de "changement
+réel de valeur" est plus sûre dès qu'un champ pilote un comportement
+(ici, geler un recalcul automatique).
+
+---
+
+## `ProgrammeContext` renvoyait un utilisateur connecté vers le choix de programme à chaque rechargement
+
+**Symptôme** (17/07/2026) : un utilisateur déjà connecté, ayant déjà
+choisi un programme lors d'une session précédente, se retrouvait
+systématiquement renvoyé vers la page "Choisir un programme" à chaque
+rechargement de page (F5) — alors que tout aurait dû rester sur la même
+page.
+
+**Cause** : `ProgrammeContext` et `AuthContext` revalident chacun leur
+état auprès du serveur au chargement, en parallèle. L'effet de
+`ProgrammeContext` se déclenchait une première fois avant que
+`AuthContext` ait fini sa propre vérification, avec `utilisateur`
+encore à `null` (valeur initiale, pas encore résolue) — il concluait
+alors à tort "pas d'utilisateur connecté", posait
+`programmeActif = null` et `chargement = false` définitivement, avant
+même qu'`AuthContext` ait eu le temps de confirmer que l'utilisateur
+était bien connecté. `RouteProgramme` redirigeait alors vers
+`/programmes` sur la base de ce faux `null`.
+
+**Correction** : `ProgrammeContext` lit maintenant aussi
+`chargement` (renommé `chargementAuth`) depuis `useAuth()`, et son
+effet retourne immédiatement tant que cette valeur est `true`, avant
+de décider quoi que ce soit.
+
+**Leçon** : deux `Context` qui dépendent l'un de l'autre (ici,
+"programme actif" n'a de sens que si "utilisateur connu") doivent
+explicitement attendre la résolution de l'un avant que l'autre ne
+prenne une décision définitive — sinon le state initial "pas encore
+chargé" (`null`) est silencieusement traité comme un vrai résultat
+("pas connecté"). Trouvé via une revue de code à plusieurs agents en
+parallèle, pas par un signalement utilisateur — ce genre de bug ne se
+voit qu'au rechargement, facile à ne jamais remarquer soi-même en dev
+avec le rechargement à chaud (HMR) qui ne repart jamais de zéro.
+
+---
+
+## Annuler une vente d'annexe seule ne libérait pas l'annexe
+
+**Symptôme** (17/07/2026) : après avoir annulé la vente d'un parking
+vendu à part, celui-ci n'apparaissait plus comme disponible dans
+"Vendre une annexe", et le lot "fantôme" associé restait visible dans
+le tableau des lots avec un statut "Libre" incohérent (un lot
+`estAnnexeSeule` n'a pas vocation à exister en dehors d'une vente en
+cours).
+
+**Cause** : la route d'annulation de vente avait été écrite pour le cas
+général (remettre un lot classique à "Libre"), sans branche spécifique
+pour `estAnnexeSeule` — elle ne remettait donc jamais
+`Annexe.lot` à `null`, et laissait le `Lot` lui-même en base au lieu de
+le supprimer.
+
+**Correction** : branche dédiée dans la route d'annulation pour les
+lots `estAnnexeSeule` : libère l'annexe
+(`Annexe.updateMany({ lot: lot._id }, { lot: null })`) puis supprime le
+`Lot` entièrement, au lieu de le remettre à "Libre" — cohérent avec le
+fait qu'une vente d'annexe annulée se revend uniquement via "Vendre une
+annexe", jamais en éditant un lot existant. Le lot de test déjà cassé
+par le bug a été nettoyé par un script ponctuel.
+
+**Leçon** : une fonctionnalité qui réutilise un cycle existant
+(`estAnnexeSeule` réutilise le cycle de vente des lots classiques) doit
+être revue explicitement à **chaque** endroit qui suppose "il s'agit
+d'un vrai logement" — l'annulation, écrite avant l'introduction
+d'`estAnnexeSeule`, est un point de rupture facile à manquer tant que
+personne ne teste spécifiquement ce cas.

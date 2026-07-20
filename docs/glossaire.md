@@ -86,6 +86,26 @@ l'entreprise sous-traitante : le promoteur applique une marge (typiquement de
 l'ordre de 30% dans les données observées) entre le coût réel des travaux et
 le prix facturé au client.
 
+## Annexe (parking, cave, cellier)
+
+Un bien accessoire à un logement, vendu séparément mais rattachable à un
+lot : place de parking (extérieure ou intérieure), cave, cellier. Chacune
+a son propre prix. Une annexe peut être :
+- **attribuée** à un logement dès sa vente (son prix s'ajoute alors au
+  prix TTC du logement) ;
+- ou **vendue à part** (ex: un acheteur qui veut juste un parking
+  supplémentaire, ou une annexe restée disponible après la vente d'un
+  logement déjà Acté) — elle suit alors son propre petit cycle de vente,
+  avec un barème d'appels de fonds simplifié à deux échéances
+  (Réservation / Acte).
+
+## Programme actif
+
+Le programme immobilier actuellement sélectionné par l'utilisateur (une
+agence ou un gestionnaire peut suivre plusieurs programmes). Toutes les
+pages de l'application (Lots, Clients, TMA, Appels de fonds...) affichent
+et filtrent uniquement les données du programme actif.
+
 ---
 
 *Ce glossaire sera complété au fur et à mesure de l'avancement du projet.*

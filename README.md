@@ -29,32 +29,38 @@ développeur web, en remplacement d'outils Excel/VBA existants.
   - [`demandes.md`](docs/demandes.md) — liste chronologique de toutes les demandes de Nicolas
 - [`vanilla/`](vanilla/) — étape 1 : version HTML/CSS/JS sans framework
 - [`client/`](client/) — étape 2 : application React + Vite + React Router + Sass.
-  - Page **Lots** : tableau complet (caractéristiques, prix/m², statut,
-    client, dates, commentaire) avec édition en ligne, création/liaison
-    d'acquéreur à la volée, et totaux TTC/TVA/HT + prix moyen au m².
-  - Page **Clients** : coordonnées complètes des acquéreurs, triées par n°
-    de logement, téléphone affiché au format national (FR) ou
-    international (étranger).
+  Toute l'appli est **multi-programme** : une page d'accueil
+  ([`ChoixProgramme.jsx`](client/src/pages/ChoixProgramme.jsx)) fait choisir
+  ou créer un programme, mémorisé pour la session (`ProgrammeContext`) —
+  chaque page filtre ses données sur ce programme actif.
+  - Page **Lots** : tableau complet (caractéristiques, annexes, prix/m²,
+    statut, client, dates, commentaire) avec édition en ligne,
+    création/liaison d'acquéreur à la volée, prix modifiable avec motif
+    obligatoire et historique, bouton "Vendre une annexe" (vente d'un
+    parking/cave/cellier à part, avec son propre cycle de vente), et
+    totaux TTC/TVA/HT + prix moyen au m². Historique des ventes annulées
+    et des modifications de prix consultable en bas de page (repliable).
+  - Page **Clients** : coordonnées complètes des acquéreurs "actifs"
+    (ayant un lot dans le programme), triées par n° de logement,
+    téléphone au format national (FR) ou international, code postal
+    complété automatiquement depuis la commune.
   - Page **TMA** : création de demandes depuis l'interface, machine à
-    états pilotée par les dates, détail multi-entreprises par TMA.
-  - Page **Appels de fonds** : générés automatiquement quand un lot passe
-    "Acté" (un par phase du barème du programme), attestation MOE et
-    règlement saisis à la main, émission et date limite calculées seules.
-  - Page **Paramètres** : infos programme, délais/taux, barème, étages,
-    lots (caractéristiques techniques), entreprises — édition complète de
-    `programme.parametres` et des référentiels lots/entreprises.
+    états pilotée par les dates, détail multi-entreprises par TMA, alerte
+    de retard entreprise, montant client modifiable manuellement.
+  - Page **Appels de fonds** : générés automatiquement par phase (la
+    "Réservation" dès que le lot est réservé, les suivantes à l'Acté),
+    attestation MOE et règlement saisis à la main, émission et date
+    limite calculées seules ; barème modifiable par logement.
+  - Page **Paramètres** : infos programme, délais/taux, alertes,
+    catalogue d'annexes numérotées et prixées, barème, étages, lots
+    (caractéristiques techniques uniquement — le prix se modifie depuis
+    la page Lots), entreprises, utilisateurs.
 - [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose. Modèles
-  des 8 collections (Programme, Lot, Acquereur, AppelDeFonds, TMA,
-  TmaEntreprise, Entreprise, Utilisateur), script de seed (`npm run seed`
-  — ne génère que Programme/Lot/Acquereur/TMA ; le référentiel Entreprise
-  reste propre à chaque environnement, jamais réinitialisé par le seed),
-  routes de lecture/écriture complètes sur programme/lots/acquereurs/tma/
-  tma-entreprises/entreprises/appels-de-fonds (changement de statut TMA
-  avec machine à états, calcul automatique du statut depuis les dates,
-  cohérence dates/statut sur les lots, liaison lot ↔ acquéreur, unicité
-  des numéros de parking/cave sur un programme, garde-fou contre la
-  suppression d'un lot encore référencé, génération et calcul automatique
-  des appels de fonds)
+  des 12 collections (Programme, Lot, Annexe, Acquereur, AppelDeFonds, TMA,
+  TmaEntreprise, Entreprise, Utilisateur, HistoriqueAnnulation,
+  HistoriqueModificationPrix), script de seed (`npm run seed`), routes de
+  lecture/écriture complètes — toutes filtrables par programme actif
+  (`?programme=<id>`), authentification JWT sur toute l'API.
 - [`références/`](références/) — fichiers Excel de référence (usage interne, non déployés)
 
 ## Avancement
@@ -63,8 +69,9 @@ Le projet avance par étapes (détail dans [`docs/decisions.md`](docs/decisions.
 
 1. ✅ Version HTML/CSS/JS vanilla
 2. ✅ Migration vers React + Vite + React Router + Sass
-3. 🔶 Back-end Express + MongoDB (API REST sécurisée, JWT) (en cours — auth JWT restante)
-4. 🔶 Logique métier avancée (statut TMA automatique et appels de fonds faits — alertes de retard restantes)
+3. ✅ Back-end Express + MongoDB (API REST sécurisée, JWT)
+4. ✅ Logique métier avancée (statuts automatiques, appels de fonds,
+   alertes de retard, multi-programme, catalogue d'annexes)
 5. ⬜ Déploiement
 
 ## Stack technique

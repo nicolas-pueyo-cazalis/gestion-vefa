@@ -63,11 +63,15 @@ devis entreprises (souvent exprimés en HT à la base).
 ## Vue d'ensemble des collections
 
 ```
-Programme (1) ──< Lot (N)
+Programme (N, multi-programme depuis le 17/07/2026) ──< Lot (N)
+Programme (1) ──< Annexe (N)                        (catalogue, ajouté le 17/07/2026)
+Lot (1) ──< Annexe (N)                              (populate virtuel, pas un champ stocké sur Lot)
 Lot (1) ──< AppelDeFonds (N)
 Lot (1) ──< TMA (N)
 Lot (1) ──< Acquereur (N)          (rare, mais un lot peut avoir plusieurs acquéreurs — achat en indivision)
 Acquereur (N) ──> Lot (N)          (un acquéreur peut, en théorie, acheter plusieurs lots)
+Lot (1) ──< HistoriqueAnnulation (N)                (snapshot, ajouté le 13/07/2026)
+Lot (1) ──< HistoriqueModificationPrix (N)          (ajouté le 17/07/2026)
 TMA (1) ──< TmaEntreprise (N)
 Entreprise (1) ──< TmaEntreprise (N)   (ajouté le 10/07/2026)
 Utilisateur                         (indépendant, sert à l'authentification)
@@ -75,6 +79,14 @@ Utilisateur                         (indépendant, sert à l'authentification)
 
 `(1) ──< (N)` se lit "un ... a plusieurs ...". `Programme.parametres` est un
 sous-document embarqué (pas une collection séparée).
+
+> **Multi-programme (17/07/2026)** : l'application a d'abord été conçue
+> avec un seul `Programme` en base. Passage à une vraie liste de
+> programmes en parallèle — voir `decisions.md`, section "Multi-programme".
+> Seuls `Entreprise` et `Utilisateur` restent des référentiels globaux,
+> partagés entre tous les programmes ; toutes les autres collections
+> appartiennent (directement ou indirectement, via leur lot) à un
+> programme précis.
 
 ---
 
@@ -124,12 +136,30 @@ sous-document embarqué (pas une collection séparée).
 | `type` | String | ex: T1, T2, T3bis... |
 | `orientation` | enum `'Nord' \| 'Nord-Est' \| 'Est' \| 'Sud-Est' \| 'Sud' \| 'Sud-Ouest' \| 'Ouest' \| 'Nord-Ouest'` | liste fixe (les 8 orientations n'ont pas de raison de varier d'un programme à l'autre) |
 | `surfaceHabitable`, `surfaceTerrasse`, `surfaceJardin` | Number | m² |
-| `parkings`, `caves` | `[Number]` | modifié le 10/07/2026 : ce ne sont pas des compteurs mais des **numéros identifiants** (ex: place de parking n°10) — un lot peut en avoir plusieurs, d'où la liste. Chaque numéro doit être **unique sur tout le programme** (deux lots ne peuvent pas revendiquer le même numéro de parking ou de cave/cellier), vérifié côté serveur à la création/modification d'un lot |
-| `prixTTC` | Number | montant — voir la convention monétaire en début de document (affiché avec "€", stocké en `Number` pur) |
+| `surfaceSousPlafondBas` | Number | ajouté le 17/07/2026, optionnel — surface sous plafond à moins de 1,80m (comble, sous pente), distincte de la surface habitable ; colonne du tableau Lots affichée uniquement si au moins un lot du programme a cette valeur renseignée |
+| `prixLogementSeul` | Number | renommé/clarifié le 17/07/2026 (portait la confusion "prix du lot" alors qu'il ne couvre pas les annexes) : prix du logement seul, **saisi** à la création puis modifiable uniquement depuis la page Lots (motif obligatoire, voir `HistoriqueModificationPrix` plus bas) |
+| `annexes` | virtuel Mongoose (pas stocké) | ajouté le 17/07/2026 : `Annexe` documents dont `lot` pointe vers ce lot (`populate('annexes')`) — remplace les anciens tableaux `parkings`/`caves`/`celliers` de simples numéros. Voir collection `Annexe` plus bas |
+| `prixTTC` | Number | montant — voir la convention monétaire en début de document. **Calculé côté serveur** depuis le 17/07/2026 = `prixLogementSeul` + somme des `Annexe.prix` attribuées (`synchroniserAnnexesEtPrix()`, `server/routes/lots.js`), plus une simple saisie manuelle |
+| `estAnnexeSeule` | Boolean | ajouté le 17/07/2026, défaut `false` — un `Lot` avec ce champ à `true` représente la vente d'une annexe seule (parking/cave/cellier sans logement), voir encadré plus bas. `prixLogementSeul` vaut alors `0`, le prix affiché ne vient que de l'annexe attribuée |
 | `statut` | enum `'libre' \| 'option' \| 'reserve' \| 'acte'` | défaut `'libre'` |
 | `dateOption`, `dateReservation`, `dateActe` | Date | rempli au fil du cycle de vente |
 | `acquereur` | ObjectId → `Acquereur` | ajouté le 10/07/2026 : référence directe vers l'acquéreur principal du lot (relation inverse de `Acquereur.lots`), nécessaire pour afficher/éditer le client directement dans le tableau des lots. Le cas rare d'indivision (plusieurs acquéreurs pour un même lot) reste couvert par `Acquereur.lots` mais n'a pas d'interface dédiée pour l'instant |
 | `commentaire` | String | ajouté le 10/07/2026, libre, optionnel |
+
+> **Vente d'une annexe seule (`estAnnexeSeule`, 17/07/2026)** : plutôt que
+> construire un second système de vente en parallèle pour le cas d'un
+> parking/cave/cellier vendu sans logement (ex: un lot déjà Acté sur
+> lequel plus aucune négociation n'est possible, mais dont une annexe
+> reste disponible), un `Lot` à part entière est créé avec
+> `estAnnexeSeule: true` — il réutilise tel quel tout le cycle de vente
+> déjà en place (statut, dates, acquéreur, appels de fonds, annulation),
+> sans dupliquer cette logique. Deux différences seulement : un barème
+> d'appels de fonds simplifié à deux échéances fixes (Réservation 5% /
+> Acte 95%, non modifiable pour l'instant — voir `AppelDeFonds` plus
+> bas), et l'exclusion de ces lots du quota `Programme.nombreLogements`
+> ainsi que de la liste "Lots" de Paramètres (aucune caractéristique
+> technique de logement n'a de sens pour une annexe seule). Décision
+> détaillée dans `decisions.md`.
 
 > **Pourquoi des valeurs d'enum sans accent (`reserve`, `acte`) ?** Les
 > valeurs d'enum sont lues par le code (comparaisons, URLs d'API, filtres) —
@@ -154,6 +184,79 @@ sous-document embarqué (pas une collection séparée).
 > (`dateReservation + programme.parametres.delaiObtentionPretJours`, etc.). Ça
 > évite d'avoir une donnée qui se périme si personne ne la recalcule — un des
 > points d'amélioration identifiés par rapport à Excel.
+
+---
+
+## `Annexe` (ajouté le 17/07/2026)
+
+Catalogue des parkings/caves/celliers d'un programme — remplace les
+anciens tableaux `Lot.parkings`/`caves`/`celliers` (simples numéros sans
+prix ni existence propre).
+
+| Champ | Type | Remarque |
+|---|---|---|
+| `programme` | ObjectId → `Programme` | |
+| `type` | enum `'parking_ext' \| 'parking_int' \| 'cave' \| 'cellier'` | parkings extérieurs et intérieurs distingués (remarque de Nicolas — pas le même produit, ni le même prix) |
+| `numero` | Number | identifiant, unique par `(programme, type, numero)` |
+| `prix` | Number | montant → convention "€" en début de document |
+| `lot` | ObjectId → `Lot` \| `null` | `null` = disponible à la vente ; renseigné = attribuée à un logement OU vendue seule (`Lot.estAnnexeSeule`) |
+
+> **Pourquoi une relation `Annexe.lot` plutôt que `Lot.annexes: [ObjectId]`
+> ?** Une annexe appartient à un seul lot à la fois (ou à aucun) — porter
+> la référence côté `Annexe` évite un tableau à synchroniser à la main
+> des deux côtés. Côté `Lot`, la relation inverse est exposée par un
+> **populate virtuel** Mongoose (`schema.virtual('annexes', { ref:
+> 'Annexe', localField: '_id', foreignField: 'lot' })`), pas par un champ
+> stocké — voir `concepts-techniques.md`.
+
+---
+
+## `HistoriqueAnnulation` (ajouté le 13/07/2026)
+
+Snapshot complet d'une vente annulée — permet de "repartir à zéro" sur le
+lot (remis à `libre`) tout en gardant une trace consultable de la vente
+annulée, y compris si l'acquéreur concerné est supprimé par la suite.
+
+| Champ | Type | Remarque |
+|---|---|---|
+| `lot` | ObjectId → `Lot` | le lot dont la vente a été annulée |
+| `programme` | ObjectId → `Programme` | |
+| `referenceLot` | String | copiée (pas juste l'ObjectId), pour rester lisible même si le lot est ensuite supprimé (cas d'une annexe seule, voir plus bas) |
+| `statut`, `client`, `dates`, `pret`, `acte`, `appelsDeFonds`, `tma`, `commentaire` | copies (pas des références) | **snapshot complet**, pas juste un pointeur — l'annulation d'une vente ne doit rien perdre de son historique même si les documents source changent ou disparaissent ensuite |
+
+> **Consultation** : fusionnée dans la page Lots depuis le 17/07/2026
+> (section repliable "Voir l'historique", voir plus bas) — il n'existe
+> plus de page/route front dédiée `/annules`.
+
+> **Cas particulier `estAnnexeSeule`** : annuler la vente d'une annexe
+> seule libère l'annexe (`Annexe.lot = null`) puis **supprime le `Lot`**
+> plutôt que de le remettre à `libre` — un lot `estAnnexeSeule` n'a pas
+> vocation à exister en dehors d'une vente en cours ; sa revente repasse
+> entièrement par "Vendre une annexe". Voir `bugs.md` pour le bug initial
+> où cette libération manquait.
+
+---
+
+## `HistoriqueModificationPrix` (ajouté le 17/07/2026)
+
+Trace chaque changement de prix d'un lot (ou d'une annexe vendue seule)
+après sa création — motif obligatoire à chaque fois, cohérent avec des
+négociations réelles qui doivent pouvoir se justifier après coup.
+
+| Champ | Type | Remarque |
+|---|---|---|
+| `lot` | ObjectId → `Lot` | |
+| `programme` | ObjectId → `Programme` | |
+| `referenceLot` | String | copiée, même raison que sur `HistoriqueAnnulation` |
+| `ancienPrix`, `nouveauPrix` | Number | montant → convention "€" |
+| `motif` | String | **requis** |
+
+> Modification possible uniquement depuis la page Lots (route `PATCH
+> /api/lots/:id/prix`), jamais depuis Paramètres — voir `decisions.md`,
+> section "Prix modifiable uniquement depuis la page Lots". Bloquée dès
+> que `Lot.statut === 'acte'` (plus de négociation possible après
+> signature). Consultable en bas de la page Lots, dans la même section
+> repliable que l'historique des annulations.
 
 ---
 
@@ -266,6 +369,30 @@ une saisie manuelle — implémentés dans `calculerEmissionAppel()`
 Dans les deux cas, `dateReglement` reste modifiable à la main ensuite
 (bouton "Modifier", en vidant la date) si l'automatisme ne correspondait
 pas à la réalité.
+
+### Révision du moment de génération (17/07/2026)
+
+Le principe "les 6 lignes sont générées d'un coup à l'Acté" ci-dessus a
+été révisé : Nicolas a fait remarquer qu'un dépôt de réservation est
+factuellement dû dès la **réservation**, pas seulement à l'acte — et
+qu'une négociation de prix reste possible entre la réservation et l'acte
+(mais plus après, une fois l'acte signé). `genererAppelsDeFonds(lot,
+{ seulementReservation })` génère donc maintenant :
+- **à "Réservé"** : uniquement la 1ʳᵉ phase du barème ;
+- **à "Acté"** : les phases restantes (anti-doublon par **phase**, pas
+  par lot, pour permettre cette génération en deux temps).
+
+Tant que le lot n'est pas encore Acté, le montant de la phase
+"Réservation" **suit automatiquement** une renégociation du prix
+(`resynchroniserMontantReservation()`) ; il se fige définitivement dès
+l'Acté, comme le prix lui-même.
+
+**Vente d'annexe seule (`Lot.estAnnexeSeule`)** : barème dédié, à deux
+échéances fixes non modifiables pour l'instant —
+`genererAppelsAnnexeSeule()` (`server/routes/lots.js`) : Réservation 5%
+/ Acte 95% (`POURCENTAGE_RESERVATION_ANNEXE_SEULE = 0.05`), plutôt que
+les 6 phases du barème de construction complet, qui n'ont pas de sens
+pour un simple parking/cave/cellier.
 
 > **Pourquoi copier `phase` au lieu de juste stocker un `pourcentage` recalculé
 > à la volée depuis `Programme.parametres.baremePhases` ?** Parce que le
@@ -436,6 +563,29 @@ n'est possible qu'avant validation).
 > **Date limite de retour entreprise** (`dateEnvoiEntreprises +
 > programme.parametres.delaiRetourEntrepriseTmaJours`) : calculée à la volée,
 > même logique que pour les échéances de `Lot`.
+
+### Corrections et compléments du 13/07/2026 (points 134-137)
+
+- **`nombreEntreprisesConcernees`** (`TMA`, Number) : ajouté pour corriger
+  le passage automatique à `chiffre`, qui se basait jusque-là sur "toutes
+  les lignes `TmaEntreprise` déjà créées ont répondu" — un sous-ensemble
+  trompeur si toutes les entreprises concernées n'avaient pas encore été
+  saisies une à une. Le calcul compare désormais le nombre de lignes
+  chiffrées à cette valeur explicite plutôt qu'au nombre de lignes
+  existantes.
+- **Bug corrigé — `TmaEntreprise.dateEnvoi` jamais réellement saisie** :
+  le champ existait dans le schéma (10/07/2026) mais n'était ni proposé
+  au formulaire d'ajout ni éditable ensuite — il retombait toujours sur
+  la valeur par défaut du schéma (l'instant de création), donc l'alerte
+  de retard entreprise ne se déclenchait jamais avec une vraie date
+  passée. Corrigé : champ ajouté aux formulaires d'ajout et d'édition, et
+  synchronisation automatique sur chaque ligne quand la date d'envoi
+  globale de la TMA (`Tma.dateEnvoiEntreprises`) est renseignée.
+- **Alertes désactivables** (`Programme.parametres`, section
+  `SectionAlertes.jsx`) : chaque catégorie de retard (prêt, notaire,
+  appel de fonds, entreprise TMA, facture TMA) peut être désactivée
+  individuellement par programme, pour les cas où une alerte ne
+  correspond pas à l'organisation réelle du client.
 
 ---
 

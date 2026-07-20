@@ -344,3 +344,39 @@ ici c'est uniquement du vocabulaire **technique**.
   effet visible** si le `margin-bottom` du premier est déjà supérieur.
   Solutions : soit augmenter la marge qui compte réellement, soit utiliser
   `padding` à la place (qui ne fusionne jamais avec les marges voisines).
+
+## Multi-programme et données dérivées (étape 4)
+
+- **`Context` qui dépend d'un autre `Context`** (`ProgrammeContext` par
+  rapport à `AuthContext`) : si l'effet du second se déclenche avant que
+  le premier ait fini de résoudre son propre état initial, il risque de
+  traiter une valeur "pas encore chargée" (ex: `utilisateur === null`)
+  comme un vrai résultat. Solution : exposer aussi l'état de chargement
+  du premier Context (`chargementAuth`), et faire attendre l'effet du
+  second tant qu'il vaut `true`.
+- **Virtual populate Mongoose** (`schema.virtual('champ', { ref, localField,
+  foreignField })`) : relation calculée à la volée à la lecture, sans
+  champ stocké sur le document — utile quand c'est l'autre collection qui
+  porte la référence (ici `Annexe.lot`, pas `Lot.annexes`). Nécessite
+  `.populate('champ')` explicite comme une vraie référence, ET l'option de
+  schéma `toJSON: { virtuals: true }` pour que le champ apparaisse dans
+  les réponses JSON de l'API (sinon il n'existe que côté serveur, invisible
+  côté client).
+- **Champ calculé recentralisé dans une seule fonction serveur**
+  (`synchroniserAnnexesEtPrix`) : dès qu'une valeur (ici `prixTTC`) dérive
+  d'autres champs, mieux vaut une fonction unique appelée par toutes les
+  routes qui peuvent faire varier ces champs, plutôt que de recalculer à
+  la main dans chaque route — évite qu'une route oublie de recalculer et
+  laisse une valeur dérivée obsolète en base.
+- **Pas de `<form>` imbriqué en HTML** : un `<form>` à l'intérieur d'un
+  autre `<form>` n'est pas valide (le second est ignoré par le
+  navigateur). Un sous-formulaire affiché à l'intérieur d'un formulaire
+  existant (ex: modifier le prix depuis le formulaire d'édition d'un lot)
+  doit utiliser un `<fieldset>` avec un bouton `type="button"` et un
+  gestionnaire `onClick` asynchrone manuel, plutôt qu'un second
+  `onSubmit`.
+- **Appel à une API publique externe côté client** (`geo.api.gouv.fr`
+  pour le code postal) : pas de clé requise pour une donnée publique,
+  mais toujours prévoir le cas "aucun résultat" / "plusieurs résultats
+  possibles" (une commune peut avoir plusieurs codes postaux) plutôt que
+  de supposer une réponse unique.

@@ -1763,3 +1763,239 @@ réussie.
 Nicolas doit revérifier avec son compte "lecture" : une tentative
 d'écriture doit maintenant afficher un message d'erreur clair, sans page
 blanche, sur Paramètres comme partout ailleurs.
+
+---
+
+## 2026-07-13 (suite) — Annulation de vente, TMA obsolètes, refonte des
+actions TMA
+
+**Ce qui a été fait**
+
+Grosse série de remarques transmises d'un coup par Nicolas (points
+109-163 de `docs/demandes.md`), traitées une par une avec validation
+explicite à chaque étape. Résumé des chantiers principaux (le détail de
+chaque point reste dans `demandes.md`, ce journal se concentre sur le
+"comment" et les décisions structurantes) :
+
+- **"Annuler la vente" d'un lot** : premier essai gardant un statut
+  "annulé" sur le lot lui-même, rejeté par Nicolas ("il faut que ça
+  reparte à zéro"). Refonte complète : `HistoriqueAnnulation.js` (nouveau
+  modèle, snapshot complet — statut/dates, client, prêt, acte, appels de
+  fonds — en copies, pas en références, pour survivre même si l'acquéreur
+  est supprimé ensuite) ; `POST /api/lots/:id/annuler` copie tout dans
+  l'historique PUIS remet le lot à "Libre" ; page dédiée (fusionnée dans
+  Lots depuis, voir plus bas).
+- **TMA devenue obsolète** : une TMA garde son acquéreur d'origine même
+  après l'annulation de la vente (`Tma.acquereur` reste une référence
+  vivante, jamais vidée) — comparaison `tma.lot.acquereur` (actuel) vs
+  `tma.acquereur` (figé) pour détecter et signaler le cas, avec
+  réattribution en un clic.
+- **Refonte des actions TMA** : un seul bouton crayon dépliant un panneau
+  (modification localisation/description/commentaire/montant client
+  manuel, dates, détail entreprises, refuser/annuler la TMA) plutôt que
+  des boutons épars par ligne — même principe repris ensuite pour Lots.
+- **Point 125 (bug)** : corriger la date d'acte ou le statut d'un lot
+  déjà Acté doit dé-régler automatiquement les appels de fonds devenus
+  caducs, mais SANS jamais toucher à un règlement saisi à la main. Un
+  premier essai réagissait aussi à la toute première génération d'un
+  lot qui vient de passer Acté (donc effaçait les valeurs qu'il venait
+  de calculer) — corrigé en capturant `ancienStatut`/`ancienneDateActe`
+  avant modification, pour ne réagir qu'à une vraie correction.
+  Diagnostiqué via un script Node ponctuel interrogeant directement Mongo
+  (technique reprise plusieurs fois ensuite pour ce type de bug).
+- **Barème verrouillé après le premier appel émis** (point 123), barème
+  par logement pour une négociation particulière (point 159, formulaire
+  dédié).
+- **Fenêtre récapitulative des attestations MOE** par phase (point 124).
+
+**Prochaine étape**
+
+Point 134 (alerte de retard entreprise TMA) signalé cassé par Nicolas —
+voir entrée suivante.
+
+---
+
+## 2026-07-13/17 — Retard entreprise TMA, alertes désactivables
+
+**Ce qui a été fait**
+
+- **Bug retard entreprise (point 134)** : `dateEnvoi` d'une ligne
+  `TmaEntreprise` n'était jamais transmise par le formulaire d'ajout, ni
+  éditable ensuite — elle retombait toujours sur le défaut du schéma
+  (l'instant de la création), donc `estEntrepriseEnRetard()` ne se
+  déclenchait jamais avec une vraie date passée. Corrigé (champ ajouté au
+  formulaire d'ajout ET à l'édition d'une ligne existante), plus la
+  synchronisation automatique de `dateEnvoi` sur chaque ligne quand la
+  date d'envoi globale de la TMA est renseignée.
+- **Point 136** : `nombreEntreprisesConcernees` sur la TMA — le passage
+  au statut "chiffré" ne se fait que si CE nombre de lignes ont répondu,
+  pas seulement "toutes celles déjà ajoutées" (qui pouvait être un
+  sous-ensemble si toutes les entreprises n'avaient pas encore été
+  saisies).
+- **Point 137** : fenêtre d'alertes désactivable depuis Paramètres,
+  globalement ou type de retard par type de retard
+  (`SectionAlertes.jsx`).
+- Nouvelles colonnes de dates dans le tableau TMA (Date de la demande,
+  Date envoi entreprise, Date envoi facture, Facture validée le).
+
+**Bug découvert en marge** : `montantClientManuel` se figeait à `true` à
+chaque enregistrement du panneau "Infos" d'une TMA, même quand seul le
+nombre d'entreprises concernées changeait — le formulaire renvoyait
+toujours `montantClient`, et le serveur figeait le flag dès que le champ
+était présent, pas seulement s'il changeait réellement. Corrigé
+(comparaison à l'ancienne valeur avant de figer).
+
+---
+
+## 2026-07-17 — Multi-programme
+
+**Ce qui a été fait**
+
+Chantier structurant : passage d'une application mono-programme (un seul
+document `Programme`, jamais choisi) à une gestion de plusieurs
+programmes en parallèle.
+
+- **Serveur** : `Programme` passe de `findOne()`/`PATCH /` à une vraie
+  liste (`GET/POST /api/programme`, `GET/PATCH /api/programme/:id`).
+  Chaque route de liste (lots, acquéreurs, tma, appels-de-fonds,
+  tma-entreprises, historique-annulations) accepte un filtre
+  `?programme=<id>` — directement pour `Lot` (champ `programme`
+  direct), en passant par les lots pour les collections qui n'ont pas ce
+  champ (`Tma`/`AppelDeFonds` via `lot.programme`,
+  `TmaEntreprise` via `tma.lot.programme`, `Acquereur` via
+  `lots[].programme`). Logique de résolution "lots d'un programme"
+  dupliquée dans 6-7 routes lors du premier passage, factorisée ensuite
+  dans `server/utils/programme.js` (`getIdsLotsDuProgramme`) suite à une
+  revue de code. `Entreprise`/`Utilisateur` restent globaux
+  (référentiels partagés entre programmes).
+- **Client** : `ProgrammeContext.jsx` (même principe que `AuthContext` —
+  `localStorage` + revalidation au chargement), page
+  `ChoixProgramme.jsx` (sélection ou création), garde de route
+  `RouteProgramme.jsx` imbriquée dans `RouteProtegee`. Toutes les pages
+  lisent le programme actif du contexte au lieu de le récupérer
+  elles-mêmes, et ajoutent `?programme=` à leurs appels de liste.
+- **Bug de démarrage trouvé lors d'une revue de code dédiée** :
+  `ProgrammeContext` déclenchait son effet une première fois avant
+  qu'`AuthContext` ait fini de revalider la session (avec `utilisateur`
+  encore `null`), posait `chargement=false` prématurément, et
+  `RouteProgramme` redirigeait alors à tort vers `/programmes` — un
+  utilisateur déjà connecté avec un programme déjà choisi se retrouvait
+  renvoyé au choix de programme à **chaque** rechargement de page.
+  Corrigé en attendant que `AuthContext.chargement` soit à `false` avant
+  de décider quoi que ce soit.
+
+**Revue de code dédiée** : 7 agents lancés en parallèle (angles
+correction, doublons, simplification, efficacité, altitude) sur le diff
+du multi-programme — le bug de démarrage ci-dessus, plusieurs
+gardes-fous manquants (`Programme.findById` non vérifié avant usage),
+et la duplication de la logique de résolution des lots ont été trouvés
+et corrigés dans la foulée.
+
+**Prochaine étape**
+
+Nicolas doit tester la création d'un second programme de test pour
+vérifier l'étanchéité complète entre deux programmes.
+
+---
+
+## 2026-07-17 — Code postal automatique, audit des données en dur
+
+**Ce qui a été fait**
+
+- **Point 140** : code postal complété automatiquement au blur du champ
+  Commune, via l'API publique `geo.api.gouv.fr` (aucune clé requise).
+  Toujours modifiable à la main ensuite (jamais réécrasé une fois
+  rempli, pour respecter un CEDEX saisi manuellement). Ajusté après un
+  premier retour de Nicolas : une commune avec deux codes postaux (ex:
+  Urrugne, un hameau séparé) était systématiquement laissée vide par
+  excès de prudence — le premier code est maintenant retenu comme valeur
+  la plus probable ; au-delà de deux (grandes villes à arrondissements),
+  le champ reste vide.
+- **Point 142** : audit des données codées en dur résiduelles. Trouvé et
+  corrigé : le calcul du montant client TMA (`calculerMontantClient`)
+  ignorait `programme.parametres.tauxMargeTma` et
+  `regleMontantNegatifTma`, utilisait toujours 1,3 et "montant à 0" en
+  dur — ces deux réglages de Paramètres étaient donc sans le moindre
+  effet réel. Corrigé (les deux valeurs sont maintenant lues sur le
+  programme). Supprimé aussi un tableau de données fictives
+  (`client/src/data/lots.js`, `LOTS`) jamais utilisé nulle part.
+- **Point 143** : revue générale de bugs (même méthode à 7 agents que le
+  multi-programme). Trouvé et corrigé : garde-fous manquants sur deux
+  routes (`Programme.findById` non vérifié), un appel `seed.js` avec la
+  signature obsolète de `calculerMontantClient`, un chargement
+  séquentiel au lieu de parallèle sur la page Lots, un espace non
+  supprimé avant l'appel à l'API code postal.
+
+---
+
+## 2026-07-17 — Catalogue d'annexes, vente d'annexe seule, prix modifiable
+
+**Ce qui a été fait**
+
+Dernier gros chantier de la journée (points 164 à 169), en plusieurs
+allers-retours avec Nicolas au fil de ses précisions.
+
+- **Point 164** : colonne "Surface < 1,80m²" sur les lots, conditionnelle
+  (n'apparaît que si au moins un lot du programme a cette valeur).
+- **Point 165 — catalogue d'annexes** : remplace l'ancienne saisie libre
+  de numéros de parkings/caves/celliers (`Lot.parkings`/`caves`/
+  `celliers`, simples tableaux de nombres sans prix) par un vrai
+  référentiel (`Annexe.js`, nouveau modèle : `programme`, `type`
+  — parking extérieur/intérieur, cave, cellier, distingués sur remarque
+  de Nicolas —, `numero`, `prix`, `lot` optionnel). Choisies depuis une
+  liste déroulante dans le formulaire de logement (Paramètres > Lots)
+  plutôt que resaisies à chaque fois. Le prix total d'un lot devient
+  **calculé** : `Lot.prixLogementSeul` (saisi) + somme des annexes
+  attribuées = `Lot.prixTTC` (recalculé côté serveur à chaque
+  attribution/retrait, fonction `synchroniserAnnexesEtPrix`). Relation
+  `Lot.annexes` en populate virtuel Mongoose (pas de duplication de
+  données). Décision de Nicolas suite à une question de cadrage :
+  repartir de zéro sur les données existantes plutôt que migrer les
+  anciens numéros.
+- **"Vendre une annexe"** (nouveau bouton, page Lots) : une annexe encore
+  disponible peut être vendue à part — cas d'un logement déjà Acté (plus
+  de négociation possible dessus) ou d'un acheteur qui n'a acheté aucun
+  logement. Crée un `Lot` à part entière (`estAnnexeSeule: true`,
+  `prixLogementSeul: 0`), qui suit exactement le même cycle de vente
+  (statut/dates/client) qu'un logement classique — réutilise donc telle
+  quelle toute la logique déjà en place (génération des appels de fonds,
+  annulation de vente...), avec un barème simplifié à 2 échéances
+  (Réservation 5% / Acte 95%, taux fixes pour l'instant) plutôt que les 6
+  phases de construction. Exclue du quota `nombreLogements` et de la
+  liste Paramètres > Lots (aucune caractéristique technique de logement
+  n'a de sens pour elle).
+- **Prix figé une fois Acté** : plus aucune modification de prix ni
+  d'annexe possible sur un lot Acté (front désactivé + garde serveur),
+  cohérent avec l'appel de fonds "Réservation" qui devient lui aussi figé
+  au même moment (voir plus bas).
+- **Appel de fonds "Réservation" généré dès la Réservation** (plus
+  seulement à l'Acté, remarque de Nicolas — un dépôt de réservation est
+  factuellement dû à la réservation) : anti-doublon par phase (pas par
+  lot) dans `genererAppelsDeFonds()`, pour permettre de générer
+  "Réservation" puis rattraper les autres phases séparément à l'Acté.
+  Recalculé automatiquement tant que le lot n'est pas Acté si le prix
+  change (négociation), figé ensuite.
+- **Point 169 — prix modifiable avec historique** : le prix d'un
+  logement (ou de l'annexe d'une vente à part) devient modifiable
+  **uniquement depuis la page Lots** (plus depuis Paramètres, recentré
+  sur le paramétrage initial du programme, décision de Nicolas), toujours
+  avec un motif obligatoire, tracé dans un nouveau modèle
+  `HistoriqueModificationPrix`. Un seul bouton crayon (pas de bouton
+  séparé, remarque explicite de Nicolas) — "Modifier le prix" est un
+  sous-formulaire à l'intérieur du même panneau d'édition.
+- **Fusion de la page "Annulés" dans la page Lots** (idée de Nicolas,
+  reprise ici) : plus de route/page séparée — l'historique des
+  annulations ET des modifications de prix se consulte en bas de la page
+  Lots, sous un même lien repliable. `HistoriqueAnnulations.jsx`
+  supprimé, son contenu (tableau + détail par annulation) repris tel
+  quel dans `Lots.jsx`.
+
+**Bugs trouvés en cours de route (signalés par Nicolas, corrigés dans la
+foulée)** :
+- Annuler la vente d'une annexe seule ne libérait pas l'annexe
+  (`Annexe.lot` jamais remis à `null`) et laissait le lot bloqué en
+  "Libre" au lieu de disparaître (une vente d'annexe annulée n'a pas
+  vocation à rester en attente d'une revente au même lot — elle se
+  revend via "Vendre une annexe", qui crée un nouveau lot).
+- Un lot test créé avant ce correctif est resté orphelin (nettoyé par
+  script ponctuel).

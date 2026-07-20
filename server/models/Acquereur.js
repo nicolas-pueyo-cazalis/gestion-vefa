@@ -26,6 +26,9 @@ const acquereurSchema = new mongoose.Schema({
   // une fois pour toutes par le bouton "Sans prêt" (page "Suivi de prêt"),
   // qui vide au passage banque/courtier/dateOffrePretRecue.
   sansPret: { type: Boolean, default: false },
+  // 20/07/2026, point 176 : libre, optionnel, même principe que
+  // Lot.commentaire/Tma.commentaire.
+  commentaire: String,
 }, { timestamps: true })
 
 export default mongoose.model('Acquereur', acquereurSchema)

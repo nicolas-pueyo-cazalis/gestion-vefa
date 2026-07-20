@@ -9,7 +9,7 @@ import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireSuiviPret from '../components/FormulaireSuiviPret.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
 
-const NB_COLONNES = 9
+const NB_COLONNES = 10
 // Nombre de colonnes fusionnées pour une acquisition "sans prêt" : Banque,
 // Courtier, Limite obtention prêt, Offre reçue le, Statut.
 const NB_COLONNES_FUSIONNEES = 5
@@ -63,7 +63,10 @@ function SuiviPret() {
     init()
   }, [])
 
-  async function enregistrer(idAcquereur, donnees) {
+  // `idLot`/`commentaireLot` optionnels (20/07/2026, point 176) : le
+  // commentaire appartient au lot, pas à l'acquéreur — deux requêtes
+  // distinctes, mais un seul bouton "Enregistrer" côté formulaire.
+  async function enregistrer(idAcquereur, donnees, idLot, commentaireLot) {
     const reponse = await apiFetch(`${API_URL}/api/acquereurs/${idAcquereur}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -74,6 +77,20 @@ function SuiviPret() {
       alert(message)
       return
     }
+
+    if (idLot !== undefined) {
+      const reponseLot = await apiFetch(`${API_URL}/api/lots/${idLot}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentaire: commentaireLot }),
+      })
+      if (!reponseLot.ok) {
+        const { message } = await reponseLot.json()
+        alert(message)
+        return
+      }
+    }
+
     await chargerLots()
     setIdEnEdition(null)
   }
@@ -131,6 +148,7 @@ function SuiviPret() {
               <th>Limite obtention prêt</th>
               <th>Offre reçue le</th>
               <th>Statut</th>
+              <th>Commentaire</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -164,6 +182,7 @@ function SuiviPret() {
                         </td>
                       </>
                     )}
+                    <td><span className="commentaire-cellule">{lot.commentaire || '—'}</span></td>
                     <td className="actions">
                       {acquereur && statut !== 'sans_pret' && (
                         <>
@@ -192,6 +211,7 @@ function SuiviPret() {
                   {acquereur && idEnEdition === acquereur._id && (
                     <FormulaireSuiviPret
                       acquereur={acquereur}
+                      lot={lot}
                       colonnes={NB_COLONNES}
                       onEnregistrer={enregistrer}
                       onFermer={() => setIdEnEdition(null)}

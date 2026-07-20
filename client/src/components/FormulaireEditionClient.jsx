@@ -19,6 +19,7 @@ function FormulaireEditionClient({ acquereur, colonnes, onEnregistrer, onFermer 
   const [telephone, setTelephone] = useState(acquereur.telephone ?? '')
   const [telephoneValide, setTelephoneValide] = useState(true)
   const [email, setEmail] = useState(acquereur.email ?? '')
+  const [commentaire, setCommentaire] = useState(acquereur.commentaire ?? '')
   const [erreurs, setErreurs] = useState({})
 
   function gererTelephone(valeur, estValide) {
@@ -63,6 +64,7 @@ function FormulaireEditionClient({ acquereur, colonnes, onEnregistrer, onFermer 
       codePostal: codePostal || null,
       telephone,
       email: email || null,
+      commentaire: commentaire || null,
     })
   }
 
@@ -125,6 +127,10 @@ function FormulaireEditionClient({ acquereur, colonnes, onEnregistrer, onFermer 
               className={erreurs.email ? 'invalide' : ''}
             />
             {erreurs.email && <span className="erreur-champ">{erreurs.email}</span>}
+          </label>
+          <label className="champ-description">
+            Commentaire
+            <input value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
           </label>
           <button type="submit">Enregistrer</button>
           <button type="button" onClick={onFermer}>Annuler</button>

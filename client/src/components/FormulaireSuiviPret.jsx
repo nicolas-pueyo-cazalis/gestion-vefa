@@ -9,12 +9,16 @@ function versDateInput(valeur) {
 // sont plus qu'un nom, mais un vrai contact (adresse, téléphone, email...),
 // consultable ensuite via la fenêtre ouverte par BoutonContact, et
 // disponible pour un futur export PDF.
-function FormulaireSuiviPret({ acquereur, colonnes, onEnregistrer, onFermer }) {
+// `lot` (20/07/2026, point 176) : le commentaire appartient au LOT, pas à
+// l'acquéreur — enregistré via une requête séparée orchestrée par
+// SuiviPret.jsx, un seul bouton "Enregistrer" pour les deux.
+function FormulaireSuiviPret({ acquereur, lot, colonnes, onEnregistrer, onFermer }) {
   const [banque, setBanque] = useState(acquereur.banque ?? {})
   const [courtier, setCourtier] = useState(acquereur.courtier ?? {})
   const [dateOffrePretRecue, setDateOffrePretRecue] = useState(versDateInput(acquereur.dateOffrePretRecue))
   const [banqueValide, setBanqueValide] = useState(true)
   const [courtierValide, setCourtierValide] = useState(true)
+  const [commentaire, setCommentaire] = useState(lot.commentaire ?? '')
 
   function soumettre(evenement) {
     evenement.preventDefault()
@@ -22,11 +26,12 @@ function FormulaireSuiviPret({ acquereur, colonnes, onEnregistrer, onFermer }) {
     // incomplet) — les messages d'erreur sont déjà affichés sous les champs
     // concernés par ChampsContact, il suffit de bloquer l'envoi.
     if (!banqueValide || !courtierValide) return
-    onEnregistrer(acquereur._id, {
-      banque,
-      courtier,
-      dateOffrePretRecue: dateOffrePretRecue || null,
-    })
+    onEnregistrer(
+      acquereur._id,
+      { banque, courtier, dateOffrePretRecue: dateOffrePretRecue || null },
+      lot._id,
+      commentaire || null,
+    )
   }
 
   return (
@@ -42,6 +47,10 @@ function FormulaireSuiviPret({ acquereur, colonnes, onEnregistrer, onFermer }) {
               value={dateOffrePretRecue}
               onChange={(e) => setDateOffrePretRecue(e.target.value)}
             />
+          </label>
+          <label className="champ-description">
+            Commentaire
+            <input value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
           </label>
           <div className="boutons-alignes-champs">
             <button type="submit">Enregistrer</button>

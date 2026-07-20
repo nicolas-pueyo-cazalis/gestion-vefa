@@ -22,12 +22,14 @@ function versDateInput(valeur) {
 function FormulaireAppelDeFonds({ appel, colonnes, onEnregistrer, onFermer, onOuvrirBaremeLot }) {
   const [dateEmission, setDateEmission] = useState(versDateInput(appel.dateEmission))
   const [dateReglement, setDateReglement] = useState(versDateInput(appel.dateReglement))
+  const [commentaire, setCommentaire] = useState(appel.commentaire ?? '')
 
   function soumettre(evenement) {
     evenement.preventDefault()
     onEnregistrer(appel._id, {
       dateEmission: dateEmission || null,
       dateReglement: dateReglement || null,
+      commentaire: commentaire || null,
     })
   }
 
@@ -54,6 +56,10 @@ function FormulaireAppelDeFonds({ appel, colonnes, onEnregistrer, onFermer, onOu
               disabled={!appel.dateEmission}
               title={appel.dateEmission ? '' : "L'appel n'est pas encore émis"}
             />
+          </label>
+          <label className="champ-description">
+            Commentaire
+            <input value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
           </label>
           <button type="submit">Enregistrer</button>
           <button type="button" onClick={onFermer}>Annuler</button>

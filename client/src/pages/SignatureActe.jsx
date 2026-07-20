@@ -9,7 +9,7 @@ import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireSignatureActe from '../components/FormulaireSignatureActe.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
 
-const NB_COLONNES = 8
+const NB_COLONNES = 9
 
 const LIBELLES_STATUT = {
   attente: 'En attente',
@@ -65,11 +65,15 @@ function SignatureActe() {
   // des appels de fonds (server/routes/lots.js, genererAppelsDeFonds()).
   // Le notaire (13/07/2026) est rattaché à l'acquéreur, pas au lot : deux
   // requêtes distinctes quand un acquéreur est lié.
-  async function enregistrer(lot, { dateActe, notaire }) {
+  // "statut: acte" envoyé UNIQUEMENT si une date est fournie (20/07/2026,
+  // point 176) : sinon, ouvrir ce panneau juste pour modifier le
+  // commentaire du lot forcerait une signature d'acte non voulue.
+  async function enregistrer(lot, { dateActe, notaire, commentaire }) {
+    const donneesLot = dateActe ? { statut: 'acte', dateActe, commentaire } : { commentaire }
     const reponseLot = await apiFetch(`${API_URL}/api/lots/${lot._id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'acte', dateActe }),
+      body: JSON.stringify(donneesLot),
     })
     if (!reponseLot.ok) {
       const { message } = await reponseLot.json()
@@ -134,6 +138,7 @@ function SignatureActe() {
               <th>Limite signature</th>
               <th>Date de l'acte</th>
               <th>Statut</th>
+              <th>Commentaire</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -155,6 +160,7 @@ function SignatureActe() {
                   <td>
                     <Badge statut={statutSignature(lot, delaiMois)} texte={LIBELLES_STATUT[statutSignature(lot, delaiMois)]} />
                   </td>
+                  <td><span className="commentaire-cellule">{lot.commentaire || '—'}</span></td>
                   <td className="actions">
                     <button
                       type="button"

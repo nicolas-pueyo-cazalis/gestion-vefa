@@ -13,7 +13,7 @@ import FormulaireAttestationMasse from '../components/FormulaireAttestationMasse
 import FormulaireBaremeLot from '../components/FormulaireBaremeLot.jsx'
 import FenetreRecapAttestations from '../components/FenetreRecapAttestations.jsx'
 
-const NB_COLONNES = 10
+const NB_COLONNES = 11
 
 const LIBELLES_STATUT = {
   attente: 'En attente',
@@ -191,6 +191,7 @@ function AppelsDeFonds() {
             <th>Limite règlement</th>
             <th>Réglé le</th>
             <th>Statut</th>
+            <th>Commentaire</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -222,6 +223,7 @@ function AppelsDeFonds() {
                   <td>{formatDate(appel.dateLimiteReglement)}</td>
                   <td>{formatDate(appel.dateReglement)}</td>
                   <td><Badge statut={statutAppel(appel)} texte={LIBELLES_STATUT[statutAppel(appel)]} /></td>
+                  <td><span className="commentaire-cellule">{appel.commentaire || '—'}</span></td>
                   <td className="actions">
                     <button
                       type="button"

@@ -739,6 +739,12 @@ totaux (point 115) — traitées une par une comme le reste.
      un texte sans espace, ex: un mot très long, ne revenait jamais à
      la ligne et débordait tel quel au lieu de se couper).
 176. Mettre une colonne Commentaire dans chaque tableau de chaque page.
+     ✅ fait le 20/07/2026 — nouveau champ `commentaire` sur Acquereur
+     (Clients) et sur AppelDeFonds (un commentaire par échéance) ;
+     Suivi de prêt et Signature acte affichent/modifient le
+     commentaire du LOT (même champ que la page Lots). Sur Signature
+     acte, la date de signature n'est plus obligatoire pour pouvoir
+     juste modifier le commentaire sans forcer un passage à "Acté".
 177. Se renseigner pour voir s'il y a des choses à rajouter dans "Suivi
      de prêt" et "Signature acte".
 178. À la fin : analyser l'ensemble de l'application et faire un point

@@ -26,6 +26,9 @@ const appelDeFondsSchema = new mongoose.Schema({
   // règlement (déduction devenue caduque) ou le laisser tel quel (le
   // client a vraiment payé, peu importe la correction).
   regleAutomatiquement: { type: Boolean, default: false },
+  // 20/07/2026, point 176 : libre, optionnel, propre à CETTE échéance
+  // (pas au lot entier) — même principe que Lot.commentaire/Tma.commentaire.
+  commentaire: String,
 }, { timestamps: true })
 
 export default mongoose.model('AppelDeFonds', appelDeFondsSchema)

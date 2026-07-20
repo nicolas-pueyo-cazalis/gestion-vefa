@@ -6,7 +6,7 @@ import { useProgramme } from '../context/ProgrammeContext.jsx'
 import StatCard from '../components/StatCard.jsx'
 import FormulaireEditionClient from '../components/FormulaireEditionClient.jsx'
 
-const NB_COLONNES = 8
+const NB_COLONNES = 9
 
 function nomComplet(acquereur) {
   return [acquereur.civilite, acquereur.prenom, acquereur.nom].filter(Boolean).join(' ')
@@ -115,6 +115,7 @@ function Clients() {
               <th>Code postal</th>
               <th>Téléphone</th>
               <th>Email</th>
+              <th>Commentaire</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -134,6 +135,7 @@ function Clients() {
                   <td>{acquereur.codePostal || '—'}</td>
                   <td>{formatTelephoneAffichage(acquereur.telephone) || '—'}</td>
                   <td><span className="email-cellule">{acquereur.email || '—'}</span></td>
+                  <td><span className="commentaire-cellule">{acquereur.commentaire || '—'}</span></td>
                   <td className="actions">
                     <button
                       type="button"

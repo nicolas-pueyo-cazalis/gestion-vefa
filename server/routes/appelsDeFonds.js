@@ -173,11 +173,15 @@ router.patch('/lot/:lotId/bareme', autoriserRoles('admin', 'gestionnaire'), asyn
 // silencieusement l'émission déjà calculée.
 router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { dateEmission, dateReglement } = req.body
+    const { dateEmission, dateReglement, commentaire } = req.body
     const appel = await AppelDeFonds.findById(req.params.id)
       .populate({ path: 'lot', populate: { path: 'programme' } })
     if (!appel) {
       return res.status(404).json({ message: 'Appel de fonds introuvable' })
+    }
+
+    if (commentaire !== undefined) {
+      appel.commentaire = commentaire
     }
 
     if (dateReglement !== undefined) {

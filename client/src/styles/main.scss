@@ -358,6 +358,18 @@ main {
   }
 }
 
+// Titre au-dessus d'une rangée de cartes (17/07/2026, point 167, page
+// Lots : "Commercialisation" / "Chiffre d'affaires") — discret, pas un
+// h1/h2 de page, juste de quoi distinguer les deux rangées de .stats.
+.titre-section-stats {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #52606d;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 // Hiérarchie revue le 13/07/2026 (proposition B validée) : liseré de
 // couleur à gauche (neutre par défaut, coloré si `statut` est fourni à
 // StatCard), alignement à gauche, chiffre nettement plus gros que le
@@ -395,6 +407,16 @@ main {
       font-size: 1.53rem; // 1.7rem - 10% (remarque du 13/07/2026)
       font-weight: 700;
       line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    // Part de cette carte sur le total de sa rangée (17/07/2026, point
+    // 168) — discret, sous la valeur.
+    .pourcentage {
+      order: 3;
+      margin-top: 0.15rem;
+      font-size: 0.75rem;
+      color: #8896a3;
       font-variant-numeric: tabular-nums;
     }
   }
@@ -460,7 +482,9 @@ main {
 // Ligne "Statut / Ajouter une TMA" (13/07/2026, page TMA) : filtre et
 // action principale sur une même ligne aérée, plutôt que deux éléments
 // bruts empilés sans respiration ni alignement.
-.barre-actions-tma {
+// Réutilisée sur plusieurs pages (13/07/2026 : TMA ; 17/07/2026 : Lots,
+// bouton "Vendre une annexe") — nom générique plutôt que lié à une seule page.
+.barre-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -710,8 +734,11 @@ table {
 
   // Barème négocié pour un logement (13/07/2026, FormulaireBaremeLot.jsx) :
   // une ligne par phase déjà générée, % éditable + aperçu du montant
-  // recalculé en direct à côté.
-  .formulaire-bareme-lot .apercu-montant {
+  // recalculé en direct à côté. Réutilisé tel quel (17/07/2026) pour
+  // l'aperçu du prix total d'un logement (SectionLots.jsx/LigneLot.jsx),
+  // d'où le sélecteur élargi au-delà de `.formulaire-bareme-lot`.
+  .apercu-montant {
+    display: block;
     color: #52606d;
     font-size: 0.8rem;
     margin-left: 0.3rem;
@@ -1324,6 +1351,74 @@ table.tableau-lots {
     gap: 1.5rem;
   }
 
+  // Choix des annexes d'un logement parmi le catalogue (17/07/2026, point
+  // 165, SelectionAnnexes.jsx) — même principe visuel que .fieldset-contact
+  // (cadre + légende), mais une liste de cases à cocher plutôt que des
+  // champs de saisie.
+  .groupe-annexes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    flex-basis: 100%;
+  }
+
+  .fieldset-annexes {
+    border: 1px solid $couleur-bordure;
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    min-width: 12rem;
+
+    legend {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #52606d;
+      padding: 0 0.3rem;
+    }
+
+    p {
+      margin: 0;
+      color: #52606d;
+      font-size: 0.8rem;
+    }
+  }
+
+  .liste-choix-annexes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+  }
+
+  // Catalogue d'annexes (17/07/2026, SectionAnnexes.jsx) : un bloc par
+  // type (parking ext/int, cave, cellier), côte à côte.
+  .catalogues-annexes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .catalogue-annexes-type {
+    flex: 1 1 14rem;
+
+    h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0 0 0.5rem;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.85rem;
+    }
+  }
+
   .liste-numeros {
     display: flex;
     flex-direction: column;
@@ -1453,4 +1548,41 @@ select.invalide {
 .erreur-champ {
   color: #dc2626;
   font-size: 0.75rem;
+}
+
+// Modification de prix intégrée au panneau d'édition d'un lot (17/07/2026,
+// FormulairePrixLot.jsx, rendu sur la page Lots — pas dans
+// .section-parametres, d'où une règle globale plutôt que de réutiliser
+// .fieldset-annexes qui y est scopée).
+.fieldset-prix-lot {
+  border: 1px solid $couleur-bordure;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+  flex-basis: 100%;
+
+  legend {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #52606d;
+    padding: 0 0.3rem;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: #52606d;
+  }
+
+  input {
+    border: 1px solid $couleur-bordure;
+    border-radius: 4px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+  }
 }

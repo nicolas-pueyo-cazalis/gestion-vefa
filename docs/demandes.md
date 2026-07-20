@@ -662,6 +662,75 @@ totaux (point 115) — traitées une par une comme le reste.
      Tableau élargi (largeur "moyenne", comme la page Clients) pour
      accueillir cette colonne supplémentaire sans être trop compressé.
 
+## Remarques générales du 17/07/2026 (PDF)
+
+**Lots**
+164. Rajouter une colonne "Surface < 1,80m²", qui ne s'affiche que si le
+     cas se présente.
+165. Pouvoir compléter dans Paramètres, au démarrage d'un programme, la
+     liste de toutes les annexes numérotées (parkings, caves, celliers) —
+     le client choisirait alors les annexes parmi une liste déroulante à
+     chaque fois (une liste par type : parking, cave, cellier). Pour créer
+     le prix d'un logement, il y a le prix du logement lui-même + le prix
+     des annexes (ex: logement à 100 000 € + parking à 15 000 € + cave à
+     5 000 €) — pouvoir monter le prix ainsi, pour éviter que le client
+     fasse ce calcul sur Excel avant de recopier le prix final à la main.
+     Permet aussi, une fois tous les logements complétés avec leurs
+     annexes attribuées, d'avoir un état des annexes non vendues
+     rattachées à aucun lot, et de pouvoir les rajouter à un lot (donc les
+     vendre avec) — cas d'une négociation où l'acheteur veut un parking en
+     plus de ce qui était prévu à la base.
+166. À réfléchir plus tard : carte "Taux de commercialisation", basée sur
+     le nombre de lots vendus sur le nombre de lots au total.
+167. Nommer la première ligne de cartes "Commercialisation", la deuxième
+     "Chiffre d'affaires".
+168. Mettre les taux en % sous les nombres ou montants de chaque carte.
+169. Pouvoir modifier le prix TTC du logement à la main depuis cette page
+     (négociation avec le client, ou réévaluation du prix) — la raison
+     devra être notée en dessous. Garder aussi un historique des
+     modifications de prix quelque part. Idée : intégrer la page
+     "Annulés" directement dans la page Lots ; cette page contiendrait
+     alors un historique des annulations de ventes, mais aussi un
+     historique des modifications de prix.
+170. Réflexion en cours : plutôt que de garder la liste déroulante pour le
+     choix du statut, ne serait-il pas préférable que le statut se mette à
+     jour automatiquement en fonction des dates remplies (ex: remplir la
+     date d'option fait passer le statut à "Option", ainsi de suite) ?
+
+**Appels de fonds**
+171. Lors du travail sur les exports : pouvoir générer un envoi d'appels
+     de fonds collectifs (une fois actés et qu'une attestation MOE est
+     émise) — cette génération remplirait automatiquement la case
+     "Envoyé le", tout en laissant la possibilité de la remplir à la
+     main. Une fenêtre doit s'ouvrir à la génération, listant les appels
+     de fonds qui vont être générés avec les logements correspondants,
+     avec la possibilité de décocher certains logements.
+
+**TMA**
+172. Retirer le statut "Travaux" (ne sert à rien). Pour le statut
+     "Terminé", ajouter un bouton permettant d'y passer à la main
+     (lorsque le client va sur chantier pointer que les travaux ont bien
+     été réalisés par les entreprises).
+
+**Paramètres**
+173. Pour "Délais et taux" : bien séparer les paramètres correspondants
+     par page. Rajouter sous la case "Taux de marge TMA" une case à
+     cocher "Montant devis client saisi manuellement".
+
+**Généralité**
+174. Pour les colonnes "Action" de chaque page : mettre un crayon à la
+     place des boutons (même principe que TMA ou Lots), partout.
+175. Sans rien toucher à ce qui est déjà en place, enlever partout où
+     elle existe la règle "on ne peut revenir le texte qu'une seule fois
+     à la ligne" — présente au moins sur Lots de mémoire, peut-être
+     ailleurs aussi, à vérifier.
+176. Mettre une colonne Commentaire dans chaque tableau de chaque page.
+177. Se renseigner pour voir s'il y a des choses à rajouter dans "Suivi
+     de prêt" et "Signature acte".
+178. À la fin : analyser l'ensemble de l'application et faire un point
+     sur ce qui peut être amélioré.
+179. À réfléchir à la fin : faudra-t-il créer une version démo ?
+
 ---
 
 ## Notes

@@ -277,7 +277,7 @@ function Tma() {
         <StatCard valeur={formatMontant(marge)} libelle="Marge" />
       </section>
 
-      <div className="barre-actions-tma">
+      <div className="barre-actions">
         <label className="filtre-liste-deroulante">
           Statut
           <select value={statutActif} onChange={(e) => setStatutActif(e.target.value)}>

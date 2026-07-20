@@ -1,10 +1,12 @@
 import { Router } from 'express'
 import Lot from '../models/Lot.js'
+import Annexe from '../models/Annexe.js'
 import Acquereur from '../models/Acquereur.js'
 import Programme from '../models/Programme.js'
 import Tma from '../models/Tma.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
 import HistoriqueAnnulation from '../models/HistoriqueAnnulation.js'
+import HistoriqueModificationPrix from '../models/HistoriqueModificationPrix.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
 import { autoriserRoles } from '../middleware/auth.js'
@@ -37,45 +39,63 @@ function validerDatesCoherentesAvecStatut(lot) {
   return null
 }
 
-// `parkings`/`caves` sont des numéros identifiants (ex: place n°10), pas un
-// simple compte — remarque du 10/07/2026 : deux lots ne peuvent jamais
-// revendiquer le même numéro. Vérifie qu'aucun doublon n'existe ni dans la
-// saisie elle-même, ni chez les autres lots du même programme.
-async function validerNumerosUniques(programmeId, lotIdAIgnorer, champ, valeurs) {
-  if (!valeurs || valeurs.length === 0) return null
-
-  const doublonsLocaux = [...new Set(valeurs.filter((v, i) => valeurs.indexOf(v) !== i))]
-  if (doublonsLocaux.length > 0) {
-    return `numéro(s) en double dans la saisie : ${doublonsLocaux.join(', ')}`
+// Attribue/retire les annexes choisies pour ce lot (17/07/2026, point 165)
+// et recalcule `prixTTC` en conséquence — appelé à la création ET à
+// chaque modification, que les annexes changent ou non, pour que prixTTC
+// reste toujours cohérent avec prixLogementSeul + les annexes réellement
+// attribuées (ex: si seul prixLogementSeul change). `annexeIds`
+// `undefined` = le formulaire ne gère pas les annexes pour cet appel
+// (ex: FormulaireEditionLot, qui ne modifie que statut/dates/client) :
+// dans ce cas on ne touche à aucune attribution, seulement au recalcul.
+// Ne recalcule QUE si `prixLogementSeul` est renseigné : les lots créés
+// avant ce point n'ont pas encore ce champ, et un simple PATCH (ex:
+// changer le commentaire) ne doit pas leur écraser silencieusement leur
+// prixTTC existant, saisi à la main à l'époque — tant que ce champ n'est
+// pas rempli via le formulaire, l'ancien prixTTC reste intouché.
+async function synchroniserAnnexesEtPrix(lot, annexeIds) {
+  if (annexeIds !== undefined) {
+    await Annexe.updateMany({ lot: lot._id, _id: { $nin: annexeIds } }, { lot: null })
+    if (annexeIds.length > 0) {
+      await Annexe.updateMany(
+        { _id: { $in: annexeIds }, programme: lot.programme, $or: [{ lot: null }, { lot: lot._id }] },
+        { lot: lot._id },
+      )
+    }
   }
-
-  const autresLots = await Lot.find({
-    programme: programmeId,
-    ...(lotIdAIgnorer && { _id: { $ne: lotIdAIgnorer } }),
-  })
-  const dejaUtilises = new Set(autresLots.flatMap((lot) => lot[champ] ?? []))
-  const conflits = valeurs.filter((v) => dejaUtilises.has(v))
-  if (conflits.length > 0) {
-    return `numéro(s) déjà utilisé(s) par un autre lot : ${conflits.join(', ')}`
+  if (lot.prixLogementSeul != null) {
+    const annexesAttribuees = await Annexe.find({ lot: lot._id })
+    lot.prixTTC = lot.prixLogementSeul + annexesAttribuees.reduce((somme, a) => somme + a.prix, 0)
   }
-  return null
 }
 
-// Génère les appels de fonds d'un lot (un par phase du barème), au moment
-// précis où il passe "Acté" — décision du 11/07/2026, voir docs/decisions.md.
-// Avant "Acté", un appel de fonds n'a de toute façon aucun sens (règle
-// métier n°2 de l'analyse Excel), donc rien n'est créé plus tôt. Le
-// pourcentage de chaque phase est **figé** au moment de la génération
-// (copié depuis `programme.parametres.baremePhases`) : si le barème du
-// programme est corrigé après coup, ça ne doit pas changer rétroactivement
-// un appel déjà généré — même principe que `TmaEntreprise.corpsDeTravaux`.
-async function genererAppelsDeFonds(lot) {
-  const dejaGeneres = await AppelDeFonds.countDocuments({ lot: lot._id })
-  if (dejaGeneres > 0) return // sécurité anti-doublon (déjà générés)
-
+// Génère les appels de fonds d'un lot, phase par phase — décision du
+// 11/07/2026, voir docs/decisions.md, complétée le 17/07/2026 (remarque de
+// Nicolas) : la 1ère phase du barème (ex: "Réservation") est désormais
+// générée dès que le lot passe "Réservé" (`seulementReservation: true`),
+// pas seulement à "Acté" comme avant — un dépôt de réservation est
+// factuellement dû à la réservation, pas à la signature de l'acte. Les
+// autres phases restent générées uniquement à "Acté" (règle métier n°2 de
+// l'analyse Excel : avant, un appel de fonds n'a pas de sens). Anti-doublon
+// PAR PHASE (pas par lot) : `genererAppelsDeFonds(lot)` à l'Acté ne
+// regénère jamais la phase "Réservation" si elle existe déjà depuis la
+// réservation, mais la crée quand même en rattrapage si elle manquait
+// (ex: lot passé directement à "Acté" en une seule modification, ou
+// données de seed). Le pourcentage de chaque phase est **figé** au moment
+// de sa génération (copié depuis `programme.parametres.baremePhases`) :
+// si le barème du programme est corrigé après coup, ça ne doit pas
+// changer rétroactivement un appel déjà généré — même principe que
+// `TmaEntreprise.corpsDeTravaux`.
+async function genererAppelsDeFonds(lot, { seulementReservation = false } = {}) {
   const programme = await Programme.findById(lot.programme)
   const phases = [...programme.parametres.baremePhases].sort((a, b) => a.ordre - b.ordre)
   const delai = programme.parametres.delaiReglementAppelJours
+
+  const appelsExistants = await AppelDeFonds.find({ lot: lot._id }, 'phase.nom')
+  const nomsExistants = new Set(appelsExistants.map((appel) => appel.phase.nom))
+  const phasesACreer = phases
+    .map((phase, index) => ({ phase, index }))
+    .filter(({ phase, index }) => !nomsExistants.has(phase.nom) && (!seulementReservation || index === 0))
+  if (phasesACreer.length === 0) return
 
   // Remarque du 11/07/2026 (point 5) : une attestation MOE constate
   // l'avancement du chantier dans son ensemble, pas lot par lot — si une
@@ -93,7 +113,7 @@ async function genererAppelsDeFonds(lot) {
   )
 
   await AppelDeFonds.insertMany(
-    phases.map((phase, index) => {
+    phasesACreer.map(({ phase, index }) => {
       const document = {
         lot: lot._id,
         phase: { nom: phase.nom, pourcentage: phase.pourcentage, ordre: phase.ordre },
@@ -101,12 +121,11 @@ async function genererAppelsDeFonds(lot) {
       }
       if (index === 0) {
         // 1ère phase du barème (ex: "Réservation") : ne demande jamais
-        // d'attestation MOE — un lot Acté a nécessairement déjà une date
-        // de réservation (voir validerDatesCoherentesAvecStatut
-        // ci-dessus). Le dépôt de garantie de cette phase est réglé au
-        // moment même de la réservation, factuellement, pas plus tard —
-        // remarque du 13/07/2026 : `dateReglement` se déduit donc
-        // automatiquement, comme `dateEmission`, pas seulement l'échéance.
+        // d'attestation MOE. Le dépôt de garantie de cette phase est
+        // réglé au moment même de la réservation, factuellement, pas
+        // plus tard — remarque du 13/07/2026 : `dateReglement` se déduit
+        // donc automatiquement, comme `dateEmission`, pas seulement
+        // l'échéance.
         document.dateEmission = lot.dateReservation
         document.dateReglement = lot.dateReservation
         document.regleAutomatiquement = true
@@ -128,6 +147,77 @@ async function genererAppelsDeFonds(lot) {
   )
 }
 
+// Barème simplifié pour une annexe vendue seule (17/07/2026, remarque de
+// Nicolas, "Vendre une annexe") : seulement 2 échéances (Réservation 5% /
+// Acte 95%), pas les phases de construction du barème normal — une
+// annexe (parking, cave, cellier) n'a pas de chantier propre à suivre.
+// Pourcentages fixes pour l'instant (pas encore configurables). Anti-
+// doublon par phase, même principe que genererAppelsDeFonds() ci-dessus.
+const POURCENTAGE_RESERVATION_ANNEXE_SEULE = 0.05
+
+async function genererAppelsAnnexeSeule(lot, { seulementReservation = false } = {}) {
+  const programme = await Programme.findById(lot.programme)
+  const pourcentageReservation = POURCENTAGE_RESERVATION_ANNEXE_SEULE
+  const delai = programme.parametres.delaiReglementAppelJours
+
+  const appelsExistants = await AppelDeFonds.find({ lot: lot._id }, 'phase.nom')
+  const nomsExistants = new Set(appelsExistants.map((appel) => appel.phase.nom))
+
+  function dateLimite(depuis) {
+    const date = new Date(depuis)
+    date.setDate(date.getDate() + delai)
+    return date
+  }
+
+  const documents = []
+  // Réglée au moment même de sa propre échéance (comme la phase
+  // "Réservation" d'une vente classique) : une annexe vendue à part n'a
+  // pas d'attestation de chantier à attendre, le montant est dû
+  // factuellement dès la réservation, puis dès l'acte.
+  if (!nomsExistants.has('Réservation')) {
+    documents.push({
+      lot: lot._id,
+      phase: { nom: 'Réservation', pourcentage: pourcentageReservation, ordre: 1 },
+      montant: lot.prixTTC * pourcentageReservation,
+      dateEmission: lot.dateReservation,
+      dateReglement: lot.dateReservation,
+      regleAutomatiquement: true,
+      dateLimiteReglement: dateLimite(lot.dateReservation),
+    })
+  }
+  if (!seulementReservation && !nomsExistants.has('Acte')) {
+    const pourcentageActe = 1 - pourcentageReservation
+    documents.push({
+      lot: lot._id,
+      phase: { nom: 'Acte', pourcentage: pourcentageActe, ordre: 2 },
+      montant: lot.prixTTC * pourcentageActe,
+      dateEmission: lot.dateActe,
+      dateReglement: lot.dateActe,
+      regleAutomatiquement: true,
+      dateLimiteReglement: dateLimite(lot.dateActe),
+    })
+  }
+  if (documents.length > 0) {
+    await AppelDeFonds.insertMany(documents)
+  }
+}
+
+// Tant que le logement n'est pas Acté, une négociation peut encore changer
+// son prix (17/07/2026, remarque de Nicolas) — l'appel "Réservation" déjà
+// généré (voir ci-dessus) doit alors suivre ce nouveau prix. Une fois
+// Acté, plus aucune négociation n'est possible : l'appel reste figé,
+// comme les autres (même logique que le barème, point 123).
+async function resynchroniserMontantReservation(lot) {
+  if (lot.statut === 'acte') return
+  const appelReservation = await AppelDeFonds.findOne({ lot: lot._id }).sort({ 'phase.ordre': 1 })
+  if (!appelReservation) return
+  const nouveauMontant = lot.prixTTC * appelReservation.phase.pourcentage
+  if (nouveauMontant !== appelReservation.montant) {
+    appelReservation.montant = nouveauMontant
+    await appelReservation.save()
+  }
+}
+
 // GET /api/lots — liste de tous les lots, triés par référence. Champs
 // acquéreur étendus (13/07/2026) : banque/courtier/dateOffrePretRecue sont
 // nécessaires à la page "Suivi de prêt", qui part des lots (pas des
@@ -141,6 +231,7 @@ router.get('/', async (req, res) => {
     const filtre = programme ? { programme } : {}
     const lots = await Lot.find(filtre).sort({ reference: 1 })
       .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
+      .populate('annexes')
     res.json(lots)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
@@ -150,20 +241,27 @@ router.get('/', async (req, res) => {
 // POST /api/lots — crée un lot (caractéristiques techniques, saisies depuis
 // la page Paramètres > Lots). Un lot créé démarre toujours "libre", sans
 // acquéreur : ça se renseigne ensuite via PATCH, au fil de la vente.
+// `estAnnexeSeule` (17/07/2026, remarque de Nicolas, bouton "Vendre une
+// annexe" de la page Lots) : un "lot" qui ne représente qu'une annexe
+// vendue à part (parking vendu après coup, ou à quelqu'un qui n'a pas
+// acheté de logement dans le programme) — suit exactement le même cycle
+// de vente qu'un logement normal, mais ne compte pas dans le quota
+// `nombreLogements`.
 router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const {
       programme, reference, etage, type, orientation,
-      surfaceHabitable, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
-      parkings, caves, celliers, prixTTC,
+      surfaceHabitable, surfaceSousPlafondBas, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
+      prixLogementSeul, annexeIds, estAnnexeSeule,
     } = req.body
 
     // Vérification côté serveur (pas seulement dans le formulaire React) :
     // on ne dépasse jamais le nombre de logements annoncé pour le
-    // programme, quand ce nombre est renseigné.
+    // programme, quand ce nombre est renseigné — sauf pour une annexe
+    // vendue à part, qui n'est pas un logement.
     const programmeDoc = await Programme.findById(programme)
-    if (programmeDoc?.nombreLogements != null) {
-      const nombreLotsExistants = await Lot.countDocuments({ programme })
+    if (!estAnnexeSeule && programmeDoc?.nombreLogements != null) {
+      const nombreLotsExistants = await Lot.countDocuments({ programme, estAnnexeSeule: { $ne: true } })
       if (nombreLotsExistants >= programmeDoc.nombreLogements) {
         return res.status(400).json({
           message: `Nombre maximum de logements déjà atteint (${programmeDoc.nombreLogements}).`,
@@ -171,25 +269,15 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
       }
     }
 
-    const erreurParkings = await validerNumerosUniques(programme, null, 'parkings', parkings)
-    if (erreurParkings) {
-      return res.status(400).json({ champ: 'parkings', message: erreurParkings })
-    }
-    const erreurCaves = await validerNumerosUniques(programme, null, 'caves', caves)
-    if (erreurCaves) {
-      return res.status(400).json({ champ: 'caves', message: erreurCaves })
-    }
-    const erreurCelliers = await validerNumerosUniques(programme, null, 'celliers', celliers)
-    if (erreurCelliers) {
-      return res.status(400).json({ champ: 'celliers', message: erreurCelliers })
-    }
-
     const lot = await Lot.create({
       programme, reference, etage, type, orientation,
-      surfaceHabitable, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
-      parkings, caves, celliers, prixTTC,
+      surfaceHabitable, surfaceSousPlafondBas, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
+      prixLogementSeul, prixTTC: prixLogementSeul, estAnnexeSeule,
     })
-    res.status(201).json(lot)
+    await synchroniserAnnexesEtPrix(lot, annexeIds)
+    await lot.save()
+    const lotPeuple = await lot.populate('annexes')
+    res.status(201).json(lotPeuple)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
   }
@@ -209,26 +297,7 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       return res.status(404).json({ message: 'Lot introuvable' })
     }
 
-    const { acquereurNouveau, acquereurMiseAJour, ...champs } = req.body
-
-    if (champs.parkings) {
-      const erreurParkings = await validerNumerosUniques(lot.programme, lot._id, 'parkings', champs.parkings)
-      if (erreurParkings) {
-        return res.status(400).json({ champ: 'parkings', message: erreurParkings })
-      }
-    }
-    if (champs.caves) {
-      const erreurCaves = await validerNumerosUniques(lot.programme, lot._id, 'caves', champs.caves)
-      if (erreurCaves) {
-        return res.status(400).json({ champ: 'caves', message: erreurCaves })
-      }
-    }
-    if (champs.celliers) {
-      const erreurCelliers = await validerNumerosUniques(lot.programme, lot._id, 'celliers', champs.celliers)
-      if (erreurCelliers) {
-        return res.status(400).json({ champ: 'celliers', message: erreurCelliers })
-      }
-    }
+    const { acquereurNouveau, acquereurMiseAJour, annexeIds, ...champs } = req.body
 
     const ancienAcquereurId = lot.acquereur?.toString() ?? null
     let nouvelAcquereurId = ancienAcquereurId
@@ -261,6 +330,27 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     const ancienStatut = lot.statut
     const ancienneDateActe = lot.dateActe?.getTime()
 
+    // Plus de négociation possible une fois Acté (17/07/2026, remarque de
+    // Nicolas) : le prix du logement et ses annexes sont figés — une
+    // annexe vendue après coup passe par "Vendre une annexe" (nouveau
+    // lot séparé), pas par une modification de celui-ci.
+    if (ancienStatut === 'acte') {
+      const prixChange = champs.prixLogementSeul !== undefined && champs.prixLogementSeul !== lot.prixLogementSeul
+      let annexesChange = false
+      if (annexeIds !== undefined) {
+        const idsActuels = (await Annexe.find({ lot: lot._id }, '_id')).map((a) => a._id.toString())
+        const idsDemandes = annexeIds.map(String)
+        annexesChange = idsActuels.length !== idsDemandes.length
+          || !idsActuels.every((id) => idsDemandes.includes(id))
+      }
+      if (prixChange || annexesChange) {
+        return res.status(400).json({
+          message: 'Logement Acté : le prix et les annexes ne sont plus modifiables. '
+            + 'Utilisez "Vendre une annexe" (page Lots) pour une annexe vendue après coup.',
+        })
+      }
+    }
+
     Object.assign(lot, champs)
 
     const erreurDates = validerDatesCoherentesAvecStatut(lot)
@@ -268,15 +358,26 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       return res.status(400).json({ message: erreurDates })
     }
 
+    await synchroniserAnnexesEtPrix(lot, annexeIds)
     await lot.save()
 
-    // Pas seulement "vient de passer à Acté" : un lot déjà Acté (ex: dans
-    // les données de seed) mais sans appels de fonds encore générés doit
-    // aussi être rattrapé — genererAppelsDeFonds() ne fait rien si des
-    // appels existent déjà pour ce lot (sécurité anti-doublon).
-    if (lot.statut === 'acte') {
-      await genererAppelsDeFonds(lot)
+    // Pas seulement "vient de passer à Réservé/Acté" : un lot déjà dans
+    // cet état (ex: dans les données de seed) mais sans appel(s) encore
+    // générés doit aussi être rattrapé — genererAppelsDeFonds() ne
+    // regénère jamais une phase déjà créée (sécurité anti-doublon par
+    // phase). 17/07/2026 : "Réservation" se génère dès "Réservé", pas
+    // seulement à "Acté". Barème à 2 phases pour une annexe vendue seule
+    // (remarque de Nicolas) — voir genererAppelsAnnexeSeule.
+    const genererAppels = lot.estAnnexeSeule ? genererAppelsAnnexeSeule : genererAppelsDeFonds
+    if (lot.statut === 'reserve') {
+      await genererAppels(lot, { seulementReservation: true })
+    } else if (lot.statut === 'acte') {
+      await genererAppels(lot)
     }
+    // Négociation avant l'Acté (17/07/2026, remarque de Nicolas) : suit le
+    // prix du lot tant qu'il n'est pas signé, gelé ensuite — voir la
+    // fonction pour le détail.
+    await resynchroniserMontantReservation(lot)
 
     // Bug corrigé le 13/07/2026 (point 125), deux cas distincts — tous deux
     // conditionnés à "ancienStatut === 'acte'" : ne jamais réagir à la toute
@@ -317,7 +418,67 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       }
     }
 
-    const lotPeuple = await lot.populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
+    const lotPeuple = await lot
+      .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
+    await lotPeuple.populate('annexes')
+    res.json(lotPeuple)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// PATCH /api/lots/:id/prix — modifie le prix d'un logement (ou de l'annexe
+// pour une vente d'annexe seule) depuis la page Lots (17/07/2026, remarque
+// de Nicolas — Paramètres ne sert plus qu'au paramétrage initial du
+// programme). Toujours motivée, toujours tracée dans
+// HistoriqueModificationPrix — jamais un simple écrasement silencieux.
+// Bloquée une fois Acté, comme le reste de la négociation (point 165).
+router.patch('/:id/prix', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const { nouveauPrix, motif } = req.body
+    if (!motif) {
+      return res.status(400).json({ message: 'Le motif de la modification est requis.' })
+    }
+    if (nouveauPrix == null || Number.isNaN(Number(nouveauPrix))) {
+      return res.status(400).json({ message: 'Le nouveau prix est requis.' })
+    }
+
+    const lot = await Lot.findById(req.params.id)
+    if (!lot) {
+      return res.status(404).json({ message: 'Lot introuvable' })
+    }
+    if (lot.statut === 'acte') {
+      return res.status(400).json({ message: 'Logement Acté : le prix n\'est plus modifiable.' })
+    }
+
+    const ancienPrix = lot.prixTTC
+
+    if (lot.estAnnexeSeule) {
+      // Le prix d'une vente d'annexe seule, c'est le prix de SON annexe
+      // (prixLogementSeul reste à 0) — modifié ici, pas dans le catalogue
+      // (Paramètres > Annexes, qui refuse de toute façon de modifier une
+      // annexe déjà attribuée).
+      const annexe = await Annexe.findOne({ lot: lot._id })
+      if (annexe) {
+        annexe.prix = Number(nouveauPrix)
+        await annexe.save()
+      }
+    } else {
+      lot.prixLogementSeul = Number(nouveauPrix)
+    }
+    await synchroniserAnnexesEtPrix(lot, undefined)
+    await lot.save()
+
+    await HistoriqueModificationPrix.create({
+      lot: lot._id,
+      programme: lot.programme,
+      referenceLot: lot.reference,
+      ancienPrix,
+      nouveauPrix: lot.prixTTC,
+      motif,
+    })
+
+    const lotPeuple = await lot.populate('annexes')
     res.json(lotPeuple)
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
@@ -403,6 +564,22 @@ router.post('/:id/annuler', autoriserRoles('admin', 'gestionnaire'), async (req,
       }
     }
 
+    // Une annexe vendue à part (17/07/2026, remarque de Nicolas) n'est pas
+    // un logement réel à remettre "Libre" pour une revente future — sa
+    // vente se gère uniquement depuis "Vendre une annexe" (page Lots), qui
+    // crée un nouveau lot à chaque tentative. Après annulation, ce lot
+    // disparaît donc entièrement (plutôt que de traîner "Libre" dans le
+    // tableau) et l'annexe redevient disponible dans le catalogue. Sauf si
+    // une TMA le référence encore (cas normalement impossible en pratique,
+    // gardé par sécurité) : dans ce cas on ne supprime pas, comme pour un
+    // logement normal.
+    const nombreTmaLiees = lot.estAnnexeSeule ? await Tma.countDocuments({ lot: lot._id }) : 0
+    if (lot.estAnnexeSeule && nombreTmaLiees === 0) {
+      await Annexe.updateMany({ lot: lot._id }, { lot: null })
+      await Lot.findByIdAndDelete(lot._id)
+      return res.json({ supprime: true })
+    }
+
     lot.statut = 'libre'
     lot.dateOption = null
     lot.dateReservation = null
@@ -441,6 +618,10 @@ router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) 
     if (lot.acquereur) {
       await Acquereur.findByIdAndUpdate(lot.acquereur, { $pull: { lots: lot._id } })
     }
+    // Les annexes qui lui étaient attribuées redeviennent disponibles
+    // (17/07/2026, point 165) — un lot supprimé ne doit pas garder des
+    // annexes bloquées pour toujours.
+    await Annexe.updateMany({ lot: lot._id }, { lot: null })
     res.status(204).end()
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })

@@ -11,6 +11,7 @@ import SectionBareme from '../components/parametres/SectionBareme.jsx'
 import SectionLots from '../components/parametres/SectionLots.jsx'
 import SectionUtilisateurs from '../components/parametres/SectionUtilisateurs.jsx'
 import SectionAlertes from '../components/parametres/SectionAlertes.jsx'
+import SectionAnnexes from '../components/parametres/SectionAnnexes.jsx'
 
 function Parametres() {
   const { utilisateur } = useAuth()
@@ -19,6 +20,7 @@ function Parametres() {
   const { programmeActif: programme, setProgrammeActif } = useProgramme()
   const [entreprises, setEntreprises] = useState([])
   const [lots, setLots] = useState([])
+  const [annexes, setAnnexes] = useState([])
   const [utilisateurs, setUtilisateurs] = useState([])
   const [chargement, setChargement] = useState(true)
 
@@ -32,6 +34,18 @@ function Parametres() {
     setLots(await reponse.json())
   }
 
+  async function chargerAnnexes() {
+    const reponse = await apiFetch(`${API_URL}/api/annexes?programme=${programme._id}`)
+    setAnnexes(await reponse.json())
+  }
+
+  // Attribuer une annexe à un lot (formulaire de logement) modifie les
+  // deux collections à la fois — les deux listes doivent donc être
+  // rechargées ensemble pour rester cohérentes (17/07/2026, point 165).
+  async function chargerLotsEtAnnexes() {
+    await Promise.all([chargerLots(), chargerAnnexes()])
+  }
+
   // Réservé aux admins (voir routes/utilisateurs.js) — inutile de demander
   // la liste si on n'a de toute façon pas le droit de la voir.
   async function chargerUtilisateurs() {
@@ -42,7 +56,7 @@ function Parametres() {
 
   useEffect(() => {
     async function chargerTout() {
-      await Promise.all([chargerEntreprises(), chargerLots(), chargerUtilisateurs()])
+      await Promise.all([chargerEntreprises(), chargerLots(), chargerAnnexes(), chargerUtilisateurs()])
       setChargement(false)
     }
     chargerTout()
@@ -75,7 +89,13 @@ function Parametres() {
       <SectionAlertes programme={programme} onEnregistrer={enregistrer} />
       <SectionBareme programme={programme} onEnregistrer={enregistrer} />
       <SectionEtages programme={programme} onEnregistrer={enregistrer} />
-      <SectionLots programme={programme} lots={lots} onChangement={chargerLots} />
+      <SectionAnnexes programme={programme} annexes={annexes} onChangement={chargerAnnexes} />
+      <SectionLots
+        programme={programme}
+        lots={lots}
+        annexes={annexes}
+        onChangement={chargerLotsEtAnnexes}
+      />
       <SectionEntreprises entreprises={entreprises} onChangement={chargerEntreprises} />
       {utilisateur?.role === 'admin' && (
         <SectionUtilisateurs utilisateurs={utilisateurs} onChangement={chargerUtilisateurs} />

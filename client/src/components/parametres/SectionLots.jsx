@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { API_URL } from '../../config.js'
 import { apiFetch } from '../../utils/api.js'
+import { formatMontant } from '../../utils/formatMontant.js'
 import { ORIENTATIONS } from '../../data/lots.js'
+import { TYPES_ANNEXES } from '../../data/annexes.js'
 import LigneLot from './LigneLot.jsx'
-import ListeNumeros from './ListeNumeros.jsx'
+import SelectionAnnexes from './SelectionAnnexes.jsx'
 import ListeSurfaces from './ListeSurfaces.jsx'
 
-function SectionLots({ programme, lots, onChangement }) {
+function SectionLots({ programme, lots, annexes, onChangement }) {
   const etagesDisponibles = programme.parametres.listeEtages
 
   const [reference, setReference] = useState('')
@@ -14,22 +16,25 @@ function SectionLots({ programme, lots, onChangement }) {
   const [type, setType] = useState('')
   const [orientation, setOrientation] = useState('')
   const [surfaceHabitable, setSurfaceHabitable] = useState('')
+  const [surfaceSousPlafondBas, setSurfaceSousPlafondBas] = useState('')
   const [surfacesTerrasses, setSurfacesTerrasses] = useState([])
   const [surfacesBalcons, setSurfacesBalcons] = useState([])
   const [surfacesLoggias, setSurfacesLoggias] = useState([])
   const [surfaceJardin, setSurfaceJardin] = useState('')
-  const [parkings, setParkings] = useState([])
-  const [caves, setCaves] = useState([])
-  const [celliers, setCelliers] = useState([])
-  const [prixTTC, setPrixTTC] = useState('')
+  const [annexeIds, setAnnexeIds] = useState([])
+  const [prixLogementSeul, setPrixLogementSeul] = useState('')
   const [erreur, setErreur] = useState('')
-  const [erreurParkings, setErreurParkings] = useState('')
-  const [erreurCaves, setErreurCaves] = useState('')
-  const [erreurCelliers, setErreurCelliers] = useState('')
 
-  const maximumAtteint = programme.nombreLogements != null && lots.length >= programme.nombreLogements
-  const logementsManquants = programme.nombreLogements != null && lots.length < programme.nombreLogements
-    ? programme.nombreLogements - lots.length
+  // Une annexe vendue à part (17/07/2026, "Vendre une annexe", page Lots)
+  // n'est pas un vrai logement : exclue du quota (comme côté serveur), et
+  // de cette liste — aucune de ses caractéristiques techniques (étage,
+  // surfaces...) n'a de sens ici. Se gère depuis la page Lots (statut/
+  // dates/client), pas depuis Paramètres.
+  const lotsAffiches = lots.filter((lot) => !lot.estAnnexeSeule)
+  const nombreLogements = lotsAffiches.length
+  const maximumAtteint = programme.nombreLogements != null && nombreLogements >= programme.nombreLogements
+  const logementsManquants = programme.nombreLogements != null && nombreLogements < programme.nombreLogements
+    ? programme.nombreLogements - nombreLogements
     : 0
 
   // Remarque du 10/07/2026 : le message de plafond atteint (issu d'une
@@ -43,12 +48,17 @@ function SectionLots({ programme, lots, onChangement }) {
     return valeur === '' ? null : Number(valeur)
   }
 
+  // Aperçu du prix total (17/07/2026, point 165), même principe que
+  // FormulaireBaremeLot.jsx : logement seul + somme des annexes cochées,
+  // recalculé en direct pendant la saisie.
+  const totalAnnexesChoisies = annexes
+    .filter((a) => annexeIds.includes(a._id))
+    .reduce((somme, a) => somme + a.prix, 0)
+  const apercuPrixTotal = (Number(prixLogementSeul) || 0) + totalAnnexesChoisies
+
   async function ajouter(evenement) {
     evenement.preventDefault()
     setErreur('')
-    setErreurParkings('')
-    setErreurCaves('')
-    setErreurCelliers('')
     const reponse = await apiFetch(`${API_URL}/api/lots`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -59,22 +69,18 @@ function SectionLots({ programme, lots, onChangement }) {
         type: type || null,
         orientation: orientation || null,
         surfaceHabitable: versNombreOuNull(surfaceHabitable),
+        surfaceSousPlafondBas: versNombreOuNull(surfaceSousPlafondBas),
         surfacesTerrasses,
         surfacesBalcons,
         surfacesLoggias,
         surfaceJardin: versNombreOuNull(surfaceJardin),
-        parkings,
-        caves,
-        celliers,
-        prixTTC: versNombreOuNull(prixTTC),
+        annexeIds,
+        prixLogementSeul: versNombreOuNull(prixLogementSeul),
       }),
     })
     if (!reponse.ok) {
-      const donnees = await reponse.json()
-      if (donnees.champ === 'parkings') setErreurParkings(donnees.message)
-      else if (donnees.champ === 'caves') setErreurCaves(donnees.message)
-      else if (donnees.champ === 'celliers') setErreurCelliers(donnees.message)
-      else setErreur(donnees.message)
+      const { message } = await reponse.json()
+      setErreur(message)
       return
     }
     setReference('')
@@ -82,14 +88,13 @@ function SectionLots({ programme, lots, onChangement }) {
     setType('')
     setOrientation('')
     setSurfaceHabitable('')
+    setSurfaceSousPlafondBas('')
     setSurfacesTerrasses([])
     setSurfacesBalcons([])
     setSurfacesLoggias([])
     setSurfaceJardin('')
-    setParkings([])
-    setCaves([])
-    setCelliers([])
-    setPrixTTC('')
+    setAnnexeIds([])
+    setPrixLogementSeul('')
     onChangement()
   }
 
@@ -123,12 +128,13 @@ function SectionLots({ programme, lots, onChangement }) {
     <section className="section-parametres">
       <h2>Lots</h2>
       <ul>
-        {lots.length === 0 && <li>Aucun lot pour l'instant.</li>}
-        {lots.map((lot) => (
+        {lotsAffiches.length === 0 && <li>Aucun lot pour l'instant.</li>}
+        {lotsAffiches.map((lot) => (
           <LigneLot
             key={lot._id}
             lot={lot}
             etagesDisponibles={etagesDisponibles}
+            annexes={annexes}
             onEnregistrer={modifier}
             onSupprimer={supprimer}
           />
@@ -179,6 +185,15 @@ function SectionLots({ programme, lots, onChangement }) {
           Surface habitable (m²)
           <input type="number" step="0.01" value={surfaceHabitable} onChange={(e) => setSurfaceHabitable(e.target.value)} />
         </label>
+        <label>
+          Surface &lt; 1,80m (m²)
+          <input
+            type="number"
+            step="0.01"
+            value={surfaceSousPlafondBas}
+            onChange={(e) => setSurfaceSousPlafondBas(e.target.value)}
+          />
+        </label>
         <ListeSurfaces label="Terrasses (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
         <ListeSurfaces label="Balcons (m²)" valeurs={surfacesBalcons} onChange={setSurfacesBalcons} />
         <ListeSurfaces label="Loggias (m²)" valeurs={surfacesLoggias} onChange={setSurfacesLoggias} />
@@ -186,15 +201,28 @@ function SectionLots({ programme, lots, onChangement }) {
           Jardin (m²)
           <input type="number" step="0.01" value={surfaceJardin} onChange={(e) => setSurfaceJardin(e.target.value)} />
         </label>
-        <div className="groupe-numeros">
-          <ListeNumeros label="N° de parking" valeurs={parkings} onChange={setParkings} erreur={erreurParkings} />
-          <ListeNumeros label="N° de cave" valeurs={caves} onChange={setCaves} erreur={erreurCaves} />
-          <ListeNumeros label="N° de cellier" valeurs={celliers} onChange={setCelliers} erreur={erreurCelliers} />
+        <div className="groupe-annexes">
+          {TYPES_ANNEXES.map(({ valeur, libelle }) => (
+            <SelectionAnnexes
+              key={valeur}
+              type={valeur}
+              libelle={libelle}
+              annexesDuType={annexes.filter((a) => a.type === valeur)}
+              selectionnees={annexeIds}
+              onChange={setAnnexeIds}
+            />
+          ))}
         </div>
         <label>
-          Prix TTC (€)
-          <input type="number" step="0.01" value={prixTTC} onChange={(e) => setPrixTTC(e.target.value)} />
+          Prix logement seul (€)
+          <input
+            type="number"
+            step="0.01"
+            value={prixLogementSeul}
+            onChange={(e) => setPrixLogementSeul(e.target.value)}
+          />
         </label>
+        <p className="apercu-montant">Prix total (avec annexes) : {formatMontant(apercuPrixTotal, 0)}</p>
         <button type="submit" disabled={maximumAtteint}>Ajouter</button>
       </form>
     </section>

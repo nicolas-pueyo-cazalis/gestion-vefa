@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { STATUTS_LOT, ORDRE_STATUTS } from '../data/lots.js'
+import FormulairePrixLot from './FormulairePrixLot.jsx'
 
 // Même conversion que pour les TMA : MongoDB renvoie "2026-07-01T00:00:00.000Z",
 // <input type="date"> attend juste "2026-07-01".
@@ -9,7 +10,12 @@ function versDateInput(valeur) {
 
 const NOUVEL_ACQUEREUR = '__nouveau__'
 
-function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnulerVente, onFermer }) {
+function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnulerVente, onEnregistrerPrix, onFermer }) {
+  // Prix modifiable uniquement depuis ce panneau (17/07/2026, remarque de
+  // Nicolas : un seul bouton "crayon" — Paramètres ne sert plus qu'au
+  // paramétrage initial), et seulement avant l'Acté (plus de négociation
+  // possible après, voir server/routes/lots.js).
+  const [prixOuvert, setPrixOuvert] = useState(false)
   const [statut, setStatut] = useState(lot.statut)
   const [dateOption, setDateOption] = useState(versDateInput(lot.dateOption))
   const [dateReservation, setDateReservation] = useState(versDateInput(lot.dateReservation))
@@ -163,6 +169,12 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnu
           <button type="button" onClick={onFermer}>Annuler</button>
           {statut !== 'libre' && (
             <button type="button" className="bouton-danger" onClick={annulerVente}>Annuler la vente</button>
+          )}
+          {lot.statut !== 'acte' && !prixOuvert && (
+            <button type="button" onClick={() => setPrixOuvert(true)}>Modifier le prix</button>
+          )}
+          {prixOuvert && (
+            <FormulairePrixLot lot={lot} onEnregistrer={onEnregistrerPrix} onFermer={() => setPrixOuvert(false)} />
           )}
         </form>
       </td>

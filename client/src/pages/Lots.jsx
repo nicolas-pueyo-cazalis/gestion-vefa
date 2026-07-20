@@ -1,20 +1,24 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { STATUTS_LOT } from '../data/lots.js'
+import { STATUTS_TMA } from '../data/tma.js'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
 import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatMontant } from '../utils/formatMontant.js'
+import { formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireEditionLot from '../components/FormulaireEditionLot.jsx'
+import FormulaireVenteAnnexe from '../components/FormulaireVenteAnnexe.jsx'
+import BoutonContact from '../components/BoutonContact.jsx'
 
 // Lot, Étage, Type, Orientation, SHAB, Annexes, Prix TTC, Prix/m², Statut,
 // Date, Client, Commentaire, Action (13/07/2026, point 156 : Terrasse(s),
 // Balcon(s), Loggia(s), Jardin, Parkings, Caves, Celliers sont regroupés
 // dans la seule colonne "Annexes" — plus besoin de colonnes dynamiques
 // selon le nombre de terrasses).
-const NB_COLONNES = 13
+const NB_COLONNES_BASE = 13
 
 const STATUTS_FILTRE = [
   { valeur: 'tous', libelle: 'Tous' },
@@ -51,9 +55,13 @@ function ligneSurfaces(mot, valeurs) {
   return `${mot}${valeurs.length > 1 ? 's' : ''} : ${valeurs.map((v) => `${formatteDecimales(v)} m²`).join(', ')}`
 }
 
-function ligneNumeros(mot, valeurs) {
-  if (!valeurs?.length) return null
-  return `${mot}${valeurs.length > 1 ? 's' : ''} n° ${valeurs.join(', ')}`
+// Annexes du catalogue attribuées à ce lot (17/07/2026, point 165) —
+// `lot.annexes` vient du populate de la relation virtuelle côté serveur
+// (server/models/Lot.js), plus les simples tableaux de numéros d'avant.
+function ligneAnnexesType(mot, annexesDuLot, type) {
+  const numeros = (annexesDuLot ?? []).filter((a) => a.type === type).map((a) => a.numero)
+  if (numeros.length === 0) return null
+  return `${mot}${numeros.length > 1 ? 's' : ''} n° ${numeros.join(', ')}`
 }
 
 function afficheAnnexes(lot) {
@@ -62,9 +70,10 @@ function afficheAnnexes(lot) {
     ligneSurfaces('Balcon', lot.surfacesBalcons),
     ligneSurfaces('Loggia', lot.surfacesLoggias),
     lot.surfaceJardin != null ? `Jardin : ${afficheSurface(lot.surfaceJardin)}` : null,
-    ligneNumeros('Parking', lot.parkings),
-    ligneNumeros('Cave', lot.caves),
-    ligneNumeros('Cellier', lot.celliers),
+    ligneAnnexesType('Parking extérieur', lot.annexes, 'parking_ext'),
+    ligneAnnexesType('Parking intérieur', lot.annexes, 'parking_int'),
+    ligneAnnexesType('Cave', lot.annexes, 'cave'),
+    ligneAnnexesType('Cellier', lot.annexes, 'cellier'),
   ].filter(Boolean)
 }
 
@@ -85,14 +94,36 @@ function offrePretManquante(lot) {
   return lot.statut === 'acte' && lot.acquereur && !lot.acquereur.sansPret && !lot.acquereur.dateOffrePretRecue
 }
 
+// Historique fusionné dans la page Lots (17/07/2026, remarque de Nicolas —
+// remplace l'ancienne page "Annulés" à part). `nomClient` distinct de
+// nomAcquereur() ci-dessus : une entrée d'historique stocke une COPIE du
+// nom du client (civiliteClient/nomClient/prenomClient), pas une référence
+// vivante — voir server/models/HistoriqueAnnulation.js.
+function nomClient(entree) {
+  return [entree.civiliteClient, entree.prenomClient, entree.nomClient].filter(Boolean).join(' ') || '—'
+}
+
+// Dernière date atteinte avant l'annulation (acte > réservation > option) —
+// même logique que dateActuelle() ci-dessus.
+function derniereDateAnnulation(entree) {
+  return formatDate(entree.dateActe || entree.dateReservation || entree.dateOption)
+}
+
 function Lots() {
   const { programmeActif: programme } = useProgramme()
   const [lots, setLots] = useState([])
   const [acquereurs, setAcquereurs] = useState([])
+  const [annexes, setAnnexes] = useState([])
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
   const [idEnEdition, setIdEnEdition] = useState(null)
+  const [venteAnnexeOuverte, setVenteAnnexeOuverte] = useState(false)
+  const [historiqueOuvert, setHistoriqueOuvert] = useState(false)
+  const [historiqueAnnulations, setHistoriqueAnnulations] = useState([])
+  const [historiqueModificationsPrix, setHistoriqueModificationsPrix] = useState([])
+  const [tmaList, setTmaList] = useState([])
+  const [idAnnulationOuverte, setIdAnnulationOuverte] = useState(null)
 
   // Position réelle (en pixels, mesurée dans le DOM) des colonnes SHAB et
   // Prix TTC — remarque du 13/07/2026 : un calcul par index de colonne ne
@@ -115,10 +146,31 @@ function Lots() {
     setAcquereurs(await reponse.json())
   }
 
+  async function chargerAnnexes() {
+    const reponse = await apiFetch(`${API_URL}/api/annexes?programme=${programme._id}`)
+    setAnnexes(await reponse.json())
+  }
+
+  // Historique fusionné dans la page Lots (17/07/2026, remarque de
+  // Nicolas — remplace l'ancienne page "Annulés" à part) : annulations de
+  // ventes ET modifications de prix, plus les TMA pour le détail d'une
+  // annulation (voir plus bas, même logique que l'ancienne
+  // HistoriqueAnnulations.jsx).
+  async function chargerHistorique() {
+    const [reponseAnnulations, reponsePrix, reponseTma] = await Promise.all([
+      apiFetch(`${API_URL}/api/historique-annulations?programme=${programme._id}`),
+      apiFetch(`${API_URL}/api/historique-modifications-prix?programme=${programme._id}`),
+      apiFetch(`${API_URL}/api/tma?programme=${programme._id}`),
+    ])
+    setHistoriqueAnnulations(await reponseAnnulations.json())
+    setHistoriqueModificationsPrix(await reponsePrix.json())
+    setTmaList(await reponseTma.json())
+  }
+
   useEffect(() => {
     async function chargerTout() {
       try {
-        await Promise.all([chargerAcquereurs(), chargerLots()])
+        await Promise.all([chargerAcquereurs(), chargerLots(), chargerAnnexes(), chargerHistorique()])
       } catch (e) {
         setErreur(e.message)
       } finally {
@@ -176,8 +228,71 @@ function Lots() {
       alert(message)
       return
     }
-    await Promise.all([chargerLots(), chargerAcquereurs()])
+    // L'annulation d'une vente d'annexe seule libère l'annexe (voir
+    // routes/lots.js) — sans ce rechargement, "Vendre une annexe" la
+    // proposerait de nouveau seulement après un rechargement de page.
+    // chargerHistorique() : l'annulation vient de créer une nouvelle
+    // entrée dans l'historique fusionné (voir plus bas).
+    await Promise.all([chargerLots(), chargerAcquereurs(), chargerAnnexes(), chargerHistorique()])
     setIdEnEdition(null)
+  }
+
+  // Modification du prix d'un logement (ou d'une annexe vendue à part),
+  // 17/07/2026, remarque de Nicolas — motif obligatoire, tracée dans
+  // l'historique. Renvoie le message d'erreur au formulaire (FormulairePrixLot)
+  // plutôt qu'un alert() générique, pour qu'il s'affiche au bon endroit.
+  async function enregistrerPrixLot(id, donnees) {
+    const reponse = await apiFetch(`${API_URL}/api/lots/${id}/prix`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees),
+    })
+    if (!reponse.ok) {
+      const { message } = await reponse.json()
+      return message
+    }
+    await Promise.all([chargerLots(), chargerHistorique()])
+    setIdPrixEnEdition(null)
+    return null
+  }
+
+  // Vente d'une annexe seule (17/07/2026, remarque de Nicolas) : crée un
+  // "lot" à part (voir server/models/Lot.js, `estAnnexeSeule`), qui suit
+  // ensuite le même cycle de vente que n'importe quel logement (crayon
+  // "Modifier" sur sa ligne, comme pour un lot normal).
+  async function creerVenteAnnexe({ annexeId, reference, infosVente }) {
+    const reponseCreation = await apiFetch(`${API_URL}/api/lots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        programme: programme._id,
+        reference,
+        prixLogementSeul: 0,
+        annexeIds: [annexeId],
+        estAnnexeSeule: true,
+      }),
+    })
+    if (!reponseCreation.ok) {
+      const { message } = await reponseCreation.json()
+      alert(message)
+      return
+    }
+    const lotCree = await reponseCreation.json()
+    // Statut/client/dates renseignés directement dans l'encart "Vendre une
+    // annexe" (17/07/2026, remarque de Nicolas) : un 2ème appel réutilise
+    // la même route PATCH qu'un logement classique (genération des appels
+    // de fonds, création du client, etc. déjà gérées là-bas).
+    const reponseInfos = await apiFetch(`${API_URL}/api/lots/${lotCree._id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(infosVente),
+    })
+    if (!reponseInfos.ok) {
+      const { message } = await reponseInfos.json()
+      alert(message)
+    }
+    await Promise.all([chargerLots(), chargerAnnexes(), chargerAcquereurs()])
+    setVenteAnnexeOuverte(false)
   }
 
   if (chargement) return <p>Chargement des lots...</p>
@@ -185,6 +300,13 @@ function Lots() {
 
   const lotsFiltres =
     statutActif === 'tous' ? lots : lots.filter((lot) => lot.statut === statutActif)
+
+  // Colonne conditionnelle (17/07/2026, point 164) : n'existe que si au
+  // moins un lot du programme a une surface sous plafond bas renseignée —
+  // sur `lots` (pas `lotsFiltres`), pour que la colonne n'apparaisse/
+  // disparaisse pas selon le filtre de statut sélectionné.
+  const afficherColonneSousPlafondBas = lots.some((lot) => lot.surfaceSousPlafondBas != null)
+  const NB_COLONNES = NB_COLONNES_BASE + (afficherColonneSousPlafondBas ? 1 : 0)
 
   const parStatut = Object.keys(STATUTS_LOT).reduce((compte, statut) => {
     compte[statut] = lots.filter((lot) => lot.statut === statut).length
@@ -197,6 +319,13 @@ function Lots() {
       .reduce((somme, lot) => somme + lot.prixTTC, 0)
     return compte
   }, {})
+
+  // Taux affichés sous chaque carte (17/07/2026, point 168) — la part de
+  // cette carte sur le total de sa propre rangée (nombre de lots, ou CA).
+  const totalCA = Object.values(caParStatut).reduce((somme, montant) => somme + montant, 0)
+  function pourcentage(valeur, total) {
+    return total > 0 ? Math.round((valeur / total) * 100) : 0
+  }
 
   // Totaux TTC/TVA/HT du tableau affiché (respecte le filtre de statut
   // actif), à partir du taux de TVA paramétré sur le programme.
@@ -224,22 +353,78 @@ function Lots() {
         </div>
       </div>
 
+      <h2 className="titre-section-stats">Commercialisation</h2>
       <section className="stats">
         <StatCard valeur={lots.length} libelle="Lots au total" />
-        <StatCard valeur={parStatut.acte} libelle="Actés" statut="acte" />
-        <StatCard valeur={parStatut.reserve} libelle="Réservés" statut="reserve" />
-        <StatCard valeur={parStatut.option} libelle="Options" statut="option" />
-        <StatCard valeur={parStatut.libre} libelle="Libres" statut="libre" />
+        <StatCard
+          valeur={parStatut.acte}
+          libelle="Actés"
+          statut="acte"
+          pourcentage={pourcentage(parStatut.acte, lots.length)}
+        />
+        <StatCard
+          valeur={parStatut.reserve}
+          libelle="Réservés"
+          statut="reserve"
+          pourcentage={pourcentage(parStatut.reserve, lots.length)}
+        />
+        <StatCard
+          valeur={parStatut.option}
+          libelle="Options"
+          statut="option"
+          pourcentage={pourcentage(parStatut.option, lots.length)}
+        />
+        <StatCard
+          valeur={parStatut.libre}
+          libelle="Libres"
+          statut="libre"
+          pourcentage={pourcentage(parStatut.libre, lots.length)}
+        />
       </section>
 
+      <h2 className="titre-section-stats">Chiffre d'affaires</h2>
       <section className="stats">
-        <StatCard valeur={formatMontant(caParStatut.acte, 0)} libelle="CA acté" statut="acte" />
-        <StatCard valeur={formatMontant(caParStatut.reserve, 0)} libelle="CA réservé" statut="reserve" />
-        <StatCard valeur={formatMontant(caParStatut.option, 0)} libelle="CA options" statut="option" />
-        <StatCard valeur={formatMontant(caParStatut.libre, 0)} libelle="CA libre" statut="libre" />
+        <StatCard
+          valeur={formatMontant(caParStatut.acte, 0)}
+          libelle="CA acté"
+          statut="acte"
+          pourcentage={pourcentage(caParStatut.acte, totalCA)}
+        />
+        <StatCard
+          valeur={formatMontant(caParStatut.reserve, 0)}
+          libelle="CA réservé"
+          statut="reserve"
+          pourcentage={pourcentage(caParStatut.reserve, totalCA)}
+        />
+        <StatCard
+          valeur={formatMontant(caParStatut.option, 0)}
+          libelle="CA options"
+          statut="option"
+          pourcentage={pourcentage(caParStatut.option, totalCA)}
+        />
+        <StatCard
+          valeur={formatMontant(caParStatut.libre, 0)}
+          libelle="CA libre"
+          statut="libre"
+          pourcentage={pourcentage(caParStatut.libre, totalCA)}
+        />
       </section>
 
-      <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+      <div className="barre-actions">
+        <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+        {!venteAnnexeOuverte && (
+          <button type="button" onClick={() => setVenteAnnexeOuverte(true)}>Vendre une annexe</button>
+        )}
+      </div>
+
+      {venteAnnexeOuverte && (
+        <FormulaireVenteAnnexe
+          annexesDisponibles={annexes.filter((a) => !a.lot)}
+          acquereurs={acquereurs}
+          onCreer={creerVenteAnnexe}
+          onFermer={() => setVenteAnnexeOuverte(false)}
+        />
+      )}
 
       <div className="tableau-scroll">
         <table className="tableau-lots">
@@ -250,6 +435,7 @@ function Lots() {
               <th>Type</th>
               <th>Orientation</th>
               <th ref={refTheadShab}>Surface SHAB</th>
+              {afficherColonneSousPlafondBas && <th>Surface &lt; 1,80m</th>}
               <th>Annexes</th>
               <th ref={refTheadPrixTTC}>Prix TTC</th>
               <th>Prix TTC/m² SHAB</th>
@@ -266,11 +452,15 @@ function Lots() {
               return (
                 <Fragment key={lot._id}>
                   <tr>
-                    <td>{lot.reference}</td>
+                    {/* Annexe vendue à part (17/07/2026, remarque de
+                        Nicolas) : sa référence ne s'affiche pas ici, déjà
+                        présente dans la colonne "Annexes" ci-dessous. */}
+                    <td>{lot.estAnnexeSeule ? '—' : lot.reference}</td>
                     <td>{lot.etage}</td>
                     <td>{lot.type}</td>
                     <td>{lot.orientation}</td>
                     <td>{afficheSurface(lot.surfaceHabitable)}</td>
+                    {afficherColonneSousPlafondBas && <td>{afficheSurface(lot.surfaceSousPlafondBas)}</td>}
                     <td>
                       {lignesAnnexes.length > 0 ? (
                         <div className="annexes-cellule">
@@ -311,6 +501,7 @@ function Lots() {
                       colonnes={NB_COLONNES}
                       onEnregistrer={enregistrerLot}
                       onAnnulerVente={annulerVenteLot}
+                      onEnregistrerPrix={enregistrerPrixLot}
                       onFermer={() => setIdEnEdition(null)}
                     />
                   )}
@@ -353,6 +544,151 @@ function Lots() {
           </div>
         </div>
       </div>
+
+      {/* Historique fusionné dans la page Lots (17/07/2026, remarque de
+          Nicolas) : plus de page "Annulés" séparée — ventes annulées et
+          modifications de prix se consultent ici, repliées par défaut. */}
+      <button type="button" className="lien-discret" onClick={() => setHistoriqueOuvert((v) => !v)}>
+        {historiqueOuvert ? 'Masquer' : 'Voir'} l'historique (annulations, modifications de prix)
+      </button>
+
+      {historiqueOuvert && (
+        <>
+          <h2 className="titre-section-stats">Ventes annulées</h2>
+          <div className="tableau-scroll tableau-scroll--marge">
+            <table className="tableau-lots">
+              <thead>
+                <tr>
+                  <th>Logement</th>
+                  <th>Statut avant annulation</th>
+                  <th>Date</th>
+                  <th>Client</th>
+                  <th>Commentaire</th>
+                  <th>Annulé le</th>
+                  <th>Détail</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historiqueAnnulations.length === 0 && (
+                  <tr>
+                    <td colSpan={7}>Aucune vente annulée pour l'instant.</td>
+                  </tr>
+                )}
+                {historiqueAnnulations.map((entree) => {
+                  const tmaDuLot = tmaList.filter((tma) => tma.lot?._id === entree.lot)
+                  return (
+                    <Fragment key={entree._id}>
+                      <tr>
+                        <td>{entree.referenceLot}</td>
+                        <td><Badge statut={entree.statutAvantAnnulation} texte={STATUTS_LOT[entree.statutAvantAnnulation]} /></td>
+                        <td>{derniereDateAnnulation(entree)}</td>
+                        <td><span className="nom-client">{nomClient(entree)}</span></td>
+                        <td><span className="commentaire-cellule">{entree.commentaire || '—'}</span></td>
+                        <td>{formatDate(entree.dateAnnulation)}</td>
+                        <td className="actions">
+                          <button
+                            type="button"
+                            onClick={() => setIdAnnulationOuverte(idAnnulationOuverte === entree._id ? null : entree._id)}
+                          >
+                            {idAnnulationOuverte === entree._id ? 'Masquer' : 'Détail'}
+                          </button>
+                        </td>
+                      </tr>
+                      {idAnnulationOuverte === entree._id && (
+                        <tr className="formulaire-dates">
+                          <td colSpan={7}>
+                            <div className="detail-annulation">
+                              <div className="detail-annulation-bloc">
+                                <h3>Prêt</h3>
+                                {entree.sansPret ? (
+                                  <p>Acquisition avec fonds personnels.</p>
+                                ) : (
+                                  <ul>
+                                    <li>Banque : <BoutonContact titre="Banque" contact={entree.banque} /></li>
+                                    <li>Courtier : <BoutonContact titre="Courtier" contact={entree.courtier} /></li>
+                                    <li>Offre reçue le : {formatDate(entree.dateOffrePretRecue)}</li>
+                                  </ul>
+                                )}
+                              </div>
+                              <div className="detail-annulation-bloc">
+                                <h3>Acte</h3>
+                                <ul>
+                                  <li>Notaire : <BoutonContact titre="Notaire" contact={entree.notaire} /></li>
+                                  <li>Date de l'acte : {formatDate(entree.dateActe)}</li>
+                                </ul>
+                              </div>
+                              <div className="detail-annulation-bloc">
+                                <h3>Appels de fonds ({entree.appelsDeFonds.length})</h3>
+                                {entree.appelsDeFonds.length === 0 ? (
+                                  <p>Aucun appel de fonds généré.</p>
+                                ) : (
+                                  <ul>
+                                    {entree.appelsDeFonds.map((appel, i) => (
+                                      <li key={i}>
+                                        {appel.phase.nom} — {formatMontant(appel.montant)}
+                                        {appel.dateReglement ? ` — réglé le ${formatDate(appel.dateReglement)}` : ' — non réglé'}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                              <div className="detail-annulation-bloc">
+                                <h3>TMA ({tmaDuLot.length})</h3>
+                                {tmaDuLot.length === 0 ? (
+                                  <p>Aucune TMA liée à ce logement.</p>
+                                ) : (
+                                  <ul>
+                                    {tmaDuLot.map((tma) => (
+                                      <li key={tma._id}>
+                                        {tma.description} — <Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} />
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <h2 className="titre-section-stats">Modifications de prix</h2>
+          <div className="tableau-scroll tableau-scroll--marge">
+            <table className="tableau-lots">
+              <thead>
+                <tr>
+                  <th>Logement</th>
+                  <th>Ancien prix</th>
+                  <th>Nouveau prix</th>
+                  <th>Motif</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historiqueModificationsPrix.length === 0 && (
+                  <tr>
+                    <td colSpan={5}>Aucune modification de prix pour l'instant.</td>
+                  </tr>
+                )}
+                {historiqueModificationsPrix.map((entree) => (
+                  <tr key={entree._id}>
+                    <td>{entree.referenceLot}</td>
+                    <td>{formatMontant(entree.ancienPrix)}</td>
+                    <td>{formatMontant(entree.nouveauPrix)}</td>
+                    <td><span className="commentaire-cellule">{entree.motif}</span></td>
+                    <td>{formatDate(entree.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </>
   )
 }

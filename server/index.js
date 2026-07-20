@@ -9,6 +9,7 @@ import mongoose from 'mongoose'
 // l'ordre d'import des fichiers de routes.
 import './models/Programme.js'
 import './models/Lot.js'
+import './models/Annexe.js'
 import './models/Acquereur.js'
 import './models/AppelDeFonds.js'
 import './models/Tma.js'
@@ -16,9 +17,11 @@ import './models/TmaEntreprise.js'
 import './models/Entreprise.js'
 import './models/Utilisateur.js'
 import './models/HistoriqueAnnulation.js'
+import './models/HistoriqueModificationPrix.js'
 
 import programmeRouter from './routes/programme.js'
 import lotsRouter from './routes/lots.js'
+import annexesRouter from './routes/annexes.js'
 import tmaRouter from './routes/tma.js'
 import tmaEntreprisesRouter from './routes/tmaEntreprises.js'
 import entreprisesRouter from './routes/entreprises.js'
@@ -27,6 +30,7 @@ import appelsDeFondsRouter from './routes/appelsDeFonds.js'
 import authRouter from './routes/auth.js'
 import utilisateursRouter from './routes/utilisateurs.js'
 import historiqueAnnulationsRouter from './routes/historiqueAnnulations.js'
+import historiqueModificationsPrixRouter from './routes/historiqueModificationsPrix.js'
 import { verifierToken } from './middleware/auth.js'
 
 const app = express()
@@ -48,12 +52,14 @@ app.use('/api', verifierToken)
 app.use('/api/utilisateurs', utilisateursRouter)
 app.use('/api/programme', programmeRouter)
 app.use('/api/lots', lotsRouter)
+app.use('/api/annexes', annexesRouter)
 app.use('/api/tma', tmaRouter)
 app.use('/api/tma-entreprises', tmaEntreprisesRouter)
 app.use('/api/entreprises', entreprisesRouter)
 app.use('/api/acquereurs', acquereursRouter)
 app.use('/api/appels-de-fonds', appelsDeFondsRouter)
 app.use('/api/historique-annulations', historiqueAnnulationsRouter)
+app.use('/api/historique-modifications-prix', historiqueModificationsPrixRouter)
 
 mongoose
   .connect(process.env.MONGODB_URI)

@@ -70,6 +70,10 @@ const programmeSchema = new mongoose.Schema({
   codePostal: String,
   nombreLogements: Number,
   dateLivraison: Date,
+  // 20/07/2026 : coordonnées bancaires du promoteur, affichées sur le
+  // courrier d'appel de fonds envoyé au client (page Appels de fonds).
+  iban: String,
+  bic: String,
   parametres: { type: parametresSchema, default: () => ({}) },
 }, { timestamps: true })
 

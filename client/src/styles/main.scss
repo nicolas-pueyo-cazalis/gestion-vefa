@@ -584,6 +584,15 @@ main {
   }
 }
 
+// Liste de logements à cocher/décocher (20/07/2026, "Générer un appel de
+// fonds", point 171) : défilement propre plutôt qu'une fenêtre qui
+// s'étire à l'infini si le programme compte beaucoup de lots.
+.choix-lots-generation {
+  max-height: 12rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
 // Boutons "Exporter en Excel"/"Exporter en PDF"/"Annuler" (20/07/2026,
 // chantier des exports), dans FenetreExport.jsx — couleurs proches de
 // celles associées à chaque format (vert Excel, rouge PDF), "Annuler"
@@ -606,7 +615,11 @@ main {
     transition: background 0.15s ease;
   }
 
-  button:nth-child(1) {
+  // Classes explicites, pas "au rang" (nth-child) — corrigé le 20/07/2026
+  // (courrier appel de fonds) : un export sans bouton Excel (`formats:
+  // ['pdf']`) décale tous les rangs, un style par position donnerait
+  // alors la mauvaise couleur au mauvais bouton.
+  .bouton-export-excel {
     background: #16a34a; // vert Excel
 
     &:hover {
@@ -614,7 +627,7 @@ main {
     }
   }
 
-  button:nth-child(2) {
+  .bouton-export-pdf {
     background: #dc2626; // rouge PDF
 
     &:hover {
@@ -622,7 +635,7 @@ main {
     }
   }
 
-  button:nth-child(3) {
+  .bouton-export-annuler {
     margin-left: auto;
     background: none;
     color: #52606d;
@@ -632,6 +645,28 @@ main {
     &:hover {
       color: $couleur-texte;
     }
+  }
+}
+
+// Sous-choix d'un export (20/07/2026, courrier appel de fonds) : ex.
+// "Quel appel de fonds ?" — même esprit que les champs de formulaire
+// habituels (label au-dessus du champ).
+.sous-choix-export {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #52606d;
+
+  select {
+    border: 1px solid $couleur-bordure;
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: $couleur-texte;
   }
 }
 

@@ -23,9 +23,19 @@ export function calculerDateLimiteMois(date, mois) {
   return limite
 }
 
+// "a_emettre" (20/07/2026, remarque de Nicolas) : l'attestation MOE est
+// faite mais l'appel n'a pas encore été généré/envoyé (voir "Générer un
+// appel de fonds", page Appels de fonds) — sert de repère visuel sur ce
+// qui reste à générer. Ne s'applique jamais à la phase "Réservation"
+// (jamais attestée, auto-émise dès la réservation du lot) ni au cas où
+// l'acte a été signé avant/le jour même de l'attestation (l'appel est
+// alors automatiquement émis ET réglé, voir emettreAttestation() côté
+// serveur) : dans les deux cas, `dateEmission` est déjà renseigné.
 export function statutAppel(appel) {
   if (appel.dateReglement) return 'regle'
-  if (!appel.dateEmission) return 'attente'
+  if (!appel.dateEmission) {
+    return appel.dateAttestationMOE ? 'a_emettre' : 'attente'
+  }
   const enRetard = appel.dateLimiteReglement && new Date(appel.dateLimiteReglement) < new Date()
   return enRetard ? 'retard' : 'emis'
 }

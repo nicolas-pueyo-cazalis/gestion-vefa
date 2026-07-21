@@ -879,6 +879,53 @@ des remarques déjà faites sur les exports avant ce chantier : voir #18,
 199. ✅ Mêmes deux exports que Suivi de prêt (tableau + cartes de
      statistiques), avec `.barre-actions--marge` dès le départ.
 
+**Appels de fonds (suite du point 196)**
+200. ✅ Retours sur le premier essai du "Récapitulatif par lot" : masqué
+     par défaut (affiché via un bouton sur la ligne de la barre de
+     recherche, pas en permanence) ; colonne "Avancement cumulé %"
+     replacée AVANT "Avancement %" ; tableau détaillé élargi sur toute la
+     largeur de l'écran (comme Lots), au lieu de rester aligné sur le
+     reste de la page ; espace ajouté entre le récapitulatif par lot et
+     le tableau détaillé.
+201. ✅ Courrier d'appel de fonds à envoyer au client (modèle fourni par
+     Nicolas) : un document par appel précis (un lot + une phase). PDF
+     uniquement (exception au principe "Excel + PDF partout", une lettre
+     n'a pas d'équivalent tableur utile). Nouveaux champs IBAN/BIC sur le
+     programme (Paramètres > Informations du programme), affichés sur le
+     courrier ; "Référence virement" laissée vide (pas de champ prévu
+     pour l'instant).
+202. ✅ Revu le jour même — rejoint le point 171 (envoi collectif) plutôt
+     que de rester un export "un par un" : renommé "Générer un appel de
+     fonds", choix en deux temps dans la fenêtre d'export — d'abord la
+     PHASE (Réservation exclue, comme l'attestation en masse), puis les
+     LOGEMENTS concernés à cocher/décocher (seuls ceux avec attestation
+     MOE faite et pas encore émis sont proposés). "Générer" télécharge un
+     PDF par logement coché ET remplit automatiquement "Envoyé le" sur
+     chaque appel correspondant (modifiable à la main ensuite), comme
+     demandé au point 171. `FenetreExport.jsx` généralisée pour porter ce
+     genre d'action personnalisée (`type: 'generation'`), en plus des
+     exports "classiques" en tableau.
+203. ✅ Bug signalé aussitôt : poser une attestation MOE marquait encore
+     automatiquement l'appel "Émis" — contradictoire avec "Générer un
+     appel de fonds" (point 171/202). Corrigé (`emettreAttestation()`,
+     server/routes/appelsDeFonds.js) : l'attestation MOE seule n'émet
+     plus l'appel. Exception conservée à la demande explicite de
+     Nicolas : si l'acte du lot a été signé après (ou le jour même) que
+     la phase ait été attestée, l'appel est toujours considéré
+     automatiquement émis ET réglé à la date de l'acte (le notaire
+     encaisse déjà les sommes dues à la signature) — même règle que
+     pour un nouveau lot Acté qui rattrape une phase déjà attestée par
+     un autre lot (server/routes/lots.js).
+204. ✅ Nouveau statut "À émettre" (précision le jour même du point 203) :
+     *"En attente, quand pas d'attestation MOE, À émettre quand
+     attestation MOE mais AF non généré, Émis quand AF généré, en retard
+     quand date limite de règlement dépassée, Réglé quand AF réglé (sans
+     oublier la règle de la signature de l'acte)"* — sert de repère
+     visuel sur ce qui reste à générer via "Générer un appel de fonds".
+     Ajouté dans `statutAppel()` (client/src/utils/statuts.js), carte de
+     stat dédiée sur la page, et couleur orange (#ea580c) dans la palette
+     de badges (`$couleurs-statut`, client/src/styles/_variables.scss).
+
 ---
 
 ## Notes

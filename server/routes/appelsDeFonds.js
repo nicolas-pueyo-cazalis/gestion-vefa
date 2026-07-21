@@ -22,8 +22,16 @@ router.get('/', async (req, res) => {
       // direct — passe par lot.programme (un saut).
       filtre = { lot: { $in: await getIdsLotsDuProgramme(programme) } }
     }
+    // `lot.acquereur` peuplé (20/07/2026, courrier appel de fonds) :
+    // nécessaire pour écrire le nom du client sur le courrier généré
+    // depuis cette page — jusqu'ici seuls reference/prixTTC étaient
+    // demandés, suffisants pour le tableau mais pas pour ce document.
     const appels = await AppelDeFonds.find(filtre)
-      .populate('lot', 'reference prixTTC')
+      .populate({
+        path: 'lot',
+        select: 'reference prixTTC acquereur',
+        populate: { path: 'acquereur', select: 'civilite prenom nom' },
+      })
       .sort({ createdAt: 1 })
     res.json(appels)
   } catch (erreur) {
@@ -31,30 +39,29 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Calcule dateEmission/dateLimiteReglement/dateReglement dès que
-// dateAttestationMOE passe de vide à renseignée — partagé entre la saisie
-// ligne par ligne et la saisie en masse par phase ci-dessous.
-// `appel.lot.programme` doit déjà être peuplé par l'appelant (le délai de
-// règlement en dépend). Remarque du 13/07/2026 : si l'acte du lot
-// (`appel.lot.dateActe`) est postérieur ou égal à cette attestation,
-// l'appel est considéré réglé d'office à la date de l'acte — voir
-// calculerEmissionAppel() (server/utils/appelsDeFonds.js), même règle que
-// pour un nouveau lot Acté qui rattrape une phase déjà attestée ailleurs.
+// Constate la phase — n'émet plus automatiquement l'appel dans le cas
+// normal (20/07/2026, point 171, revu le jour même à la précision de
+// Nicolas) : attestation MOE et "Envoyé le" sont deux actions distinctes,
+// l'émission attend désormais l'action explicite "Générer un appel de
+// fonds" (nouvelle fenêtre, page Appels de fonds).
+// Exception conservée : si l'acte du lot a été signé APRÈS (ou le jour
+// même) que cette phase ait été attestée, l'appel est effectivement déjà
+// émis ET réglé au moment de la signature (le notaire encaisse les sommes
+// déjà dues) — rien à "générer" ensuite dans ce cas précis. Même règle et
+// même fonction (`calculerEmissionAppel`, server/utils/appelsDeFonds.js)
+// que pour un nouveau lot Acté qui rattrape une phase déjà attestée
+// ailleurs (server/routes/lots.js, genererAppelsDeFonds).
 function emettreAttestation(appel, dateAttestationMOE) {
   appel.dateAttestationMOE = dateAttestationMOE
   if (dateAttestationMOE && !appel.dateEmission) {
     const delai = appel.lot.programme.parametres.delaiReglementAppelJours
     const { dateEmission, dateLimiteReglement, dateReglement, regleAutomatiquement } = calculerEmissionAppel(appel.lot, dateAttestationMOE, delai)
-    appel.dateEmission = dateEmission
-    appel.dateLimiteReglement = dateLimiteReglement
-    if (dateReglement) {
+    if (regleAutomatiquement) {
+      appel.dateEmission = dateEmission
+      appel.dateLimiteReglement = dateLimiteReglement
       appel.dateReglement = dateReglement
       appel.regleAutomatiquement = regleAutomatiquement
     }
-  }
-  if (!dateAttestationMOE) {
-    appel.dateEmission = null
-    appel.dateLimiteReglement = null
   }
 }
 

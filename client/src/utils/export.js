@@ -18,6 +18,7 @@
 import ExcelJS from 'exceljs'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { formatMontant } from './formatMontant.js'
 
 // Couleur d'en-tête ≈ $couleur-texte (main.scss), en ARGB (format attendu
 // par exceljs : 2 chiffres d'opacité + 6 chiffres de couleur).
@@ -120,6 +121,11 @@ export async function exporterExcel(donnees) {
 }
 
 export function exporterPDF(donnees) {
+  // Courrier d'appel de fonds (20/07/2026) : mise en page fixe (lettre),
+  // pas un tableau — délégué à une fonction dédiée plutôt que forcé dans
+  // le moule "en-têtes + lignes" du reste de ce fichier.
+  if (donnees.typeCourrier) return exporterCourrierAppelDeFonds(donnees)
+
   const { nomFichier, titre } = donnees
   const sections = versSections(donnees)
 
@@ -166,6 +172,114 @@ export function exporterPDF(donnees) {
       y += 4
     }
   })
+
+  doc.save(`${nomFichier}.pdf`)
+}
+
+// Date en toutes lettres ("12 août 2026"), pas "12/08/2026" — attendu sur
+// un courrier adressé au client (20/07/2026, courrier appel de fonds),
+// contrairement au reste de l'appli qui utilise formatDate partout
+// (utils/statuts.js), plus adapté à un tableau qu'à une lettre.
+function formatDateLongue(date) {
+  if (!date) return ''
+  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(date))
+}
+
+// Courrier d'appel de fonds (20/07/2026, remarque de Nicolas — modèle
+// fourni) : PDF uniquement (pas d'équivalent Excel utile pour une lettre,
+// exception au principe "Excel + PDF partout", voir docs/decisions.md).
+// Une lettre a une mise en page fixe, pas un tableau — construite ligne
+// par ligne avec jsPDF directement, plutôt que via autoTable comme les
+// autres exports.
+function exporterCourrierAppelDeFonds({
+  nomFichier, promoteur, numeroAppel, phaseNom, programmeNom, lotReference,
+  acquereurNom, prixVente, dateAttestation, lignesPhases, montantARegler,
+  dateLimite, iban, bic,
+}) {
+  const doc = new jsPDF() // portrait
+  const marge = 20
+  const largeurPage = doc.internal.pageSize.getWidth()
+  const largeurUtile = largeurPage - marge * 2
+  let y = 20
+
+  function ligneHorizontale() {
+    y += 4
+    doc.setDrawColor(200)
+    doc.line(marge, y, largeurPage - marge, y)
+    y += 10
+  }
+
+  function champ(libelle, valeur, { gras = false, taille = 11 } = {}) {
+    doc.setFontSize(9)
+    doc.setTextColor(120)
+    doc.text(libelle, marge, y)
+    y += 5
+    doc.setFontSize(taille)
+    doc.setTextColor(0)
+    doc.setFont('helvetica', gras ? 'bold' : 'normal')
+    doc.text(valeur || '—', marge, y)
+    doc.setFont('helvetica', 'normal')
+    y += 8
+  }
+
+  // En-tête : nom du promoteur, centré.
+  doc.setFontSize(16)
+  doc.setFont('helvetica', 'bold')
+  doc.text(promoteur || '—', largeurPage / 2, y, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  y += 6
+  ligneHorizontale()
+
+  champ('Objet :', `Appel de fonds n°${numeroAppel}`, { gras: true, taille: 13 })
+  y -= 4 // rapproche la ligne "phase" du titre "Appel de fonds n°X"
+  doc.setFontSize(11)
+  doc.text(phaseNom, marge, y)
+  y += 10
+
+  champ('Programme :', programmeNom)
+  champ('Lot :', lotReference)
+  champ('Acquéreur :', acquereurNom)
+  champ('Prix de vente TTC', formatMontant(prixVente, 0), { gras: true })
+
+  ligneHorizontale()
+
+  doc.setFontSize(11)
+  const paragraphe = doc.splitTextToSize(
+    `Conformément à l'attestation du Maître d'Œuvre du ${formatDateLongue(dateAttestation)}, `
+    + "nous vous prions de trouver ci-dessous l'appel de fonds correspondant.",
+    largeurUtile,
+  )
+  doc.text(paragraphe, marge, y)
+  y += paragraphe.length * 6 + 6
+
+  // Tableau des phases (Phase / % / Montant), sans le fond sombre des
+  // autres exports : ce document est une lettre, pas un tableau de
+  // données à parcourir — un simple alignement en colonnes suffit.
+  doc.setFont('helvetica', 'bold')
+  doc.text('Phase', marge, y)
+  doc.text('%', marge + 90, y)
+  doc.text('Montant', largeurPage - marge, y, { align: 'right' })
+  doc.setFont('helvetica', 'normal')
+  y += 3
+  doc.line(marge, y, largeurPage - marge, y)
+  y += 7
+  for (const [nomPhase, pourcentage, montantOuRegle] of lignesPhases) {
+    doc.text(nomPhase, marge, y)
+    doc.text(`${pourcentage} %`, marge + 90, y)
+    doc.text(montantOuRegle, largeurPage - marge, y, { align: 'right' })
+    y += 7
+  }
+
+  ligneHorizontale()
+
+  champ('Montant à régler', formatMontant(montantARegler, 0), { gras: true, taille: 16 })
+  champ('Avant le :', formatDateLongue(dateLimite), { gras: true })
+
+  ligneHorizontale()
+
+  champ('IBAN', iban)
+  champ('BIC', bic)
+  champ('Référence virement', '')
 
   doc.save(`${nomFichier}.pdf`)
 }

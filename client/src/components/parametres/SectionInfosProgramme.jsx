@@ -13,6 +13,10 @@ function SectionInfosProgramme({ programme, onEnregistrer }) {
   const [codePostal, setCodePostal] = useState(programme.codePostal ?? '')
   const [nombreLogements, setNombreLogements] = useState(programme.nombreLogements ?? '')
   const [dateLivraison, setDateLivraison] = useState(versDateInput(programme.dateLivraison))
+  // 20/07/2026 : coordonnées bancaires du promoteur, affichées sur le
+  // courrier d'appel de fonds envoyé au client (page Appels de fonds).
+  const [iban, setIban] = useState(programme.iban ?? '')
+  const [bic, setBic] = useState(programme.bic ?? '')
 
   // Code postal automatique depuis la commune (17/07/2026, point 140) :
   // uniquement si le code postal est encore vide — reste modifiable à la
@@ -33,6 +37,8 @@ function SectionInfosProgramme({ programme, onEnregistrer }) {
       codePostal,
       nombreLogements: nombreLogements === '' ? null : Number(nombreLogements),
       dateLivraison: dateLivraison || null,
+      iban: iban || null,
+      bic: bic || null,
     })
   }
 
@@ -71,6 +77,14 @@ function SectionInfosProgramme({ programme, onEnregistrer }) {
         <label>
           Date de livraison
           <input type="date" value={dateLivraison} onChange={(e) => setDateLivraison(e.target.value)} />
+        </label>
+        <label>
+          IBAN
+          <input value={iban} onChange={(e) => setIban(e.target.value)} placeholder="FR76 ..." />
+        </label>
+        <label>
+          BIC
+          <input value={bic} onChange={(e) => setBic(e.target.value)} />
         </label>
         <button type="submit">Enregistrer</button>
       </form>

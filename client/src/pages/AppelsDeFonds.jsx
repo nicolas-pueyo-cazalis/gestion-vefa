@@ -14,14 +14,22 @@ import FormulaireAppelDeFonds from '../components/FormulaireAppelDeFonds.jsx'
 import FormulaireAttestationMasse from '../components/FormulaireAttestationMasse.jsx'
 import FormulaireBaremeLot from '../components/FormulaireBaremeLot.jsx'
 import FenetreRecapAttestations from '../components/FenetreRecapAttestations.jsx'
+import FenetreExport from '../components/FenetreExport.jsx'
+import { exporterPDF } from '../utils/export.js'
 
 const NB_COLONNES = 12
 
 const LIBELLES_STATUT = {
   attente: 'En attente',
+  a_emettre: 'À émettre',
   emis: 'Émis',
   retard: 'En retard',
   regle: 'Réglé',
+}
+
+function nomAcquereur(acquereur) {
+  if (!acquereur) return '—'
+  return [acquereur.civilite, acquereur.prenom, acquereur.nom].filter(Boolean).join(' ')
 }
 
 // Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
@@ -59,6 +67,7 @@ function AppelsDeFonds() {
   const [recherche, setRecherche] = useState('')
   const [recapOuvert, setRecapOuvert] = useState(false)
   const [recapParLotOuvert, setRecapParLotOuvert] = useState(false)
+  const [exportOuvert, setExportOuvert] = useState(false)
 
   async function chargerAppels() {
     const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds?programme=${programme._id}`)
@@ -172,6 +181,7 @@ function AppelsDeFonds() {
   })
 
   const enAttente = appels.filter((a) => statutAppel(a) === 'attente').length
+  const aEmettre = appels.filter((a) => statutAppel(a) === 'a_emettre').length
   const enRetard = appels.filter((a) => statutAppel(a) === 'retard').length
   const regles = appels.filter((a) => statutAppel(a) === 'regle').length
   // "Émis" ici = a été émis au moins une fois (cumulatif), qu'il soit
@@ -204,6 +214,82 @@ function AppelsDeFonds() {
     }, {}),
   ).sort((a, b) => a.lot.reference.localeCompare(b.lot.reference))
 
+  // Courrier d'appel de fonds (20/07/2026, remarque de Nicolas, modèle
+  // fourni) : un document par appel précis (un lot + une phase), choisi
+  // dans la fenêtre d'export — PDF uniquement (exception au principe
+  // "Excel + PDF partout", une lettre n'a pas d'équivalent tableur utile).
+  function donneesExportCourrier(idAppel) {
+    const appel = appels.find((a) => a._id === idAppel)
+    if (!appel) return null
+    const phasesDuLotJusquIci = appelsTries
+      .filter((a) => a.lot?._id === appel.lot?._id && a.phase.ordre <= appel.phase.ordre)
+      .sort((a, b) => a.phase.ordre - b.phase.ordre)
+    return {
+      typeCourrier: true,
+      nomFichier: `appel-de-fonds-${appel.lot?.reference}-${appel.phase.nom}`,
+      promoteur: programme.maitreOuvrage || programme.nom,
+      numeroAppel: appel.phase.ordre,
+      phaseNom: appel.phase.nom,
+      programmeNom: programme.nom,
+      lotReference: appel.lot?.reference ?? '—',
+      acquereurNom: nomAcquereur(appel.lot?.acquereur),
+      prixVente: appel.lot?.prixTTC,
+      dateAttestation: appel.dateAttestationMOE,
+      lignesPhases: phasesDuLotJusquIci.map((a) => [
+        a.phase.nom,
+        Math.round(a.phase.pourcentage * 100),
+        a.dateReglement ? 'Réglé' : formatMontant(a.montant, 0),
+      ]),
+      montantARegler: appel.montant,
+      dateLimite: appel.dateLimiteReglement,
+      iban: programme.iban,
+      bic: programme.bic,
+    }
+  }
+
+  // "Générer un appel de fonds" (20/07/2026, point 171, remarque de
+  // Nicolas) — remplace l'ancienne option "Courrier appel de fonds (par
+  // lot)" par un vrai envoi collectif : choix d'une phase (Réservation
+  // exclue, comme pour l'attestation en masse — elle ne se déclenche
+  // jamais à la main), puis des logements concernés à cocher/décocher.
+  // Seuls les logements dont l'attestation MOE est déjà faite ET pas
+  // encore émis sont proposés — générer un appel n'a de sens que dans ce
+  // cas (règle métier n°2 de l'analyse Excel).
+  function lotsPourPhase(phaseNom) {
+    return appels
+      .filter((a) => a.phase.nom === phaseNom && a.dateAttestationMOE && !a.dateEmission)
+      .map((a) => ({ valeur: a.lot?._id, libelle: a.lot?.reference ?? '—' }))
+      .sort((a, b) => a.libelle.localeCompare(b.libelle))
+  }
+
+  // Génère le courrier de chaque logement coché ET remplit "Envoyé le"
+  // sur l'appel correspondant (modifiable à la main ensuite, comme
+  // partout ailleurs dans l'appli) — les deux dans la même action, comme
+  // demandé au point 171.
+  async function genererAppelsDeFonds(phaseNom, idsLots) {
+    const appelsAGenerer = idsLots
+      .map((idLot) => appels.find((a) => a.phase.nom === phaseNom && a.lot?._id === idLot))
+      .filter(Boolean)
+
+    for (const appel of appelsAGenerer) {
+      exporterPDF(donneesExportCourrier(appel._id))
+    }
+
+    const dateDuJour = new Date().toISOString().slice(0, 10)
+    const reponses = await Promise.all(appelsAGenerer.map((appel) =>
+      apiFetch(`${API_URL}/api/appels-de-fonds/${appel._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dateEmission: dateDuJour }),
+      }),
+    ))
+    if (reponses.some((r) => !r.ok)) {
+      alert("Les courriers ont été générés, mais \"Envoyé le\" n'a pas pu être mis à jour pour tous les logements.")
+    }
+
+    await chargerAppels()
+  }
+
   return (
     <>
       <h1 className="titre-page">Appels de fonds</h1>
@@ -212,6 +298,7 @@ function AppelsDeFonds() {
         <StatCard valeur={appels.length} libelle="Appels au total" />
         <StatCard valeur={emisAuTotal} libelle="Émis (au total)" />
         <StatCard valeur={enAttente} libelle="En attente" />
+        <StatCard valeur={aEmettre} libelle="À émettre" />
         <StatCard valeur={enRetard} libelle="En retard" />
         <StatCard valeur={regles} libelle="Réglés" />
       </section>
@@ -243,7 +330,26 @@ function AppelsDeFonds() {
         <button type="button" className="bouton-accordeon" onClick={() => setRecapParLotOuvert((v) => !v)}>
           {recapParLotOuvert ? 'Masquer' : 'Voir'} le récapitulatif par lot
         </button>
+        <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
+          Exporter
+        </button>
       </div>
+
+      {exportOuvert && (
+        <FenetreExport
+          options={[
+            {
+              valeur: 'generation',
+              libelle: 'Générer un appel de fonds',
+              type: 'generation',
+              phases: nomsPhasesAttestables.map((nom) => ({ valeur: nom, libelle: nom })),
+              lotsPourPhase,
+              generer: genererAppelsDeFonds,
+            },
+          ]}
+          onFermer={() => setExportOuvert(false)}
+        />
+      )}
 
       {/* Récapitulatif par lot (20/07/2026, remarque de Nicolas) : masqué
           par défaut, affiché à la demande plutôt qu'en permanence — vue

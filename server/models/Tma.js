@@ -45,13 +45,27 @@ export function calculerStatutAutomatique(tma) {
 // avec les mêmes défauts que le schéma) doit être `programme.parametres`,
 // résolu par l'appelant (ex: tma.lot.programme.parametres).
 export function calculerMontantClient(montantEntreprises, parametres) {
-  if (montantEntreprises === null || montantEntreprises === undefined) return null
+  // Frais d'ouverture de dossier (20/07/2026, point 184) : montant fixe
+  // ajouté en plus du coût des modifications elles-mêmes, appliqué
+  // systématiquement (avoir compris, décision explicite de Nicolas) tant
+  // que `appliquerFraisOuvertureDossierTma` est activé sur le programme.
+  const frais = parametres?.appliquerFraisOuvertureDossierTma
+    ? (parametres?.fraisOuvertureDossierTma ?? 0)
+    : 0
+  // Corrigé le 20/07/2026 : avant, "pas encore chiffré" (montantEntreprises
+  // null, avant réponse des entreprises) renvoyait toujours `null` tel
+  // quel — le frais d'ouverture de dossier, lui, est dû dès la création de
+  // la TMA (le dossier est ouvert), pas seulement une fois les devis
+  // entreprises connus.
+  if (montantEntreprises === null || montantEntreprises === undefined) {
+    return frais > 0 ? frais : null
+  }
   const tauxMarge = parametres?.tauxMargeTma ?? 1.3
   const regleMontantNegatif = parametres?.regleMontantNegatifTma ?? 'montant_zero'
   if (montantEntreprises < 0) {
-    return regleMontantNegatif === 'avoir_sans_marge' ? montantEntreprises : 0
+    return (regleMontantNegatif === 'avoir_sans_marge' ? montantEntreprises : 0) + frais
   }
-  return montantEntreprises * tauxMarge
+  return montantEntreprises * tauxMarge + frais
 }
 
 const tmaSchema = new mongoose.Schema({

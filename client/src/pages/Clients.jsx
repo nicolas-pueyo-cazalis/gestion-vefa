@@ -5,6 +5,8 @@ import { apiFetch } from '../utils/api.js'
 import { useProgramme } from '../context/ProgrammeContext.jsx'
 import StatCard from '../components/StatCard.jsx'
 import FormulaireEditionClient from '../components/FormulaireEditionClient.jsx'
+import BarreRecherche from '../components/BarreRecherche.jsx'
+import { correspondRecherche } from '../utils/recherche.js'
 
 const NB_COLONNES = 9
 
@@ -24,6 +26,21 @@ function coordonneesCompletes(acquereur) {
 
 function numerosLogements(acquereur) {
   return acquereur.lots?.length > 0 ? acquereur.lots.map((l) => l.reference).join(', ') : '—'
+}
+
+// Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
+// la ligne, y compris le téléphone formaté (pas la valeur brute stockée).
+function texteRechercheClient(acquereur) {
+  return [
+    numerosLogements(acquereur),
+    nomComplet(acquereur),
+    acquereur.adresse,
+    acquereur.commune,
+    acquereur.codePostal,
+    formatTelephoneAffichage(acquereur.telephone),
+    acquereur.email,
+    acquereur.commentaire,
+  ].filter(Boolean).join(' ')
 }
 
 // Affichage demandé par Nicolas : format national "06 XX XX XX XX" pour
@@ -54,6 +71,7 @@ function Clients() {
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [idEnEdition, setIdEnEdition] = useState(null)
+  const [recherche, setRecherche] = useState('')
 
   async function chargerAcquereurs() {
     const reponse = await apiFetch(`${API_URL}/api/acquereurs?programme=${programmeActif._id}`)
@@ -92,7 +110,9 @@ function Clients() {
   if (erreur) return <p>Erreur : {erreur}</p>
 
   const completes = acquereurs.filter(coordonneesCompletes).length
-  const acquereursTries = [...acquereurs].sort(comparerParLogement)
+  const acquereursTries = [...acquereurs]
+    .sort(comparerParLogement)
+    .filter((acquereur) => correspondRecherche(texteRechercheClient(acquereur), recherche))
 
   return (
     <>
@@ -103,6 +123,10 @@ function Clients() {
         <StatCard valeur={completes} libelle="Coordonnées complètes" />
         <StatCard valeur={acquereurs.length - completes} libelle="À compléter" />
       </section>
+
+      <div className="barre-actions">
+        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un client..." />
+      </div>
 
       <div className="tableau-scroll tableau-scroll--marge">
         <table className="tableau-lots">

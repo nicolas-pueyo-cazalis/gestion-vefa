@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique } from '../models/Tma.js'
+import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique, calculerMontantClient } from '../models/Tma.js'
 import Lot from '../models/Lot.js'
 import TmaEntreprise from '../models/TmaEntreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
@@ -52,7 +52,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { lot, localisation, description, dateDemande, nombreEntreprisesConcernees } = req.body
 
-    const lotDoc = await Lot.findById(lot)
+    const lotDoc = await Lot.findById(lot).populate('programme')
     if (!lotDoc) {
       return res.status(404).json({ message: 'Lot introuvable' })
     }
@@ -60,14 +60,17 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
       return res.status(400).json({ message: 'Ce lot n\'a pas encore d\'acquéreur — impossible de créer une TMA.' })
     }
 
-    // montantEntreprises/montantClient explicitement à `null` (pas juste
-    // absents) : "pas encore chiffré", cohérent avec le reste de l'appli
-    // (ex: seed.js) — un champ `undefined` fait planter le formatage côté
-    // React (`formatMontant(undefined)` → "NaN €").
+    // montantEntreprises explicitement à `null` (pas juste absent) : "pas
+    // encore chiffré", cohérent avec le reste de l'appli (ex: seed.js) —
+    // un champ `undefined` fait planter le formatage côté React
+    // (`formatMontant(undefined)` → "NaN €"). montantClient, lui, n'est
+    // plus systématiquement `null` (20/07/2026, point 184) : si des frais
+    // d'ouverture de dossier sont paramétrés, ils sont dus dès la création.
     const tma = await Tma.create({
       lot, acquereur: lotDoc.acquereur, localisation, description, dateDemande,
       nombreEntreprisesConcernees: nombreEntreprisesConcernees ?? undefined,
-      montantEntreprises: null, montantClient: null,
+      montantEntreprises: null,
+      montantClient: calculerMontantClient(null, lotDoc.programme?.parametres),
     })
     const tmaPeuplee = await tma.populate([
       { path: 'lot', select: 'reference' },
@@ -275,10 +278,17 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
     // concernées est modifié — figer montantClientManuel dans tous les cas
     // bloquait le recalcul automatique dès qu'on rouvrait ce panneau, même
     // sans toucher au montant. Ne fige que si la valeur change réellement.
-    if (montantClient !== undefined) {
-      if (montantClient !== (tma.montantClient ?? null)) {
-        tma.montantClientManuel = true
+    if (montantClient !== undefined && montantClient !== (tma.montantClient ?? null)) {
+      // Plus de négociation possible une fois validée (20/07/2026, point
+      // 182) : le montant facturé au client est acquis dès "Validé", et le
+      // reste pour "Terminé" (qui en découle) — cohérent avec le prix d'un
+      // lot, figé lui aussi une fois Acté.
+      if (['valide', 'termine'].includes(tma.statut)) {
+        return res.status(400).json({
+          message: 'TMA validée : le montant TTC client n\'est plus modifiable.',
+        })
       }
+      tma.montantClientManuel = true
       tma.montantClient = montantClient
     }
     if (nombreEntreprisesConcernees !== undefined) tma.nombreEntreprisesConcernees = nombreEntreprisesConcernees

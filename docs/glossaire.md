@@ -106,6 +106,15 @@ agence ou un gestionnaire peut suivre plusieurs programmes). Toutes les
 pages de l'application (Lots, Clients, TMA, Appels de fonds...) affichent
 et filtrent uniquement les données du programme actif.
 
+## Frais d'ouverture de dossier (TMA)
+
+Montant fixe, paramétrable par programme, ajouté au montant facturé au
+client pour chaque TMA — en plus du coût des modifications elles-mêmes
+(main d'œuvre, matériaux facturés par les entreprises). S'applique
+systématiquement dès qu'activé, y compris sur un avoir (remboursement) :
+chaque demande de TMA représente un dossier à ouvrir et à suivre, que la
+prestation soit ajoutée ou retirée.
+
 ---
 
 *Ce glossaire sera complété au fur et à mesure de l'avancement du projet.*

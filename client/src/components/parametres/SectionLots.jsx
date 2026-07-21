@@ -153,6 +153,13 @@ function SectionLots({ programme, lots, annexes, onChangement }) {
         </p>
       )}
       {erreur && <p className="total-erreur">{erreur}</p>}
+      {/* Séparation visuelle (20/07/2026, point 185) : sans elle, le
+          formulaire d'ajout d'un lot enchaînait directement sur la liste
+          des lots existants (chacun avec les mêmes champs une fois
+          déplié), au point de confondre modifier un lot déjà là et en
+          ajouter un nouveau. */}
+      <hr className="separateur-ajout" />
+      <h3>Ajouter un lot</h3>
       <form onSubmit={ajouter}>
         <label>
           N° du logement

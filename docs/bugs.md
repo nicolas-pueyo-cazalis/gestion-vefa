@@ -723,3 +723,126 @@ par le bug a été nettoyé par un script ponctuel.
 d'un vrai logement" — l'annulation, écrite avant l'introduction
 d'`estAnnexeSeule`, est un point de rupture facile à manquer tant que
 personne ne teste spécifiquement ce cas.
+
+---
+
+## Bouton noir invisible au repos, coloré seulement au survol
+
+**Symptôme** (20/07/2026) : les boutons "Marquer les travaux comme
+terminés"/"Annuler la fin des travaux" (page TMA), passés en fond
+noir/texte blanc à la demande de Nicolas, restaient blancs au repos —
+le noir n'apparaissait qu'au survol de la souris.
+
+**Cause** : le même piège de spécificité CSS déjà rencontré sur
+`.bouton-danger` (voir plus haut) — la règle `.boutons-panneau-tma
+button` (imbriquée dans `table { ... }`, donc compilée en `table
+.boutons-panneau-tma button`, spécificité (0,1,2)) l'emportait sur la
+nouvelle règle `button.bouton-fonce` (spécificité (0,1,1)) à l'état de
+repos. Au survol, `button.bouton-fonce:hover` gagnait un point de
+spécificité supplémentaire et l'emportait enfin, donnant l'illusion
+trompeuse que "ça marche, juste au survol".
+
+**Correction** : classe doublée, `button.bouton-fonce.bouton-fonce`
+(spécificité (0,2,1)), pour dépasser sans ambiguïté la règle imbriquée
+dans `table { ... }`, quel que soit l'endroit où le bouton est utilisé.
+
+**Leçon** : sur ce projet, toute nouvelle classe de bouton **colorée**
+(fond ou texte) appliquée à l'intérieur d'un tableau doit être vérifiée
+à l'état de repos, pas seulement au survol — le tableau porte déjà des
+règles génériques (`button { background: ... }`) suffisamment
+spécifiques pour piéger une classe simple à chaque fois.
+
+---
+
+## "Annuler la fin des travaux" impossible sur les TMA déjà Terminées avant le correctif
+
+**Symptôme** (20/07/2026) : le nouveau bouton "Annuler la fin des
+travaux" (point 172) refusait l'action sur une TMA déjà au statut
+"Terminé" ("Cette TMA n'est pas terminée, rien à annuler"), alors
+qu'elle l'était visiblement.
+
+**Cause** : premier essai calqué sur `statutAvantRefus`/
+`statutAvantAnnulation` — un champ `statutAvantTermine`, rempli au
+moment du passage à "Terminé". Mais cette TMA précise avait été mise à
+ce statut *avant* l'ajout du bouton (donc jamais passée par le code qui
+remplit ce nouveau champ) : `statutAvantTermine` restait vide, et le
+garde-fou (`if (tma.statut !== 'termine' || !tma.statutAvantTermine)`)
+refusait l'annulation faute de cette trace.
+
+**Correction** : suppression pure et simple de `statutAvantTermine` —
+inutile ici, puisque "Terminé" n'est atteignable que depuis "Validé"
+(une seule origine possible dans la machine à états, contrairement à
+"Refusé"/"Annulé"). "Annuler la fin des travaux" repose simplement
+`statut = 'valide'`, sans avoir besoin de savoir d'où on venait.
+
+**Leçon** : copier un motif existant (ici `statutAvantX`) sans vérifier
+s'il est réellement nécessaire dans le nouveau cas peut introduire un
+bug qui ne se voit qu'sur des données déjà en base avant le correctif —
+un test "à blanc" (créer puis terminer une TMA fraîche) ne l'aurait pas
+révélé, seul un test sur une donnée existante l'a fait apparaître.
+
+---
+
+## Frais d'ouverture de dossier TMA jamais appliqué à la création
+
+**Symptôme** (20/07/2026) : après avoir activé "Frais d'ouverture de
+dossier" (200 €) dans Paramètres, une TMA fraîchement créée affichait
+un montant TTC client à 0 €, pas 200 €.
+
+**Cause** : `calculerMontantClient(montantEntreprises, parametres)`
+renvoyait `null` dès que `montantEntreprises` n'était pas encore connu
+(cas normal d'une TMA fraîche, avant toute réponse d'entreprise) — sans
+même regarder si un frais fixe devait s'appliquer. De plus,
+`POST /api/tma` ne l'appelait pas du tout : `montantClient` était
+toujours forcé à `null` "en dur" à la création.
+
+**Correction** : `calculerMontantClient()` renvoie désormais le montant
+du frais (au lieu de `null`) quand `montantEntreprises` est encore
+inconnu ; `POST /api/tma` appelle cette fonction à la création au lieu
+de forcer `null`. Les TMA créées avant ce correctif ne sont pas
+rattrapées rétroactivement (décision explicite de Nicolas).
+
+**Leçon** : un nouveau réglage qui "s'ajoute" à un calcul existant doit
+être vérifié à **chaque** point d'entrée qui produit ce calcul, pas
+seulement celui déjà testé habituellement (ici, le recalcul après
+réponse des entreprises fonctionnait ; la création, elle, court-circuitait
+complètement le calcul).
+
+---
+
+## Barre de recherche : plusieurs corrections successives après les premiers tests
+
+**Symptôme** (20/07/2026, point 187) : après la mise en place d'une
+barre de recherche sur les 6 pages principales, Nicolas a signalé
+plusieurs cas où elle ne retrouvait pas des lignes pourtant visiblement
+correspondantes.
+
+**Corrections, dans l'ordre des signalements** :
+1. **Champs manquants** : la recherche ne portait au départ que sur
+   quelques champs jugés "identifiants" (référence, nom, commentaire) —
+   Nicolas a précisé que **tout** ce qui s'affiche dans le tableau doit
+   être trouvable, y compris des valeurs calculées comme "Prix TTC/m²
+   SHAB" ou une surface. Chaque page construit désormais son texte de
+   recherche avec les mêmes fonctions d'affichage que le tableau
+   (`formatMontant`, `formatDate`, `afficheSurface`...).
+2. **Séparateur de milliers** : chercher "5444" ne retrouvait pas
+   "5 444,00 €" — l'espace dans un montant formaté est un espace
+   insécable (séparateur de milliers), qu'un clavier ne tape jamais.
+   Corrigé en retirant tous les espaces des deux côtés de la comparaison
+   (texte affiché ET requête tapée).
+3. **Séparateur décimal** : chercher "5.00m²" ne retrouvait pas
+   "5,00 m²" — les nombres s'affichent à la française (virgule), un
+   clavier tape plus naturellement un point. Corrigé en remplaçant aussi
+   les points par des virgules des deux côtés.
+4. **Composant jamais affiché** (étourderie) : sur la page Appels de
+   fonds, `BarreRecherche` avait été importée et branchée dans la
+   logique de filtrage, mais l'élément `<BarreRecherche />` n'avait
+   jamais été ajouté au JSX rendu — la barre n'apparaissait tout
+   simplement pas à l'écran. Repéré par Nicolas ("je ne vois pas la
+   barre de recherche"), pas par une relecture du code.
+
+**Leçon** : "brancher la logique" (import, état, filtre) et "afficher le
+composant" sont deux étapes distinctes qui peuvent chacune être oubliées
+indépendamment — copier un motif déjà posé sur 5 pages sur une 6ᵉ page
+reste un copier-coller manuel, avec le même risque d'oubli qu'une
+implémentation de zéro.

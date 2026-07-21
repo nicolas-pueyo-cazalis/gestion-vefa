@@ -28,6 +28,13 @@ const parametresSchema = new mongoose.Schema({
   // automatiquement via tauxMargeTma (voir recalculerTma,
   // routes/tmaEntreprises.js) — saisi à la main sur chaque TMA à la place.
   montantClientSaisiManuellement: { type: Boolean, default: false },
+  // 20/07/2026, point 184 : montant fixe ajouté au montant client de
+  // chaque TMA (voir calculerMontantClient, models/Tma.js), en plus du
+  // coût des modifications elles-mêmes — appliqué systématiquement (avoir
+  // compris) uniquement si `appliquerFraisOuvertureDossierTma` est activé,
+  // pour que la règle n'ait aucun effet tant qu'elle n'est pas voulue.
+  fraisOuvertureDossierTma: { type: Number, default: 0 },
+  appliquerFraisOuvertureDossierTma: { type: Boolean, default: false },
   // Tous les montants stockés (prixTTC, montantEntreprises, montantClient...)
   // sont en TTC ; le HT se calcule à la volée (TTC / (1 + tauxTva)) quand
   // besoin, jamais stocké — voir "Convention monétaire" dans schema-donnees.md.

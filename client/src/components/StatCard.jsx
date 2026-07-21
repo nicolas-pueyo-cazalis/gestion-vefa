@@ -5,12 +5,19 @@
 // libellé/valeur reste la même pour toutes les cartes de l'appli.
 // `pourcentage` (17/07/2026, point 168) : optionnel, affiché sous la
 // valeur — la part que représente cette carte sur le total de sa rangée.
-function StatCard({ valeur, libelle, statut, pourcentage }) {
+// `libellePourcentage` (20/07/2026, point 180) : précise le total en
+// question (ex: "du programme", "du CA total") — un "17%" seul ne dit pas
+// de quoi c'est le pourcentage.
+function StatCard({ valeur, libelle, statut, pourcentage, libellePourcentage }) {
   return (
     <div className={statut ? `carte carte--${statut}` : 'carte'}>
       <span className="libelle">{libelle}</span>
       <span className="valeur">{valeur}</span>
-      {pourcentage != null && <span className="pourcentage">{pourcentage}%</span>}
+      {pourcentage != null && (
+        <span className="pourcentage">
+          {pourcentage}% {libellePourcentage}
+        </span>
+      )}
     </div>
   )
 }

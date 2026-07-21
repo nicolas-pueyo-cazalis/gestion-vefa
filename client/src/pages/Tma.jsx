@@ -17,6 +17,8 @@ import FormulaireDatesTma from '../components/FormulaireDatesTma.jsx'
 import DetailEntreprisesTma from '../components/DetailEntreprisesTma.jsx'
 import FormulaireCreationTma from '../components/FormulaireCreationTma.jsx'
 import FormulaireInfosTma from '../components/FormulaireInfosTma.jsx'
+import BarreRecherche from '../components/BarreRecherche.jsx'
+import { correspondRecherche } from '../utils/recherche.js'
 
 const NB_COLONNES = 13
 
@@ -56,6 +58,25 @@ function tmaObsolete(tma) {
   return (tma.lot?.acquereur?._id ?? null) !== (tma.acquereur?._id ?? null)
 }
 
+// Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
+// la ligne, mêmes fonctions de formatage que le rendu du tableau.
+function texteRechercheTma(tma) {
+  return [
+    tma.lot?.reference,
+    tmaObsolete(tma) ? null : nomAcquereur(tma.acquereur),
+    formatDate(tma.dateDemande),
+    tma.localisation,
+    tma.description,
+    formatDate(tma.dateEnvoiEntreprises),
+    tma.montantEntreprises == null ? null : formatMontant(tma.montantEntreprises),
+    formatMontant(tma.montantClient ?? 0),
+    formatDate(tma.dateEnvoiFactureClient),
+    formatDate(tma.dateRetourClient),
+    STATUTS_TMA[tma.statut],
+    tma.commentaire,
+  ].filter(Boolean).join(' ')
+}
+
 function Tma() {
   const { programmeActif: programme } = useProgramme()
   const [tmaList, setTmaList] = useState([])
@@ -63,6 +84,7 @@ function Tma() {
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
+  const [recherche, setRecherche] = useState('')
   // Un seul panneau d'actions par TMA (13/07/2026) — regroupe "Modifier les
   // dates", "Entreprises" et "Refuser"/"Supprimer" sous un même crayon,
   // comme sur la page Lots, plutôt que des boutons épars sur la ligne.
@@ -264,8 +286,9 @@ function Tma() {
     return tmaEntreprises.some((ligne) => ligne.tma?._id === tma._id && estEntrepriseEnRetard(ligne, delai))
   }
 
-  const tmaFiltrees =
-    statutActif === 'tous' ? tmaList : tmaList.filter((tma) => GROUPES_FILTRE[statutActif].includes(tma.statut))
+  const tmaFiltrees = tmaList
+    .filter((tma) => statutActif === 'tous' || GROUPES_FILTRE[statutActif].includes(tma.statut))
+    .filter((tma) => correspondRecherche(texteRechercheTma(tma), recherche))
 
   const validees = tmaList.filter((t) => STATUTS_VALIDE.includes(t.statut)).length
   const enCours = tmaList.filter((t) => STATUTS_EN_COURS.includes(t.statut)).length
@@ -301,6 +324,8 @@ function Tma() {
             ))}
           </select>
         </label>
+
+        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher une TMA..." />
 
         {!creationOuverte && (
           <button type="button" onClick={() => setCreationOuverte(true)}>Ajouter une TMA</button>

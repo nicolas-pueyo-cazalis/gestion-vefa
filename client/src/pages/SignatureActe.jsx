@@ -8,6 +8,8 @@ import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireSignatureActe from '../components/FormulaireSignatureActe.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
+import BarreRecherche from '../components/BarreRecherche.jsx'
+import { correspondRecherche } from '../utils/recherche.js'
 
 const NB_COLONNES = 9
 
@@ -33,12 +35,29 @@ function nomComplet(acquereur) {
   return [acquereur?.civilite, acquereur?.prenom, acquereur?.nom].filter(Boolean).join(' ') || '—'
 }
 
+// Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
+// la ligne, mêmes fonctions de formatage que le rendu du tableau.
+function texteRechercheSignatureActe(lot, delaiMois) {
+  const statut = statutSignature(lot, delaiMois)
+  return [
+    lot.reference,
+    nomComplet(lot.acquereur),
+    formatDate(lot.dateReservation),
+    lot.acquereur?.notaire?.nom,
+    formatDate(calculerDateLimiteMois(lot.dateReservation, delaiMois)),
+    formatDate(lot.dateActe),
+    LIBELLES_STATUT[statut],
+    lot.commentaire,
+  ].filter(Boolean).join(' ')
+}
+
 function SignatureActe() {
   const { programmeActif: programme } = useProgramme()
   const [lots, setLots] = useState([])
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
+  const [recherche, setRecherche] = useState('')
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerLots() {
@@ -109,6 +128,7 @@ function SignatureActe() {
 
   const lotsFiltres = lotsConcernes
     .filter((lot) => statutActif === 'tous' || statutSignature(lot, delaiMois) === statutActif)
+    .filter((lot) => correspondRecherche(texteRechercheSignatureActe(lot, delaiMois), recherche))
 
   const enAttente = lotsConcernes.filter((l) => statutSignature(l, delaiMois) === 'attente').length
   const enRetard = lotsConcernes.filter((l) => statutSignature(l, delaiMois) === 'retard').length
@@ -125,7 +145,10 @@ function SignatureActe() {
         <StatCard valeur={signes} libelle="Signés" />
       </section>
 
-      <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+      <div className="barre-actions">
+        <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un dossier..." />
+      </div>
 
       <div className="tableau-scroll tableau-scroll--marge">
         <table className="tableau-lots">

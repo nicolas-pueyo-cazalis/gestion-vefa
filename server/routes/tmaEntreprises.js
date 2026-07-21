@@ -43,7 +43,15 @@ async function recalculerTma(tmaId) {
   // (le taux de marge devient alors juste indicatif, jamais appliqué tout
   // seul) — le gestionnaire saisit chaque montant lui-même via le panneau
   // "Infos" (PATCH /api/tma/:id/infos), qui fige déjà montantClientManuel.
-  if (!tma.montantClientManuel && !tma.lot?.programme?.parametres?.montantClientSaisiManuellement) {
+  // Figé aussi une fois "Validé"/"Terminé" (20/07/2026, point 182) : sans
+  // ce garde-fou, corriger un devis entreprise après validation pouvait
+  // encore recalculer silencieusement le montant client déjà acquis.
+  if (
+    !tma.montantClientManuel
+    && !tma.lot?.programme?.parametres?.montantClientSaisiManuellement
+    && !STATUTS_NON_RECALCULABLES.includes(tma.statut)
+    && tma.statut !== 'valide'
+  ) {
     tma.montantClient = calculerMontantClient(montantEntreprises, tma.lot?.programme?.parametres)
   }
 

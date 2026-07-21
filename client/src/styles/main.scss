@@ -535,6 +535,23 @@ main {
   }
 }
 
+// Barre de recherche (20/07/2026, point 187) : même hauteur/rayon que les
+// <select> de filtre juste à côté (.filtre-liste-deroulante select), pour
+// que les deux paraissent appartenir au même groupe de contrôles.
+.barre-recherche {
+  border: 1px solid $couleur-bordure;
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  color: $couleur-texte;
+  background: $couleur-carte;
+  min-width: 14rem;
+
+  &::placeholder {
+    color: #97a3ae;
+  }
+}
+
 .filtres-phases {
   display: flex;
   align-items: center;
@@ -701,6 +718,18 @@ table {
   .formulaire-dates td,
   .detail-entreprises td {
     background: #f5f7fa;
+  }
+
+  // Titre d'une sous-partie du panneau crayon (20/07/2026, point 183,
+  // TMA) : "Modifier les dates", "Entreprises concernées" — pour les
+  // distinguer visuellement les unes des autres, plutôt que tout
+  // enchaîner sans repère depuis le panneau "Infos" juste au-dessus.
+  .titre-sous-partie-crayon {
+    margin: 0 0 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #52606d;
+    text-align: left;
   }
 
   .formulaire-dates form,
@@ -1025,6 +1054,90 @@ table.tableau-lots {
   }
 }
 
+// Aligné sur le bord gauche de l'écran (20/07/2026, point 181, suite) :
+// même technique "sortie de <main>" que `.tableau-scroll` ci-dessus, pour que le
+// bouton parte du même bord gauche que le tableau au-dessus, plutôt que
+// de rester dans la colonne centrée à 960px de <main> (donc plus décalé
+// vers l'intérieur que le tableau juste au-dessus).
+.conteneur-bouton-accordeon {
+  width: 100vw;
+  max-width: 1600px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 1rem;
+  margin-top: 1.5rem;
+}
+
+// Bouton "accordéon" (20/07/2026, point 181, Lots.jsx) : ouvre/ferme
+// l'historique (ventes annulées, modifications de prix) — un vrai bouton
+// visible (bordure, fond, ombre légère au survol), pas un simple lien
+// souligné qui passait presque inaperçu. Chevron qui pivote de 90° une
+// fois ouvert, même principe qu'un accordéon classique.
+.bouton-accordeon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid $couleur-bordure;
+  background: $couleur-carte;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $couleur-texte;
+  cursor: pointer;
+  margin-bottom: 1rem;
+
+  svg {
+    transition: transform 0.15s ease;
+  }
+
+  &:hover {
+    background: #eef2f6;
+  }
+
+  &.bouton-accordeon--ouvert svg {
+    transform: rotate(90deg);
+  }
+}
+
+// Contenu déplié par .bouton-accordeon ci-dessus. Pas de cadre/fond
+// (20/07/2026, corrigé le jour même à la demande de Nicolas) : un premier
+// essai encadrait ce bloc comme `.section-parametres`, mais sa largeur
+// restait celle de <main> (960px) alors que les tableaux à l'intérieur
+// s'étendent plus large (`.tableau-scroll--marge`) — le cadre blanc
+// n'enveloppait donc que le titre, pas le tableau, un résultat incohérent.
+// Juste des titres noirs simples, alignés à gauche de chaque tableau.
+.bloc-historique {
+  margin-bottom: 1.5rem;
+
+  h3 {
+    margin: 0 0 0.75rem;
+    // Aligné avec le texte de la 1ère colonne du tableau juste en dessous
+    // (20/07/2026, corrigé le jour même). Les deux tableaux de cette
+    // section utilisent `.tableau-scroll--marge`, qui sort de <main>
+    // (960px) pour s'élargir à 1250px — le titre doit sortir exactement
+    // de la même façon (même technique "left: 50% + translateX(-50%)"),
+    // sinon il reste calé sur la largeur de <main> comme les cartes de
+    // stats plus haut, plus étroite, et paraît décalé vers la droite par
+    // rapport au tableau. Padding-left = 1rem (padding de
+    // .tableau-scroll--marge) + 1.25rem (padding de la 1ère cellule).
+    width: 100vw;
+    max-width: 1250px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-left: 2.25rem;
+    font-size: 0.95rem;
+    color: $couleur-texte;
+    text-align: left;
+
+    &:not(:first-child) {
+      margin-top: 1.75rem;
+    }
+  }
+}
+
 // Variante dans un formulaire flex (13/07/2026, FormulaireInfosTma.jsx) :
 // passe sur sa propre ligne plutôt que de s'aligner avec les champs.
 .avertissement-pleine-largeur {
@@ -1259,6 +1372,21 @@ table.tableau-lots {
     font-size: 1.1rem;
   }
 
+  // Séparation avant le formulaire "Ajouter un lot" (20/07/2026, point
+  // 185, SectionLots.jsx) : sans elle, ce formulaire enchaînait
+  // directement sur la liste des lots existants (chacun avec les mêmes
+  // champs une fois déplié en modification), au point de les confondre.
+  .separateur-ajout {
+    border: none;
+    border-top: 1px solid $couleur-bordure;
+    margin: 1.5rem 0 1rem;
+  }
+
+  h3 {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+  }
+
   // En-tête de section avec une action secondaire juste à côté du titre
   // (13/07/2026, ex: "Voir le récapitulatif" collé à "Attestation MOE par
   // phase", pas renvoyée à l'autre bout du cadre) — le h2 imbriqué perd sa
@@ -1345,12 +1473,13 @@ table.tableau-lots {
       font-size: 0.95rem;
     }
 
-    // Case à cocher juste sous "Taux de marge TMA" (20/07/2026, point
-    // 173), pas étalée sur toute la largeur du groupe comme le fait
+    // Champ + case à cocher juste en dessous (20/07/2026, point 173,
+    // réutilisé au point 184 pour les frais d'ouverture de dossier), pas
+    // étalé sur toute la largeur du groupe comme le fait
     // .champ-case-a-cocher par défaut — un petit conteneur en colonne
     // les regroupe tous les deux, la case perd son flex-basis: 100%
     // puisqu'elle n'a plus besoin de forcer un retour à la ligne ici.
-    .champ-taux-marge-tma {
+    .champ-avec-case-en-dessous {
       display: flex;
       flex-direction: column;
       gap: 0.4rem;

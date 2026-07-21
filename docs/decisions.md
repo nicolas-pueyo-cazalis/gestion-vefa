@@ -165,3 +165,50 @@ signature, par exemple).
 sur la page Lots avec un motif obligatoire à chaque changement, et
 historisée (`HistoriqueModificationPrix`). Verrouillée dès que le lot
 est Acté (plus de négociation possible après signature).
+
+## Pas d'historique d'état à mémoriser pour "Terminé" (décision du 20/07/2026)
+
+En retirant le statut "Travaux" (inutile, aucun bouton n'y menait), le
+passage à "Terminé" est devenu une action manuelle depuis "Validé", avec
+un bouton pour revenir en arrière en cas d'erreur — même besoin que
+"Refuser"/"Annuler une TMA", qui eux mémorisent le statut quitté
+(`statutAvantRefus`/`statutAvantAnnulation`) pour y revenir exactement,
+car ces deux-là sont atteignables depuis plusieurs statuts différents.
+
+**Décision :** pas de `statutAvantTermine` équivalent — "Terminé" n'est
+atteignable que depuis "Validé" (une seule origine possible dans la
+machine à états), donc rien à mémoriser : annuler la fin des travaux
+repose simplement `statut = 'valide'`. Confirmé utile dès le premier
+test : une première version avec un champ mémorisé a buté sur les TMA
+déjà "Terminé" avant l'ajout de ce bouton (donc sans cette mémorisation),
+qui ne pouvaient plus être annulées.
+
+## Frais d'ouverture de dossier TMA appliqué systématiquement, avoir compris (décision du 20/07/2026)
+
+Nouveau réglage par programme (point 184) : un montant fixe ajouté au
+montant client de chaque TMA. Question posée à Nicolas : ce frais
+s'applique-t-il aussi sur un "avoir" (montant entreprise négatif,
+remboursement au client) ?
+
+**Décision :** oui, systématiquement dès que la case "À appliquer" est
+cochée — chaque TMA (avoir compris) a un dossier à ouvrir, donc le frais
+administratif s'applique sans exception. Implémenté dans
+`calculerMontantClient()` (server/models/Tma.js), ajouté après le calcul
+de marge/avoir plutôt qu'à part.
+
+## Barre de recherche : "tout ce qui s'affiche" doit être trouvable (décision du 20/07/2026)
+
+Premier essai (point 187) : recherche limitée à quelques champs
+"identifiants" par ligne (référence, nom du client, commentaire...).
+Nicolas a explicitement recadré : n'importe quelle valeur visible dans le
+tableau doit pouvoir être retrouvée par un mot-clé, y compris des valeurs
+calculées/formatées comme "Prix TTC/m² SHAB" ou une surface.
+
+**Décision :** le texte de recherche de chaque ligne est reconstruit à
+partir des **mêmes fonctions d'affichage** que le rendu du tableau
+(`formatMontant`, `formatDate`, `afficheSurface`...), pas des valeurs
+brutes — pour que "ce qui se cherche" corresponde exactement à "ce qui se
+lit à l'écran". Conséquence directe : la comparaison doit aussi neutraliser
+les différences purement typographiques entre "ce qu'on tape" et "ce qui
+s'affiche" (espace insécable des milliers, virgule décimale à la
+française vs point tapé au clavier) — voir `utils/recherche.js`.

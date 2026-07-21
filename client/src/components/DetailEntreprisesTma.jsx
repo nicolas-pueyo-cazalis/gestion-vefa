@@ -110,6 +110,9 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   return (
     <tr className="detail-entreprises">
       <td colSpan={colonnes}>
+        {/* Titre ajouté (20/07/2026, point 183), même raison que
+            FormulaireDatesTma.jsx. */}
+        <h3 className="titre-sous-partie-crayon">Entreprises concernées</h3>
         {chargement ? (
           <p>Chargement...</p>
         ) : (

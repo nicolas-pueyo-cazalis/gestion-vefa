@@ -17,6 +17,12 @@ function SectionDelaisEtTaux({ programme, onEnregistrer }) {
   // gestionnaire le saisit lui-même à chaque fois (voir
   // recalculerTma, server/routes/tmaEntreprises.js).
   const [montantClientSaisiManuellement, setMontantClientSaisiManuellement] = useState(p.montantClientSaisiManuellement)
+  // Nouveau (20/07/2026, point 184) : montant fixe ajouté au montant
+  // client de chaque TMA, en plus du coût des modifications elles-mêmes
+  // (voir calculerMontantClient, server/models/Tma.js) — sans effet tant
+  // que la case "À appliquer" n'est pas cochée.
+  const [fraisOuvertureDossierTma, setFraisOuvertureDossierTma] = useState(p.fraisOuvertureDossierTma)
+  const [appliquerFraisOuvertureDossierTma, setAppliquerFraisOuvertureDossierTma] = useState(p.appliquerFraisOuvertureDossierTma)
   const [tauxTva, setTauxTva] = useState(p.tauxTva)
   const [regleMontantNegatifTma, setRegleMontantNegatifTma] = useState(p.regleMontantNegatifTma)
 
@@ -31,6 +37,8 @@ function SectionDelaisEtTaux({ programme, onEnregistrer }) {
         delaiReponseFactureTmaJours: Number(delaiReponseFactureTmaJours),
         tauxMargeTma: Number(tauxMargeTma),
         montantClientSaisiManuellement,
+        fraisOuvertureDossierTma: Number(fraisOuvertureDossierTma),
+        appliquerFraisOuvertureDossierTma,
         tauxTva: Number(tauxTva),
         regleMontantNegatifTma,
       },
@@ -83,7 +91,7 @@ function SectionDelaisEtTaux({ programme, onEnregistrer }) {
             Délai réponse facture TMA (jours)
             <input type="number" value={delaiReponseFactureTmaJours} onChange={(e) => setDelaiReponseFactureTmaJours(e.target.value)} />
           </label>
-          <div className="champ-taux-marge-tma">
+          <div className="champ-avec-case-en-dessous">
             <label>
               Taux de marge TMA (ex: 1.3 = +30%)
               <input
@@ -101,6 +109,25 @@ function SectionDelaisEtTaux({ programme, onEnregistrer }) {
                 onChange={(e) => setMontantClientSaisiManuellement(e.target.checked)}
               />
               Montant devis client saisi manuellement
+            </label>
+          </div>
+          <div className="champ-avec-case-en-dessous">
+            <label>
+              Frais d'ouverture de dossier (€)
+              <input
+                type="number"
+                step="0.01"
+                value={fraisOuvertureDossierTma}
+                onChange={(e) => setFraisOuvertureDossierTma(e.target.value)}
+              />
+            </label>
+            <label className="champ-case-a-cocher">
+              <input
+                type="checkbox"
+                checked={appliquerFraisOuvertureDossierTma}
+                onChange={(e) => setAppliquerFraisOuvertureDossierTma(e.target.checked)}
+              />
+              À appliquer
             </label>
           </div>
           <label>

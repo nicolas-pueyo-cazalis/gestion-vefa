@@ -18,6 +18,9 @@ function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onE
   const [nombreEntreprisesConcernees, setNombreEntreprisesConcernees] = useState(
     tma.nombreEntreprisesConcernees ?? '',
   )
+  // Plus de négociation possible une fois validée (20/07/2026, point 182) :
+  // même principe que le prix d'un lot, figé une fois Acté.
+  const montantVerrouille = ['valide', 'termine'].includes(tma.statut)
 
   function soumettre(evenement) {
     evenement.preventDefault()
@@ -40,6 +43,7 @@ function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onE
   return (
     <tr className="formulaire-dates">
       <td colSpan={colonnes}>
+        <h3 className="titre-sous-partie-crayon">Description de la TMA</h3>
         <form onSubmit={soumettre}>
           <label>
             Localisation
@@ -60,6 +64,8 @@ function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onE
               step="0.01"
               value={montantClient}
               onChange={(e) => setMontantClient(e.target.value)}
+              disabled={montantVerrouille}
+              title={montantVerrouille ? 'TMA validée : le montant n\'est plus modifiable.' : ''}
             />
           </label>
           <label>
@@ -74,7 +80,7 @@ function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onE
           </label>
           <button type="submit">Enregistrer</button>
           <button type="button" onClick={onFermer}>Annuler</button>
-          {!montantClientSaisiManuellement && (
+          {!montantClientSaisiManuellement && !montantVerrouille && (
             <p className="avertissement-cellule avertissement-pleine-largeur">
               Modifier le montant client l'écrase définitivement : il ne sera plus recalculé
               automatiquement à partir des devis entreprises.

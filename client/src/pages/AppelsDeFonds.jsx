@@ -7,6 +7,8 @@ import { statutAppel, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
+import BarreRecherche from '../components/BarreRecherche.jsx'
+import { correspondRecherche } from '../utils/recherche.js'
 import FiltreMultiple from '../components/FiltreMultiple.jsx'
 import FormulaireAppelDeFonds from '../components/FormulaireAppelDeFonds.jsx'
 import FormulaireAttestationMasse from '../components/FormulaireAttestationMasse.jsx'
@@ -20,6 +22,23 @@ const LIBELLES_STATUT = {
   emis: 'Émis',
   retard: 'En retard',
   regle: 'Réglé',
+}
+
+// Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
+// la ligne, mêmes fonctions de formatage que le rendu du tableau.
+function texteRechercheAppel(appel) {
+  return [
+    appel.lot?.reference,
+    appel.phase.nom,
+    `${Math.round(appel.phase.pourcentage * 100)}%`,
+    formatMontant(appel.montant),
+    formatDate(appel.dateAttestationMOE),
+    formatDate(appel.dateEmission),
+    formatDate(appel.dateLimiteReglement),
+    formatDate(appel.dateReglement),
+    LIBELLES_STATUT[statutAppel(appel)],
+    appel.commentaire,
+  ].filter(Boolean).join(' ')
 }
 
 const STATUTS_FILTRE = [
@@ -37,6 +56,7 @@ function AppelsDeFonds() {
   const [lotsActifs, setLotsActifs] = useState([])
   const [idEnEdition, setIdEnEdition] = useState(null)
   const [idLotBaremeOuvert, setIdLotBaremeOuvert] = useState(null)
+  const [recherche, setRecherche] = useState('')
   const [recapOuvert, setRecapOuvert] = useState(false)
 
   async function chargerAppels() {
@@ -130,6 +150,7 @@ function AppelsDeFonds() {
     .filter((a) => statutActif === 'tous' || statutAppel(a) === statutActif)
     .filter((a) => phasesActives.length === 0 || phasesActives.includes(a.phase.nom))
     .filter((a) => lotsActifs.length === 0 || lotsActifs.includes(a.lot?.reference))
+    .filter((a) => correspondRecherche(texteRechercheAppel(a), recherche))
 
   const enAttente = appels.filter((a) => statutAppel(a) === 'attente').length
   const enRetard = appels.filter((a) => statutAppel(a) === 'retard').length
@@ -178,6 +199,9 @@ function AppelsDeFonds() {
       <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
       <FiltreMultiple titre="Phase :" options={nomsPhases} valeursActives={phasesActives} onChange={setPhasesActives} />
       <FiltreMultiple titre="Lot :" options={referencesLots} valeursActives={lotsActifs} onChange={setLotsActifs} />
+      <div className="barre-actions">
+        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un appel de fonds..." />
+      </div>
 
       <table>
         <thead>

@@ -111,6 +111,9 @@ sous-document embarqué (pas une collection séparée).
 | `delaiReglementAppelJours` | Number | **30** | Nouveau (n'existait pas dans Excel) — valeur retenue le 09/07/2026 |
 | `delaiRetourEntrepriseTmaJours` | Number | 15 | `TMA_Entreprises` (date envoi + 15j) |
 | `tauxMargeTma` | Number | 1.3 | `Suivi_TMA` (montant × 1.3) |
+| `montantClientSaisiManuellement` | Boolean | `false` | 20/07/2026, point 173 : si activé, `tauxMargeTma` n'est plus appliqué automatiquement — le montant client de chaque TMA se saisit à la main |
+| `fraisOuvertureDossierTma` | Number | `0` | 20/07/2026, point 184 : montant fixe ajouté au montant client de chaque TMA, en plus du coût des modifications |
+| `appliquerFraisOuvertureDossierTma` | Boolean | `false` | 20/07/2026, point 184 : sans cette case, `fraisOuvertureDossierTma` n'a aucun effet — voir `calculerMontantClient()` |
 | `tauxTva` | Number | **0.20** | Nouveau (10/07/2026) : sert à calculer le HT à la volée (`TTC / (1 + tauxTva)`), jamais stocké — voir "TTC / HT et TVA" plus haut |
 | `regleMontantNegatifTma` | enum `'montant_zero' \| 'avoir_sans_marge'` | `'montant_zero'` | Règle demandée le 09/07 (`montant_zero`) ; `avoir_sans_marge` correspond à l'ancien comportement Excel, gardé en option puisque vous avez dit que ça pouvait varier par client |
 | `listeEtages` | `[String]` | `['R-1','RDJ','RDC','R+1','R+2','R+3','R+4','R+5','R+6','R+7','R+8']` | Remarque du 09/07 : liste déroulante des étages, modifiable par programme (chaque bâtiment a un nombre d'étages différent) |
@@ -276,6 +279,7 @@ négociations réelles qui doivent pouvoir se justifier après coup.
 | `dateOffrePretRecue` | Date \| `null` | remplace l'ancien booléen `offrePretRecue` (13/07/2026) : une vraie date, **saisie manuelle** comme `TmaEntreprise.dateRetour` (personne ne peut deviner quand la banque a répondu), qui permet en plus de savoir si l'offre est arrivée avant ou après la date limite (page "Suivi de prêt") |
 | `notaire` | sous-document `Contact` | ajouté le 13/07/2026, page "Signature acte" — même sous-schéma que `banque`/`courtier` |
 | `sansPret` | Boolean | ajouté le 13/07/2026 : acquisition financée sur fonds personnels, sans prêt bancaire — **saisie manuelle** (bouton "Sans prêt", page "Suivi de prêt"), rien dans les dates ne permet de le déduire. Vide `banque`/`courtier`/`dateOffrePretRecue` au passage |
+| `commentaire` | String | ajouté le 20/07/2026, point 176, libre, optionnel — même principe que `Lot.commentaire`/`Tma.commentaire`, affiché sur la page Clients |
 
 > **Remarque du 09/07 — téléphone international :** un client peut avoir un
 > numéro étranger (belge, suisse, autre...), donc un simple regex "numéro
@@ -342,6 +346,7 @@ Un document par (lot × phase du barème).
 | `dateEmission` | Date | posée automatiquement dès que `dateAttestationMOE` passe de vide à renseignée — la 2ᵉ condition (lot Acté) est déjà acquise puisque la ligne n'existe que pour un lot Acté |
 | `dateLimiteReglement` | Date | calculée automatiquement en même temps que `dateEmission` = `dateEmission + programme.parametres.delaiReglementAppelJours` |
 | `dateReglement` | Date \| `null` | **saisie manuelle** en général, mais posée **automatiquement** dans deux cas précis où le règlement est factuellement acquis dès la génération (voir "Règlement automatique" ci-dessous) |
+| `commentaire` | String | ajouté le 20/07/2026, point 176, libre, optionnel — propre à CETTE échéance, pas au lot entier |
 
 ### Règlement automatique (13/07/2026)
 
@@ -514,7 +519,7 @@ Reprend le cycle réel observé dans Excel, complété par les étapes
 post-validation identifiées comme piste d'amélioration :
 
 ```
-demande → etude → chiffre → facture → valide → travaux → termine
+demande → etude → chiffre → facture → valide → termine
                      ↘          ↘
                       ────────→ refuse   (possible depuis demande, etude, chiffre ou facture)
 ```
@@ -524,9 +529,22 @@ demande → etude → chiffre → facture → valide → travaux → termine
 > devis/facture au client pour accord (`dateEnvoiFactureClient`), et `valide`
 > à son retour signé (`dateRetourClient`) — la facture est donc envoyée
 > **avant** que le client ne valide, pas après. D'où le nouvel ordre :
-> `chiffre → facture → valide → travaux`. Les cartes de statistiques du
+> `chiffre → facture → valide`. Les cartes de statistiques du
 > front (« En cours » / « Validées ») suivent ce nouvel ordre : `facture`
 > est compté dans « En cours », pas dans « Validées ».
+
+> **Statut "travaux" retiré (20/07/2026, point 172)** — prévu à l'origine
+> entre "Validé" et "Terminé", mais jamais réellement câblé côté
+> interface (aucun bouton n'y menait). "Terminé" est désormais une action
+> manuelle directement depuis "Validé" (`PATCH /api/tma/:id/statut`, le
+> client va constater sur chantier que les travaux ont bien été réalisés
+> par les entreprises), avec un moyen de revenir en arrière
+> (`PATCH /api/tma/:id/annuler-termine`, repose simplement `statut =
+> 'valide'` — pas de `statutAvantTermine` équivalent à
+> `statutAvantRefus`, puisque "termine" n'a qu'une seule origine possible
+> dans cette machine à états, rien à mémoriser). Une fois "Validé", le
+> montant TTC client devient également non modifiable (point 182) — la
+> négociation s'arrête là, comme pour le prix d'un lot une fois Acté.
 
 Règle explicite (déjà dans le cadrage initial, à coder en dur dans le
 back-end, pas seulement côté front) : **on ne peut pas passer à `valide` si
@@ -548,8 +566,8 @@ n'est possible qu'avant validation).
 > facture → valide` ne se clique pas à la main, ça se déduit des dates
 > saisies (`dateEnvoiEntreprises`, `montantEntreprises`, `dateEnvoiFactureClient`,
 > `dateRetourClient`) via `calculerStatutAutomatique()` (`server/models/Tma.js`),
-> appelée par `PATCH /api/tma/:id/dates`. Au-delà de `valide` (`travaux`,
-> `termine`) et pour `refuse`, il n'y a pas de date correspondante dans le
+> appelée par `PATCH /api/tma/:id/dates`. Au-delà de `valide` (`termine`)
+> et pour `refuse`, il n'y a pas de date correspondante dans le
 > modèle actuel — ça reste une action manuelle via `PATCH /api/tma/:id/statut`.
 
 > **Passage à "chiffre" conditionné à TOUTES les réponses entreprises

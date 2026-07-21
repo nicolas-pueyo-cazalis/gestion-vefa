@@ -23,6 +23,10 @@ function FormulaireDatesTma({ tma, colonnes, onEnregistrer, onFermer }) {
   return (
     <tr className="formulaire-dates">
       <td colSpan={colonnes}>
+        {/* Titre ajouté (20/07/2026, point 183) : le panneau du crayon
+            enchaîne plusieurs sous-parties (infos, dates, entreprises) sans
+            rien pour les distinguer visuellement les unes des autres. */}
+        <h3 className="titre-sous-partie-crayon">Modifier les dates</h3>
         <form onSubmit={soumettre}>
           <label>
             Date envoi entreprises

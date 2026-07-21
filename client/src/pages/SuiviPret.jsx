@@ -8,6 +8,8 @@ import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import FormulaireSuiviPret from '../components/FormulaireSuiviPret.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
+import BarreRecherche from '../components/BarreRecherche.jsx'
+import { correspondRecherche } from '../utils/recherche.js'
 
 const NB_COLONNES = 10
 // Nombre de colonnes fusionnées pour une acquisition "sans prêt" : Banque,
@@ -37,12 +39,34 @@ function nomComplet(acquereur) {
   return [acquereur?.civilite, acquereur?.prenom, acquereur?.nom].filter(Boolean).join(' ') || '—'
 }
 
+// Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
+// la ligne, mêmes fonctions de formatage que le rendu du tableau.
+function texteRechercheSuiviPret(lot, statut, delaiJours) {
+  const acquereur = lot.acquereur
+  if (statut === 'sans_pret') {
+    return [lot.reference, nomComplet(acquereur), formatDate(lot.dateReservation), 'Acquisition avec fonds personnels', lot.commentaire]
+      .filter(Boolean).join(' ')
+  }
+  return [
+    lot.reference,
+    nomComplet(acquereur),
+    formatDate(lot.dateReservation),
+    acquereur?.banque?.nom,
+    acquereur?.courtier?.nom,
+    formatDate(calculerDateLimiteJours(lot.dateReservation, delaiJours)),
+    formatDate(acquereur?.dateOffrePretRecue),
+    LIBELLES_STATUT[statut],
+    lot.commentaire,
+  ].filter(Boolean).join(' ')
+}
+
 function SuiviPret() {
   const { programmeActif: programme } = useProgramme()
   const [lots, setLots] = useState([])
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
+  const [recherche, setRecherche] = useState('')
   const [idEnEdition, setIdEnEdition] = useState(null)
 
   async function chargerLots() {
@@ -116,6 +140,7 @@ function SuiviPret() {
 
   const lotsFiltres = lotsConcernes
     .filter((lot) => statutActif === 'tous' || statutPret(lot, delaiJours) === statutActif)
+    .filter((lot) => correspondRecherche(texteRechercheSuiviPret(lot, statutPret(lot, delaiJours), delaiJours), recherche))
 
   const enAttente = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'attente').length
   const enRetard = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'retard').length
@@ -134,7 +159,10 @@ function SuiviPret() {
         <StatCard valeur={sansPretNombre} libelle="Sans prêt" />
       </section>
 
-      <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+      <div className="barre-actions">
+        <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un dossier..." />
+      </div>
 
       <div className="tableau-scroll tableau-scroll--marge">
         <table className="tableau-lots">

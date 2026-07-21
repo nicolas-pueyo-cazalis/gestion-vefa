@@ -380,3 +380,29 @@ ici c'est uniquement du vocabulaire **technique**.
   mais toujours prévoir le cas "aucun résultat" / "plusieurs résultats
   possibles" (une commune peut avoir plusieurs codes postaux) plutôt que
   de supposer une réponse unique.
+
+## Recherche texte et normalisation (étape 4, point 187)
+
+- **`String.normalize('NFD')` + `\p{Diacritic}`** : une lettre accentuée
+  comme "é" peut s'écrire par un seul caractère Unicode, ou par deux
+  (lettre "e" + accent combiné). `normalize('NFD')` force la seconde
+  forme (décomposée), ce qui permet ensuite de retirer facilement les
+  accents avec une regex `\p{Diacritic}` (propriété Unicode "signe
+  diacritique", nécessite le flag `u`) — plus fiable qu'une liste de
+  remplacements "é→e, è→e, ê→e..." écrite à la main.
+- **Machine à états : ne mémoriser un état précédent que s'il y a
+  plusieurs origines possibles** : `statutAvantRefus`/
+  `statutAvantAnnulation` existent car "Refusé"/"Annulé" sont
+  atteignables depuis 4 statuts différents — il faut savoir lequel pour y
+  revenir. "Terminé" n'est lui atteignable que depuis "Validé" (une seule
+  transition prévue) : pas besoin de champ dédié, revenir en arrière
+  consiste juste à reposer ce statut fixe. Un bon réflexe avant d'ajouter
+  un champ de mémorisation : vérifier combien d'origines existent
+  réellement dans la machine à états.
+- **Construire le texte "cherchable" avec les mêmes fonctions que
+  l'affichage** : plutôt que de chercher sur les valeurs brutes stockées
+  en base (ex: `lot.prixTTC` = `182000`), le texte de recherche de chaque
+  ligne réutilise les fonctions qui formatent déjà l'affichage
+  (`formatMontant`, `formatDate`...) — pour que "ce qu'on tape" corresponde
+  à "ce qu'on lit à l'écran", pas à une représentation interne invisible
+  pour l'utilisateur.

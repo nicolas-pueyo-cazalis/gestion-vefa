@@ -1999,3 +1999,113 @@ foulée)** :
   revend via "Vendre une annexe", qui crée un nouveau lot).
 - Un lot test créé avant ce correctif est resté orphelin (nettoyé par
   script ponctuel).
+
+---
+
+## 2026-07-20 — Statut Terminé, paramètres regroupés, frais de dossier, barre de recherche
+
+Nouveau lot de remarques transmis par PDF (points 172 à 188 de
+`docs/demandes.md`), traité point par point avec validation explicite à
+chaque étape, comme d'habitude. Avant de commencer, rattrapage rétroactif
+complet de `docs/demandes.md` : tous les points 1 à 179 relus et cochés
+(✅ fait / ⏳ reporté / ❓ question) — jusque-là seuls les tout derniers
+points l'étaient.
+
+**TMA**
+
+- **Point 172 — statut "Travaux" retiré** : ne servait à rien (aucun
+  bouton n'y menait jamais). `valide` mène désormais directement à
+  `termine`, via un bouton manuel "Marquer les travaux comme terminés"
+  (le client va constater sur chantier que les travaux ont bien été
+  réalisés). Nicolas a aussitôt demandé un moyen de revenir en arrière en
+  cas de clic par erreur — ajout d'un bouton "Annuler la fin des
+  travaux". Comme `termine` n'est atteignable que depuis `valide` (une
+  seule origine possible), pas besoin de mémoriser l'état précédent
+  (contrairement à `statutAvantRefus`/`statutAvantAnnulation`) : le
+  bouton repose juste `statut = 'valide'`.
+- **Bug découvert au premier test** : une TMA déjà au statut "Terminé"
+  *avant* l'ajout de ce bouton (donc jamais passée par la nouvelle route)
+  refusait l'annulation. Confirme que l'approche "pas d'état à
+  mémoriser" était la bonne — un `statutAvantTermine` aurait eu le même
+  problème pour tout ce qui existait déjà en base.
+- **Point 182 — montant TTC client verrouillé une fois validée** : même
+  principe que le prix d'un lot une fois Acté (champ grisé, garde
+  serveur). En creusant, un second point d'entrée oublié : le recalcul
+  automatique du montant client (déclenché à chaque ligne entreprise
+  ajoutée/modifiée) ignorait complètement le statut de la TMA — corriger
+  un devis après validation pouvait donc encore écraser silencieusement
+  le montant déjà acquis. Corrigé au passage.
+- **Point 183 — titres dans le panneau du crayon** : "Description de la
+  TMA", "Modifier les dates", "Entreprises concernées" — le panneau
+  enchaînait ses trois sous-parties sans rien pour les distinguer.
+- **Point 184 — frais d'ouverture de dossier** : nouveau réglage par
+  programme (montant fixe + case "À appliquer"), ajouté au montant
+  client de chaque TMA en plus du coût des modifications elles-mêmes.
+  Application systématique, avoir compris (décision explicite de
+  Nicolas — un avoir reste un dossier à traiter). **Bug signalé au
+  premier test** : le montant restait à 0 tant qu'aucune entreprise
+  n'avait répondu, car `calculerMontantClient()` renvoyait `null` dès que
+  `montantEntreprises` était inconnu, et la route de création de TMA ne
+  l'appelait même pas. Corrigé : le frais est dû dès la création du
+  dossier, pas seulement une fois les devis connus ; les TMA créées
+  avant ce correctif ne sont pas rattrapées rétroactivement (décision de
+  Nicolas).
+
+**Paramètres**
+
+- **Point 173** (déjà en cours de traitement au moment du dernier
+  rattrapage doc) : regroupement de "Délais et taux" par page plutôt
+  qu'en liste plate, nouvelle case "Montant devis client saisi
+  manuellement" (désactive le pré-remplissage automatique par le taux de
+  marge pour tout le programme).
+- **Point 185 — séparation "Ajouter un lot"** : un trait + titre
+  distinguent maintenant le formulaire d'ajout de la liste des lots
+  existants au-dessus (chacun affichant les mêmes champs une fois
+  déplié en modification, au point de confondre les deux).
+
+**Lots**
+
+- **Point 180** : les pourcentages sous les cartes de stats précisent
+  désormais "du programme" (rangée Commercialisation) ou "du CA total"
+  (rangée Chiffre d'affaires).
+- **Point 181 — refonte du bouton "Voir l'historique"** : passé d'un
+  simple lien texte souligné à un vrai bouton en accordéon (chevron qui
+  pivote), aligné sur le bord gauche de l'écran (même technique de
+  sortie de `<main>` que le tableau juste au-dessus, pour partir du même
+  bord). Plusieurs allers-retours sur l'alignement des titres internes
+  ("Ventes annulées"/"Modifications de prix") : d'abord encadrés comme
+  `.section-parametres` (rejeté, le cadre n'enveloppait que le titre, pas
+  le tableau plus large en dessous), puis simplement calés à gauche du
+  tableau — ce qui a révélé que ces deux tableaux utilisent
+  `.tableau-scroll--marge` (sortie de `<main>` à 1250px) : les titres
+  devaient sortir exactement de la même façon pour tomber à la bonne
+  verticale, sinon ils restaient calés sur la largeur de `<main>` comme
+  les cartes de stats.
+
+**Généralité**
+
+- **Point 187 — barre de recherche sur chaque page** (Lots, Clients,
+  TMA, Appels de fonds, Suivi de prêt, Signature acte) : composant
+  réutilisable `BarreRecherche.jsx` + utilitaire `utils/recherche.js`
+  (`correspondRecherche`), combinée aux filtres de statut déjà en place.
+  Nicolas a précisé "un ou DES mots-clés" (pas juste un ou deux) : chaque
+  mot tapé doit se retrouver quelque part dans la ligne, dans n'importe
+  quel ordre. Trois corrections après les premiers tests :
+  1. La recherche ne portait que sur quelques champs "identifiants"
+     (référence, nom, commentaire...) — Nicolas a insisté : **tout** ce
+     qui s'affiche dans le tableau doit être trouvable (ex: le "Prix
+     TTC/m² SHAB"). Chaque page construit maintenant un texte de
+     recherche à partir des mêmes fonctions de formatage que le rendu du
+     tableau (`formatMontant`, `formatDate`, `afficheSurface`...).
+  2. Chercher "5444" ne retrouvait pas "5 444,00 €" : un montant formaté
+     contient un espace insécable (séparateur de milliers) qu'un clavier
+     ne tape jamais. La comparaison retire désormais tous les espaces,
+     des deux côtés.
+  3. Chercher "5.00m²" ne retrouvait pas "5,00 m²" (une surface) : les
+     nombres s'affichent à la française (virgule), un clavier tape plus
+     naturellement un point. La comparaison remplace aussi les points
+     par des virgules, des deux côtés.
+  4. Bug d'étourderie : le composant avait été importé et branché dans
+     le filtre de la page Appels de fonds, mais jamais réellement affiché
+     dans le JSX — repéré par Nicolas ("je ne vois pas la barre de
+     recherche"), une ligne oubliée.

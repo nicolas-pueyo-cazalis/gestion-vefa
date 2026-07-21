@@ -9,6 +9,8 @@ import { formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
+import BarreRecherche from '../components/BarreRecherche.jsx'
+import { correspondRecherche } from '../utils/recherche.js'
 import FormulaireEditionLot from '../components/FormulaireEditionLot.jsx'
 import FormulaireVenteAnnexe from '../components/FormulaireVenteAnnexe.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
@@ -28,6 +30,31 @@ const STATUTS_FILTRE = [
 function nomAcquereur(acquereur) {
   if (!acquereur) return '—'
   return [acquereur.civilite, acquereur.prenom, acquereur.nom].filter(Boolean).join(' ')
+}
+
+// Texte de recherche d'un lot (20/07/2026, point 187) : TOUT ce qui
+// s'affiche dans la ligne du tableau doit pouvoir être retrouvé (demande
+// explicite de Nicolas, ex: chercher "5444" doit retrouver un lot dont le
+// "Prix TTC/m² SHAB" affiche "5 444 €") — mêmes fonctions d'affichage que
+// le rendu du tableau (afficheSurface, formatMontant...), pas les valeurs
+// brutes, pour que la recherche corresponde exactement à ce qui est lu à
+// l'écran.
+function texteRechercheLot(lot) {
+  return [
+    lot.reference,
+    lot.etage,
+    lot.type,
+    lot.orientation,
+    afficheSurface(lot.surfaceHabitable),
+    afficheSurface(lot.surfaceSousPlafondBas),
+    ...afficheAnnexes(lot),
+    formatMontant(lot.prixTTC, 0),
+    prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : null,
+    STATUTS_LOT[lot.statut],
+    dateActuelle(lot),
+    nomAcquereur(lot.acquereur),
+    lot.commentaire,
+  ].filter(Boolean).join(' ')
 }
 
 function prixParM2(lot) {
@@ -117,6 +144,7 @@ function Lots() {
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState(null)
   const [statutActif, setStatutActif] = useState('tous')
+  const [recherche, setRecherche] = useState('')
   const [idEnEdition, setIdEnEdition] = useState(null)
   const [venteAnnexeOuverte, setVenteAnnexeOuverte] = useState(false)
   const [historiqueOuvert, setHistoriqueOuvert] = useState(false)
@@ -298,8 +326,9 @@ function Lots() {
   if (chargement) return <p>Chargement des lots...</p>
   if (erreur) return <p>Erreur : {erreur}</p>
 
-  const lotsFiltres =
-    statutActif === 'tous' ? lots : lots.filter((lot) => lot.statut === statutActif)
+  const lotsFiltres = lots
+    .filter((lot) => statutActif === 'tous' || lot.statut === statutActif)
+    .filter((lot) => correspondRecherche(texteRechercheLot(lot), recherche))
 
   // Colonne conditionnelle (17/07/2026, point 164) : n'existe que si au
   // moins un lot du programme a une surface sous plafond bas renseignée —
@@ -361,24 +390,28 @@ function Lots() {
           libelle="Actés"
           statut="acte"
           pourcentage={pourcentage(parStatut.acte, lots.length)}
+          libellePourcentage="du programme"
         />
         <StatCard
           valeur={parStatut.reserve}
           libelle="Réservés"
           statut="reserve"
           pourcentage={pourcentage(parStatut.reserve, lots.length)}
+          libellePourcentage="du programme"
         />
         <StatCard
           valeur={parStatut.option}
           libelle="Options"
           statut="option"
           pourcentage={pourcentage(parStatut.option, lots.length)}
+          libellePourcentage="du programme"
         />
         <StatCard
           valeur={parStatut.libre}
           libelle="Libres"
           statut="libre"
           pourcentage={pourcentage(parStatut.libre, lots.length)}
+          libellePourcentage="du programme"
         />
       </section>
 
@@ -389,29 +422,34 @@ function Lots() {
           libelle="CA acté"
           statut="acte"
           pourcentage={pourcentage(caParStatut.acte, totalCA)}
+          libellePourcentage="du CA total"
         />
         <StatCard
           valeur={formatMontant(caParStatut.reserve, 0)}
           libelle="CA réservé"
           statut="reserve"
           pourcentage={pourcentage(caParStatut.reserve, totalCA)}
+          libellePourcentage="du CA total"
         />
         <StatCard
           valeur={formatMontant(caParStatut.option, 0)}
           libelle="CA options"
           statut="option"
           pourcentage={pourcentage(caParStatut.option, totalCA)}
+          libellePourcentage="du CA total"
         />
         <StatCard
           valeur={formatMontant(caParStatut.libre, 0)}
           libelle="CA libre"
           statut="libre"
           pourcentage={pourcentage(caParStatut.libre, totalCA)}
+          libellePourcentage="du CA total"
         />
       </section>
 
       <div className="barre-actions">
         <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
+        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un lot..." />
         {!venteAnnexeOuverte && (
           <button type="button" onClick={() => setVenteAnnexeOuverte(true)}>Vendre une annexe</button>
         )}
@@ -547,14 +585,28 @@ function Lots() {
 
       {/* Historique fusionné dans la page Lots (17/07/2026, remarque de
           Nicolas) : plus de page "Annulés" séparée — ventes annulées et
-          modifications de prix se consultent ici, repliées par défaut. */}
-      <button type="button" className="lien-discret" onClick={() => setHistoriqueOuvert((v) => !v)}>
-        {historiqueOuvert ? 'Masquer' : 'Voir'} l'historique (annulations, modifications de prix)
-      </button>
+          modifications de prix se consultent ici, repliées par défaut.
+          Bouton en accordéon + bloc encadré (20/07/2026, point 181) : un
+          simple lien texte souligné se voyait à peine comme un vrai
+          bouton, et les titres internes réutilisaient le même style que
+          "Commercialisation"/"Chiffre d'affaires" plus haut, sans rien
+          qui les distingue visuellement d'une section principale de page. */}
+      <div className="conteneur-bouton-accordeon">
+        <button
+          type="button"
+          className={`bouton-accordeon${historiqueOuvert ? ' bouton-accordeon--ouvert' : ''}`}
+          onClick={() => setHistoriqueOuvert((v) => !v)}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+          Historique (ventes annulées, modifications de prix)
+        </button>
+      </div>
 
       {historiqueOuvert && (
-        <>
-          <h2 className="titre-section-stats">Ventes annulées</h2>
+        <div className="bloc-historique">
+          <h3>Ventes annulées</h3>
           <div className="tableau-scroll tableau-scroll--marge">
             <table className="tableau-lots">
               <thead>
@@ -657,7 +709,7 @@ function Lots() {
             </table>
           </div>
 
-          <h2 className="titre-section-stats">Modifications de prix</h2>
+          <h3>Modifications de prix</h3>
           <div className="tableau-scroll tableau-scroll--marge">
             <table className="tableau-lots">
               <thead>
@@ -687,7 +739,7 @@ function Lots() {
               </tbody>
             </table>
           </div>
-        </>
+        </div>
       )}
     </>
   )

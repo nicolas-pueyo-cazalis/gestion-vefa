@@ -10,6 +10,7 @@ import FormulaireSignatureActe from '../components/FormulaireSignatureActe.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
 import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
+import FenetreExport from '../components/FenetreExport.jsx'
 
 const NB_COLONNES = 9
 
@@ -59,6 +60,7 @@ function SignatureActe() {
   const [statutActif, setStatutActif] = useState('tous')
   const [recherche, setRecherche] = useState('')
   const [idEnEdition, setIdEnEdition] = useState(null)
+  const [exportOuvert, setExportOuvert] = useState(false)
 
   async function chargerLots() {
     const reponse = await apiFetch(`${API_URL}/api/lots?programme=${programme._id}`)
@@ -134,6 +136,42 @@ function SignatureActe() {
   const enRetard = lotsConcernes.filter((l) => statutSignature(l, delaiMois) === 'retard').length
   const signes = lotsConcernes.filter((l) => statutSignature(l, delaiMois) === 'signe').length
 
+  // Export #1 (20/07/2026, chantier des exports) : tableau de la
+  // signature d'acte, respecte le statut + la recherche actifs, sans la
+  // colonne Action.
+  function donneesExportTableau() {
+    return {
+      nomFichier: `signature-acte-${programme.nom}`,
+      titre: `Signature acte — ${programme.nom}`,
+      entetes: ['Lot', 'Client', 'Réservation', 'Notaire', 'Limite signature', "Date de l'acte", 'Statut', 'Commentaire'],
+      lignes: lotsFiltres.map((lot) => [
+        lot.reference,
+        nomComplet(lot.acquereur),
+        formatDate(lot.dateReservation),
+        lot.acquereur?.notaire?.nom || '—',
+        formatDate(calculerDateLimiteMois(lot.dateReservation, delaiMois)),
+        formatDate(lot.dateActe),
+        LIBELLES_STATUT[statutSignature(lot, delaiMois)],
+        lot.commentaire || '—',
+      ]),
+    }
+  }
+
+  // Export #2 : cartes de statistiques.
+  function donneesExportCartes() {
+    return {
+      nomFichier: `signature-acte-statistiques-${programme.nom}`,
+      titre: `Signature acte — Statistiques — ${programme.nom}`,
+      entetes: ['Indicateur', 'Valeur'],
+      lignes: [
+        ['Dossiers concernés', String(lotsConcernes.length)],
+        ['En attente', String(enAttente)],
+        ['En retard', String(enRetard)],
+        ['Signés', String(signes)],
+      ],
+    }
+  }
+
   return (
     <>
       <h1 className="titre-page">Signature acte</h1>
@@ -145,10 +183,23 @@ function SignatureActe() {
         <StatCard valeur={signes} libelle="Signés" />
       </section>
 
-      <div className="barre-actions">
+      <div className="barre-actions barre-actions--marge">
         <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
         <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un dossier..." />
+        <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
+          Exporter
+        </button>
       </div>
+
+      {exportOuvert && (
+        <FenetreExport
+          options={[
+            { valeur: 'tableau', libelle: 'Tableau de la signature acte', donnees: donneesExportTableau },
+            { valeur: 'cartes', libelle: 'Statistiques (cartes)', donnees: donneesExportCartes },
+          ]}
+          onFermer={() => setExportOuvert(false)}
+        />
+      )}
 
       <div className="tableau-scroll tableau-scroll--marge">
         <table className="tableau-lots">

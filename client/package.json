@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "libphonenumber-js": "^1.13.8",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

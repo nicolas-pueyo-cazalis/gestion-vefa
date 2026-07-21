@@ -11,6 +11,7 @@ import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
+import FenetreExport from '../components/FenetreExport.jsx'
 import FormulaireEditionLot from '../components/FormulaireEditionLot.jsx'
 import FormulaireVenteAnnexe from '../components/FormulaireVenteAnnexe.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
@@ -148,6 +149,7 @@ function Lots() {
   const [idEnEdition, setIdEnEdition] = useState(null)
   const [venteAnnexeOuverte, setVenteAnnexeOuverte] = useState(false)
   const [historiqueOuvert, setHistoriqueOuvert] = useState(false)
+  const [exportOuvert, setExportOuvert] = useState(false)
   const [historiqueAnnulations, setHistoriqueAnnulations] = useState([])
   const [historiqueModificationsPrix, setHistoriqueModificationsPrix] = useState([])
   const [tmaList, setTmaList] = useState([])
@@ -368,6 +370,132 @@ function Lots() {
   // de chaque lot, comme calculé jusqu'ici).
   const totalSurface = lotsFiltres.reduce((somme, lot) => somme + (lot.surfaceHabitable ?? 0), 0)
   const moyennePrixM2 = totalSurface > 0 ? totalTTC / totalSurface : null
+
+  // Export #1 (20/07/2026, point 192) : tableau récapitulatif des lots,
+  // respecte les filtres actifs (statut + recherche, déjà appliqués à
+  // `lotsFiltres`), sans la colonne Action, avec les mêmes totaux qu'à
+  // l'écran. Mêmes fonctions d'affichage que le rendu du tableau, pour
+  // que l'export corresponde exactement à ce qui est lu à l'écran.
+  function donneesExportTableau() {
+    const entetes = [
+      'Lot', 'Étage', 'Type', 'Orientation', 'Surface SHAB',
+      ...(afficherColonneSousPlafondBas ? ['Surface < 1,80m'] : []),
+      'Annexes', 'Prix TTC', 'Prix TTC/m² SHAB', 'Statut', 'Date', 'Client', 'Commentaire',
+    ]
+    const lignes = lotsFiltres.map((lot) => [
+      lot.estAnnexeSeule ? '—' : lot.reference,
+      lot.etage ?? '',
+      lot.type ?? '',
+      lot.orientation ?? '',
+      afficheSurface(lot.surfaceHabitable),
+      ...(afficherColonneSousPlafondBas ? [afficheSurface(lot.surfaceSousPlafondBas)] : []),
+      afficheAnnexes(lot).join('\n') || '—',
+      formatMontant(lot.prixTTC, 0),
+      prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—',
+      STATUTS_LOT[lot.statut],
+      dateActuelle(lot),
+      nomAcquereur(lot.acquereur),
+      lot.commentaire || '—',
+    ])
+    const totaux = [
+      ['SHAB totale', afficheSurface(totalSurface)],
+      ['Total TTC', formatMontant(totalTTC)],
+      [`TVA (${Math.round(tauxTva * 100)}%)`, formatMontant(totalTVA)],
+      ['Total HT', formatMontant(totalHT)],
+      ['Prix moyen TTC/m²', moyennePrixM2 !== null ? formatMontant(moyennePrixM2, 0) : '—'],
+    ]
+    return {
+      nomFichier: `lots-${programme.nom}`,
+      titre: `Lots — ${programme.nom}`,
+      entetes,
+      lignes,
+      totaux,
+    }
+  }
+
+  // Export #2 (20/07/2026, point 193) : les cartes de statistiques
+  // (Commercialisation, Chiffre d'affaires, Prix moyen TTC/m²) — mêmes
+  // valeurs et pourcentages qu'à l'écran, réunies dans un tableau à deux
+  // colonnes plutôt que sous forme de cartes (peu adapté à Excel/PDF).
+  function donneesExportCartes() {
+    const entetes = ['Indicateur', 'Valeur']
+    const lignes = [
+      ['Prix moyen TTC/m²', moyennePrixM2 !== null ? formatMontant(moyennePrixM2, 0) : '—'],
+      ['Commercialisation — Lots au total', String(lots.length)],
+      ['Commercialisation — Actés', `${parStatut.acte} (${pourcentage(parStatut.acte, lots.length)}% du programme)`],
+      ['Commercialisation — Réservés', `${parStatut.reserve} (${pourcentage(parStatut.reserve, lots.length)}% du programme)`],
+      ['Commercialisation — Options', `${parStatut.option} (${pourcentage(parStatut.option, lots.length)}% du programme)`],
+      ['Commercialisation — Libres', `${parStatut.libre} (${pourcentage(parStatut.libre, lots.length)}% du programme)`],
+      ["Chiffre d'affaires — CA acté", `${formatMontant(caParStatut.acte, 0)} (${pourcentage(caParStatut.acte, totalCA)}% du CA total)`],
+      ["Chiffre d'affaires — CA réservé", `${formatMontant(caParStatut.reserve, 0)} (${pourcentage(caParStatut.reserve, totalCA)}% du CA total)`],
+      ["Chiffre d'affaires — CA options", `${formatMontant(caParStatut.option, 0)} (${pourcentage(caParStatut.option, totalCA)}% du CA total)`],
+      ["Chiffre d'affaires — CA libre", `${formatMontant(caParStatut.libre, 0)} (${pourcentage(caParStatut.libre, totalCA)}% du CA total)`],
+    ]
+    return {
+      nomFichier: `lots-statistiques-${programme.nom}`,
+      titre: `Statistiques — ${programme.nom}`,
+      entetes,
+      lignes,
+    }
+  }
+
+  // Export #3 (20/07/2026, point 194) : l'historique — deux tableaux
+  // (ventes annulées, modifications de prix) dans un même fichier, sans
+  // la colonne "Détail" (équivalent d'une colonne Action ici, point 190).
+  function donneesExportHistorique() {
+    return {
+      nomFichier: `lots-historique-${programme.nom}`,
+      titre: `Historique — ${programme.nom}`,
+      sections: [
+        {
+          sousTitre: 'Ventes annulées',
+          entetes: ['Logement', 'Statut avant annulation', 'Date', 'Client', 'Commentaire', 'Annulé le'],
+          lignes: historiqueAnnulations.map((entree) => [
+            entree.referenceLot,
+            STATUTS_LOT[entree.statutAvantAnnulation],
+            derniereDateAnnulation(entree),
+            nomClient(entree),
+            entree.commentaire || '—',
+            formatDate(entree.dateAnnulation),
+          ]),
+        },
+        {
+          sousTitre: 'Modifications de prix',
+          entetes: ['Logement', 'Ancien prix', 'Nouveau prix', 'Motif', 'Date'],
+          lignes: historiqueModificationsPrix.map((entree) => [
+            entree.referenceLot,
+            formatMontant(entree.ancienPrix),
+            formatMontant(entree.nouveauPrix),
+            entree.motif,
+            formatDate(entree.createdAt),
+          ]),
+        },
+      ],
+    }
+  }
+
+  // Export #4 (20/07/2026, point 195) : les annexes encore disponibles à
+  // la vente (pas encore attribuées à un lot) — même liste que celle
+  // proposée dans le panneau "Vendre une annexe".
+  function donneesExportAnnexesALaVente() {
+    const libellesType = {
+      parking_ext: 'Parking extérieur',
+      parking_int: 'Parking intérieur',
+      cave: 'Cave',
+      cellier: 'Cellier',
+    }
+    const disponibles = annexes.filter((a) => !a.lot)
+    const entetes = ['Type', 'N°', 'Prix']
+    const lignes = disponibles.map((a) => [libellesType[a.type] ?? a.type, String(a.numero), formatMontant(a.prix)])
+    const totaux = [['Total', formatMontant(disponibles.reduce((somme, a) => somme + a.prix, 0))]]
+    return {
+      nomFichier: `lots-annexes-a-la-vente-${programme.nom}`,
+      titre: `Annexes à la vente — ${programme.nom}`,
+      entetes,
+      lignes,
+      totaux,
+    }
+  }
 
   return (
     <>
@@ -591,7 +719,11 @@ function Lots() {
           bouton, et les titres internes réutilisaient le même style que
           "Commercialisation"/"Chiffre d'affaires" plus haut, sans rien
           qui les distingue visuellement d'une section principale de page. */}
-      <div className="conteneur-bouton-accordeon">
+      {/* Bouton "Exporter" sur la même ligne que "Historique" (20/07/2026,
+          chantier des exports, à la demande de Nicolas) — emplacement
+          provisoire, l'ergonomie de la page sera revue à la fin du
+          chantier. */}
+      <div className="conteneur-bouton-accordeon conteneur-bouton-accordeon--espace">
         <button
           type="button"
           className={`bouton-accordeon${historiqueOuvert ? ' bouton-accordeon--ouvert' : ''}`}
@@ -601,6 +733,9 @@ function Lots() {
             <path d="M9 6l6 6-6 6" />
           </svg>
           Historique (ventes annulées, modifications de prix)
+        </button>
+        <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
+          Exporter
         </button>
       </div>
 
@@ -740,6 +875,18 @@ function Lots() {
             </table>
           </div>
         </div>
+      )}
+
+      {exportOuvert && (
+        <FenetreExport
+          options={[
+            { valeur: 'tableau', libelle: 'Tableau récapitulatif des lots', donnees: donneesExportTableau },
+            { valeur: 'cartes', libelle: 'Statistiques (cartes)', donnees: donneesExportCartes },
+            { valeur: 'historique', libelle: 'Historique (annulations, modifications de prix)', donnees: donneesExportHistorique },
+            { valeur: 'annexes', libelle: 'Annexes à la vente', donnees: donneesExportAnnexesALaVente },
+          ]}
+          onFermer={() => setExportOuvert(false)}
+        />
       )}
     </>
   )

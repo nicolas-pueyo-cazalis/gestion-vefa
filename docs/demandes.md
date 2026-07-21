@@ -814,6 +814,71 @@ totaux (point 115) — traitées une par une comme le reste.
      exemple 172, 173… ✅ fait le 20/07/2026 (rattrapage rétroactif sur
      l'ensemble des points 1 à 179, tenu à jour au fil de l'eau ensuite).
 
+## Chantier des exports (démarré le 20/07/2026)
+
+Gros chantier, traité page par page en commençant par Lots. Récapitulatif
+des remarques déjà faites sur les exports avant ce chantier : voir #18,
+#30, #90, #100, #102, #122, #131, #132, #141.
+
+189. ✅ Chaque export mis en place doit pouvoir être réalisé aussi bien en
+     Excel qu'en PDF.
+190. ✅ La colonne "Action" (boutons/crayon de modification) ne doit
+     jamais apparaître dans un export, quel que soit le format.
+191. ✅ On commence par la page Lots. Génération choisie : côté navigateur
+     (pas côté serveur — réutilise directement les données déjà filtrées
+     à l'écran, sans dépendance lourde à installer sur le serveur, voir
+     `docs/decisions.md`). Librairie Excel `xlsx` remplacée par
+     `exceljs` le jour même (mise en forme réellement écrite : gras,
+     couleurs, largeurs de colonnes, lignes figées — `xlsx` en version
+     gratuite ne sait quasiment pas écrire de style). PDF via `jspdf` +
+     `jspdf-autotable`. Ergonomie revue en cours de route : un seul
+     bouton "Exporter" par page (pas un bouton par format à chaque
+     section) ouvre une fenêtre listant les exports possibles, puis le
+     format (Excel/PDF) — voir `FenetreExport.jsx`.
+
+**Lots — 4 exports distincts prévus**
+192. ✅ Le tableau récapitulatif des lots, avec l'ensemble des
+     informations qui y sont inscrites (respecte les filtres actifs à
+     l'écran — statut, recherche —, totaux TTC/TVA/HT + prix moyen au m²
+     en bas, sans la colonne Action). Remarques de Nicolas à venir,
+     donnera son retour groupé à la fin du chantier des exports.
+193. ✅ Les cartes de statistiques (Commercialisation, Chiffre
+     d'affaires), réunies en tableau à deux colonnes (indicateur/valeur).
+194. ✅ L'historique (ventes annulées + modifications de prix), réunis
+     dans un même fichier à deux sections.
+195. ✅ Le récapitulatif des annexes à la vente (parkings/caves/celliers
+     pas encore attribués à un lot), avec total.
+
+**Appels de fonds**
+196. ✅ À retravailler quand on abordera les exports de cette page : on ne
+     voit à aucun moment le reste à payer par logement, ni le total de
+     ce qui a déjà été réglé. Nouveau tableau "Récapitulatif par lot"
+     (Lot / Prix TTC / Total émis / Total payé / Reste à payer),
+     indépendant des filtres du tableau détaillé (comme les cartes de
+     stats existantes), ajouté au-dessus du tableau détaillé par phase.
+
+**Clients**
+197. ✅ Un seul export : le tableau des clients (respecte la recherche
+     active). Un export "Statistiques (cartes)" avait été ajouté par
+     défaut (même principe que Lots) mais retiré aussitôt : pas de raison
+     d'être sur cette page.
+
+**Suivi de prêt**
+198. ✅ Deux exports, statistiques comprises cette fois (contrairement à
+     Clients) : tableau du suivi de prêt (respecte statut + recherche,
+     ligne "sans prêt" reproduite comme à l'écran) et cartes de
+     statistiques (Dossiers concernés, En attente, En retard, Offres
+     reçues, Sans prêt). Corrigé le jour même : la barre filtre/
+     recherche/export restait calée sur la largeur de `<main>` (960px)
+     pendant que le tableau juste en dessous s'étend à 1250px
+     (`.tableau-scroll--marge`) — "Exporter" tombait donc avant le vrai
+     bord droit du tableau. Nouvelle classe `.barre-actions--marge`
+     (même sortie de `<main>` que le tableau) pour aligner les deux.
+
+**Signature acte**
+199. ✅ Mêmes deux exports que Suivi de prêt (tableau + cartes de
+     statistiques), avec `.barre-actions--marge` dès le départ.
+
 ---
 
 ## Notes

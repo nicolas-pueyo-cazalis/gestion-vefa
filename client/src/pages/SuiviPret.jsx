@@ -10,6 +10,7 @@ import FormulaireSuiviPret from '../components/FormulaireSuiviPret.jsx'
 import BoutonContact from '../components/BoutonContact.jsx'
 import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
+import FenetreExport from '../components/FenetreExport.jsx'
 
 const NB_COLONNES = 10
 // Nombre de colonnes fusionnées pour une acquisition "sans prêt" : Banque,
@@ -68,6 +69,7 @@ function SuiviPret() {
   const [statutActif, setStatutActif] = useState('tous')
   const [recherche, setRecherche] = useState('')
   const [idEnEdition, setIdEnEdition] = useState(null)
+  const [exportOuvert, setExportOuvert] = useState(false)
 
   async function chargerLots() {
     const reponse = await apiFetch(`${API_URL}/api/lots?programme=${programme._id}`)
@@ -147,6 +149,48 @@ function SuiviPret() {
   const recues = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'recue').length
   const sansPretNombre = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'sans_pret').length
 
+  // Export #1 (20/07/2026, chantier des exports) : tableau du suivi de
+  // prêt, respecte le statut + la recherche actifs, sans la colonne
+  // Action. Ligne "sans prêt" reproduite comme à l'écran (une seule
+  // mention, plutôt que des colonnes vides sans explication).
+  function donneesExportTableau() {
+    return {
+      nomFichier: `suivi-pret-${programme.nom}`,
+      titre: `Suivi de prêt — ${programme.nom}`,
+      entetes: ['Lot', 'Client', 'Réservation', 'Banque', 'Courtier', 'Limite obtention prêt', 'Offre reçue le', 'Statut', 'Commentaire'],
+      lignes: lotsFiltres.map((lot) => {
+        const statut = statutPret(lot, delaiJours)
+        const acquereur = lot.acquereur
+        const colonnesPret = statut === 'sans_pret'
+          ? ['Acquisition avec fonds personnels', '—', '—', '—', '—']
+          : [
+            acquereur?.banque?.nom || '—',
+            acquereur?.courtier?.nom || '—',
+            formatDate(calculerDateLimiteJours(lot.dateReservation, delaiJours)),
+            formatDate(acquereur?.dateOffrePretRecue),
+            LIBELLES_STATUT[statut],
+          ]
+        return [lot.reference, nomComplet(acquereur), formatDate(lot.dateReservation), ...colonnesPret, lot.commentaire || '—']
+      }),
+    }
+  }
+
+  // Export #2 : cartes de statistiques.
+  function donneesExportCartes() {
+    return {
+      nomFichier: `suivi-pret-statistiques-${programme.nom}`,
+      titre: `Suivi de prêt — Statistiques — ${programme.nom}`,
+      entetes: ['Indicateur', 'Valeur'],
+      lignes: [
+        ['Dossiers concernés', String(lotsConcernes.length)],
+        ['En attente', String(enAttente)],
+        ['En retard', String(enRetard)],
+        ['Offres reçues', String(recues)],
+        ['Sans prêt', String(sansPretNombre)],
+      ],
+    }
+  }
+
   return (
     <>
       <h1 className="titre-page">Suivi de prêt</h1>
@@ -159,10 +203,23 @@ function SuiviPret() {
         <StatCard valeur={sansPretNombre} libelle="Sans prêt" />
       </section>
 
-      <div className="barre-actions">
+      <div className="barre-actions barre-actions--marge">
         <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
         <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un dossier..." />
+        <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
+          Exporter
+        </button>
       </div>
+
+      {exportOuvert && (
+        <FenetreExport
+          options={[
+            { valeur: 'tableau', libelle: 'Tableau du suivi de prêt', donnees: donneesExportTableau },
+            { valeur: 'cartes', libelle: 'Statistiques (cartes)', donnees: donneesExportCartes },
+          ]}
+          onFermer={() => setExportOuvert(false)}
+        />
+      )}
 
       <div className="tableau-scroll tableau-scroll--marge">
         <table className="tableau-lots">

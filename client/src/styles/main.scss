@@ -495,6 +495,23 @@ main {
   border-top: 1px solid $couleur-bordure;
   border-bottom: 1px solid $couleur-bordure;
 
+  // Alignée sur la largeur du tableau juste en dessous (20/07/2026,
+  // chantier des exports, Suivi de prêt) : sans ça, cette barre restait
+  // calée sur la largeur de <main> (960px) pendant que
+  // `.tableau-scroll--marge` (le tableau) s'étend à 1250px — le bouton
+  // "Exporter", poussé à droite par `justify-content: space-between`,
+  // s'arrêtait donc bien avant le vrai bord droit du tableau. Même
+  // technique de sortie de `<main>` que `.tableau-scroll--marge`.
+  &--marge {
+    width: 100vw;
+    max-width: 1250px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
   // Bouton d'action principale de la page (13/07/2026) : plein, comme
   // button[type='submit'] dans les formulaires, pour se distinguer des
   // boutons secondaires à contour.
@@ -532,6 +549,89 @@ main {
     background: $couleur-carte;
     min-width: 10rem;
     cursor: pointer;
+  }
+}
+
+// Bouton "Exporter" en bas de page (20/07/2026, chantier des exports) —
+// emplacement provisoire (voir Lots.jsx), juste poussé à droite pour
+// l'instant.
+.conteneur-bouton-export {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+// Choix du type d'export, dans FenetreExport.jsx.
+.choix-export {
+  border: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  legend {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    padding: 0;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+}
+
+// Boutons "Exporter en Excel"/"Exporter en PDF"/"Annuler" (20/07/2026,
+// chantier des exports), dans FenetreExport.jsx — couleurs proches de
+// celles associées à chaque format (vert Excel, rouge PDF), "Annuler"
+// délibérément plus discret et séparé des deux actions principales
+// (margin-left: auto), pour ne pas rivaliser visuellement avec elles.
+.boutons-export {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  button {
+    border: none;
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button:nth-child(1) {
+    background: #16a34a; // vert Excel
+
+    &:hover {
+      background: #15803d;
+    }
+  }
+
+  button:nth-child(2) {
+    background: #dc2626; // rouge PDF
+
+    &:hover {
+      background: #b91c1c;
+    }
+  }
+
+  button:nth-child(3) {
+    margin-left: auto;
+    background: none;
+    color: #52606d;
+    font-weight: 400;
+    text-decoration: underline;
+
+    &:hover {
+      color: $couleur-texte;
+    }
   }
 }
 
@@ -943,6 +1043,12 @@ table {
   }
 }
 
+// Espace sous le tableau récapitulatif par lot (20/07/2026, page Appels
+// de fonds) — collé au tableau détaillé juste en dessous sans lui.
+.tableau-recap-par-lot {
+  margin-bottom: 2rem;
+}
+
 // Remarque du 13/07/2026 : plus de barre de défilement horizontale, même
 // avec des colonnes en plus (ex: plusieurs terrasses) — largeur bloquée à
 // 100% du conteneur, mais en gardant `table-layout: auto` (donc les
@@ -1067,6 +1173,14 @@ table.tableau-lots {
   transform: translateX(-50%);
   padding: 0 1rem;
   margin-top: 1.5rem;
+
+  // Deux boutons sur la même ligne (20/07/2026, "Historique" + "Exporter",
+  // à la demande de Nicolas) — chacun à un bout, plutôt que collés.
+  &--espace {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
 // Bouton "accordéon" (20/07/2026, point 181, Lots.jsx) : ouvre/ferme

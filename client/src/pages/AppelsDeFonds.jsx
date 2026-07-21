@@ -15,7 +15,7 @@ import FormulaireAttestationMasse from '../components/FormulaireAttestationMasse
 import FormulaireBaremeLot from '../components/FormulaireBaremeLot.jsx'
 import FenetreRecapAttestations from '../components/FenetreRecapAttestations.jsx'
 
-const NB_COLONNES = 11
+const NB_COLONNES = 12
 
 const LIBELLES_STATUT = {
   attente: 'En attente',
@@ -58,6 +58,7 @@ function AppelsDeFonds() {
   const [idLotBaremeOuvert, setIdLotBaremeOuvert] = useState(null)
   const [recherche, setRecherche] = useState('')
   const [recapOuvert, setRecapOuvert] = useState(false)
+  const [recapParLotOuvert, setRecapParLotOuvert] = useState(false)
 
   async function chargerAppels() {
     const reponse = await apiFetch(`${API_URL}/api/appels-de-fonds?programme=${programme._id}`)
@@ -152,6 +153,24 @@ function AppelsDeFonds() {
     .filter((a) => lotsActifs.length === 0 || lotsActifs.includes(a.lot?.reference))
     .filter((a) => correspondRecherche(texteRechercheAppel(a), recherche))
 
+  // "Avancement cumulé %" (20/07/2026, remarque de Nicolas) : somme des
+  // pourcentages de phase d'un même lot, du début jusqu'à cette ligne —
+  // atteint 100% à la dernière phase (si aucun filtre phase/statut ne
+  // masque de lignes). Repose sur `appelsFiltres` déjà trié lot puis
+  // phase.ordre (voir appelsTries) : un simple cumul qui se remet à zéro
+  // à chaque changement de lot pendant le parcours de la liste.
+  let cumulCourant = 0
+  let lotCourantPourCumul = null
+  const cumulsParAppel = appelsFiltres.map((appel) => {
+    const idLot = appel.lot?._id
+    if (idLot !== lotCourantPourCumul) {
+      cumulCourant = 0
+      lotCourantPourCumul = idLot
+    }
+    cumulCourant += appel.phase.pourcentage
+    return cumulCourant
+  })
+
   const enAttente = appels.filter((a) => statutAppel(a) === 'attente').length
   const enRetard = appels.filter((a) => statutAppel(a) === 'retard').length
   const regles = appels.filter((a) => statutAppel(a) === 'regle').length
@@ -164,6 +183,26 @@ function AppelsDeFonds() {
   const totalEmis = appels.filter((a) => a.dateEmission).reduce((s, a) => s + a.montant, 0)
   const totalPaye = appels.filter((a) => a.dateReglement).reduce((s, a) => s + a.montant, 0)
   const soldeRestant = totalEmis - totalPaye
+
+  // Récapitulatif par lot (20/07/2026, remarque de Nicolas) : jusqu'ici,
+  // le reste à payer n'apparaissait qu'au niveau du programme entier
+  // ("Solde restant dû" ci-dessus) — impossible de savoir en un coup
+  // d'œil où ça coince lot par lot. Construit sur `appels` (pas
+  // `appelsFiltres`) : comme les cartes de stats ci-dessus, indépendant
+  // des filtres du tableau détaillé en dessous, pour toujours voir
+  // l'ensemble des lots.
+  const recapParLot = Object.values(
+    appels.reduce((parLot, appel) => {
+      const idLot = appel.lot?._id
+      if (!idLot) return parLot
+      if (!parLot[idLot]) {
+        parLot[idLot] = { lot: appel.lot, totalEmis: 0, totalPaye: 0 }
+      }
+      if (appel.dateEmission) parLot[idLot].totalEmis += appel.montant
+      if (appel.dateReglement) parLot[idLot].totalPaye += appel.montant
+      return parLot
+    }, {}),
+  ).sort((a, b) => a.lot.reference.localeCompare(b.lot.reference))
 
   return (
     <>
@@ -201,17 +240,58 @@ function AppelsDeFonds() {
       <FiltreMultiple titre="Lot :" options={referencesLots} valeursActives={lotsActifs} onChange={setLotsActifs} />
       <div className="barre-actions">
         <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un appel de fonds..." />
+        <button type="button" className="bouton-accordeon" onClick={() => setRecapParLotOuvert((v) => !v)}>
+          {recapParLotOuvert ? 'Masquer' : 'Voir'} le récapitulatif par lot
+        </button>
       </div>
 
-      <table>
+      {/* Récapitulatif par lot (20/07/2026, remarque de Nicolas) : masqué
+          par défaut, affiché à la demande plutôt qu'en permanence — vue
+          d'ensemble du reste à payer logement par logement, indépendante
+          des filtres du tableau détaillé plus bas. */}
+      {recapParLotOuvert && (
+        <div className="tableau-scroll tableau-scroll--marge tableau-recap-par-lot">
+          <table className="tableau-lots">
+            <thead>
+              <tr>
+                <th>Lot</th>
+                <th>Prix TTC</th>
+                <th>Total émis</th>
+                <th>Total payé</th>
+                <th>Reste à payer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recapParLot.length === 0 && (
+                <tr>
+                  <td colSpan={5}>Aucun appel de fonds pour l'instant.</td>
+                </tr>
+              )}
+              {recapParLot.map(({ lot, totalEmis: emisLot, totalPaye: payeLot }) => (
+                <tr key={lot._id}>
+                  <td>{lot.reference}</td>
+                  <td>{formatMontant(lot.prixTTC)}</td>
+                  <td>{formatMontant(emisLot)}</td>
+                  <td>{formatMontant(payeLot)}</td>
+                  <td>{formatMontant(emisLot - payeLot)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="tableau-scroll">
+      <table className="tableau-lots">
         <thead>
           <tr>
             <th>Lot</th>
             <th>Phase</th>
-            <th>%</th>
+            <th>Avancement cumulé %</th>
+            <th>Avancement %</th>
             <th>Montant TTC</th>
-            <th>Attestation MOE</th>
-            <th>Envoyé le</th>
+            <th>Date attestation</th>
+            <th>Émis le</th>
             <th>Limite règlement</th>
             <th>Réglé le</th>
             <th>Statut</th>
@@ -240,6 +320,7 @@ function AppelsDeFonds() {
                 <tr>
                   <td>{appel.lot?.reference ?? '—'}</td>
                   <td>{appel.phase.nom}</td>
+                  <td>{Math.round(cumulsParAppel[index] * 100)}%</td>
                   <td>{Math.round(appel.phase.pourcentage * 100)}%</td>
                   <td>{formatMontant(appel.montant)}</td>
                   <td>{formatDate(appel.dateAttestationMOE)}</td>
@@ -289,6 +370,7 @@ function AppelsDeFonds() {
           })}
         </tbody>
       </table>
+      </div>
     </>
   )
 }

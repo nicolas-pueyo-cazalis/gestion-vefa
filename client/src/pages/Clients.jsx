@@ -7,6 +7,7 @@ import StatCard from '../components/StatCard.jsx'
 import FormulaireEditionClient from '../components/FormulaireEditionClient.jsx'
 import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
+import FenetreExport from '../components/FenetreExport.jsx'
 
 const NB_COLONNES = 9
 
@@ -72,6 +73,7 @@ function Clients() {
   const [erreur, setErreur] = useState(null)
   const [idEnEdition, setIdEnEdition] = useState(null)
   const [recherche, setRecherche] = useState('')
+  const [exportOuvert, setExportOuvert] = useState(false)
 
   async function chargerAcquereurs() {
     const reponse = await apiFetch(`${API_URL}/api/acquereurs?programme=${programmeActif._id}`)
@@ -114,6 +116,27 @@ function Clients() {
     .sort(comparerParLogement)
     .filter((acquereur) => correspondRecherche(texteRechercheClient(acquereur), recherche))
 
+  // Export #1 (20/07/2026, chantier des exports) : tableau des clients,
+  // respecte la recherche active, sans la colonne Action, téléphone
+  // formaté comme à l'écran (pas la valeur brute stockée).
+  function donneesExportTableau() {
+    return {
+      nomFichier: `clients-${programmeActif.nom}`,
+      titre: `Clients — ${programmeActif.nom}`,
+      entetes: ['N° logement', 'Nom', 'Adresse', 'Commune', 'Code postal', 'Téléphone', 'Email', 'Commentaire'],
+      lignes: acquereursTries.map((acquereur) => [
+        numerosLogements(acquereur),
+        nomComplet(acquereur),
+        acquereur.adresse || '—',
+        acquereur.commune || '—',
+        acquereur.codePostal || '—',
+        formatTelephoneAffichage(acquereur.telephone) || '—',
+        acquereur.email || '—',
+        acquereur.commentaire || '—',
+      ]),
+    }
+  }
+
   return (
     <>
       <h1 className="titre-page">Clients</h1>
@@ -126,7 +149,19 @@ function Clients() {
 
       <div className="barre-actions">
         <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un client..." />
+        <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
+          Exporter
+        </button>
       </div>
+
+      {exportOuvert && (
+        <FenetreExport
+          options={[
+            { valeur: 'tableau', libelle: 'Tableau des clients', donnees: donneesExportTableau },
+          ]}
+          onFermer={() => setExportOuvert(false)}
+        />
+      )}
 
       <div className="tableau-scroll tableau-scroll--marge">
         <table className="tableau-lots">

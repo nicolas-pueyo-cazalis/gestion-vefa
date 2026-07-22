@@ -192,11 +192,10 @@ function AppelsDeFonds() {
   const emisAuTotal = appels.filter((a) => a.dateEmission).length
   const totalEmis = appels.filter((a) => a.dateEmission).reduce((s, a) => s + a.montant, 0)
   const totalPaye = appels.filter((a) => a.dateReglement).reduce((s, a) => s + a.montant, 0)
-  const soldeRestant = totalEmis - totalPaye
 
   // Récapitulatif par lot (20/07/2026, remarque de Nicolas) : jusqu'ici,
   // le reste à payer n'apparaissait qu'au niveau du programme entier
-  // ("Solde restant dû" ci-dessus) — impossible de savoir en un coup
+  // ("Solde restant dû" ci-dessous) — impossible de savoir en un coup
   // d'œil où ça coince lot par lot. Construit sur `appels` (pas
   // `appelsFiltres`) : comme les cartes de stats ci-dessus, indépendant
   // des filtres du tableau détaillé en dessous, pour toujours voir
@@ -213,6 +212,15 @@ function AppelsDeFonds() {
       return parLot
     }, {}),
   ).sort((a, b) => a.lot.reference.localeCompare(b.lot.reference))
+
+  // Solde restant dû (21/07/2026, correction de Nicolas) : le reste à payer
+  // d'un logement, c'est son prix TTC total moins ce qui a déjà été réglé —
+  // pas "ce qui a été émis moins ce qui a été réglé" (les phases pas
+  // encore émises restent quand même dues). Même règle sur la carte de
+  // stat (somme sur tous les lots ayant au moins un appel) et dans le
+  // récapitulatif par lot ci-dessous (ligne par ligne).
+  const soldeRestant = recapParLot.reduce((s, { lot, totalPaye: payeLot }) => s + lot.prixTTC - payeLot, 0)
+  const totalPrixTTCRecap = recapParLot.reduce((s, { lot }) => s + lot.prixTTC, 0)
 
   // Courrier d'appel de fonds (20/07/2026, remarque de Nicolas, modèle
   // fourni) : un document par appel précis (un lot + une phase), choisi
@@ -244,6 +252,141 @@ function AppelsDeFonds() {
       dateLimite: appel.dateLimiteReglement,
       iban: programme.iban,
       bic: programme.bic,
+    }
+  }
+
+  // Export "Statistiques" (21/07/2026, remarque de Nicolas) : les deux
+  // lignes de cartes de stats affichées en haut de page, réunies en
+  // tableau à deux colonnes (même principe que Lots/Suivi de prêt/
+  // Signature acte).
+  function donneesExportStatistiques() {
+    return {
+      nomFichier: `appels-de-fonds-statistiques-${programme.nom}`,
+      titre: `Statistiques des appels de fonds — ${programme.nom}`,
+      entetes: ['Indicateur', 'Valeur'],
+      lignes: [
+        ['Appels au total', String(appels.length)],
+        ['Émis (au total)', String(emisAuTotal)],
+        ['En attente', String(enAttente)],
+        ['À émettre', String(aEmettre)],
+        ['En retard', String(enRetard)],
+        ['Réglés', String(regles)],
+        ['Total émis', formatMontant(totalEmis)],
+        ['Total payé', formatMontant(totalPaye)],
+        ['Solde restant dû', formatMontant(soldeRestant)],
+      ],
+    }
+  }
+
+  // Export "Récapitulatif par lot" (21/07/2026, remarque de Nicolas) : le
+  // tableau tel qu'affiché à l'écran (bouton "Voir le récapitulatif par
+  // lot"), avec une ligne de total sous chaque colonne — absente jusqu'ici
+  // aussi bien à l'écran que dans l'export (ajoutée aux deux en même
+  // temps, voir tfoot ci-dessous dans le rendu).
+  function donneesExportRecapParLot() {
+    return {
+      nomFichier: `appels-de-fonds-recap-par-lot-${programme.nom}`,
+      titre: `Récapitulatif par lot — ${programme.nom}`,
+      entetes: ['Lot', 'Prix TTC', 'Total émis', 'Total payé', 'Reste à payer'],
+      lignes: recapParLot.map(({ lot, totalEmis: emisLot, totalPaye: payeLot }) => [
+        lot.reference,
+        formatMontant(lot.prixTTC),
+        formatMontant(emisLot),
+        formatMontant(payeLot),
+        formatMontant(lot.prixTTC - payeLot),
+      ]),
+      lignesTotal: [
+        ['Total', formatMontant(totalPrixTTCRecap), formatMontant(totalEmis), formatMontant(totalPaye), formatMontant(soldeRestant)],
+      ],
+    }
+  }
+
+  // Export "Récapitulatif détaillé par phase" (21/07/2026, remarque de
+  // Nicolas, modèle PDF fourni en référence) : une colonne "Montant" +
+  // "Réglé le" par phase du barème (Réservation comprise, contrairement
+  // aux exports/génération ci-dessus qui l'excluent puisqu'elle ne
+  // s'atteste jamais à la main — ici c'est un simple récapitulatif, pas
+  // une action). Cellule vide tant que la phase n'est pas émise pour ce
+  // lot. Ne reprend QUE les lots ayant déjà au moins un appel de fonds
+  // (question posée à Nicolas, choix explicite : pas les logements encore
+  // Libres sans aucun appel — contrairement au modèle PDF d'origine).
+  // Colonnes "ID Client" et "Solde livraison" du modèle PDF volontairement
+  // absentes (retirées à la demande de Nicolas : la 1ère n'a pas
+  // d'équivalent dans les données de l'appli, la 2ème était un doublon de
+  // "Reste à payer").
+  function donneesExportDetailParPhase() {
+    const tauxTva = programme.parametres.tauxTva
+    const entetes = [
+      'Lot', 'Client', 'Prix TTC',
+      ...phasesTriees.flatMap((phase) => [`${phase.nom} (${Math.round(phase.pourcentage * 100)}%)`, 'Réglé le']),
+      'Total payé', 'Reste à payer',
+    ]
+    const lignes = recapParLot.map(({ lot, totalPaye: payeLot }) => {
+      const appelsDuLot = appels.filter((a) => a.lot?._id === lot._id)
+      return [
+        lot.reference,
+        nomAcquereur(lot.acquereur),
+        formatMontant(lot.prixTTC),
+        ...phasesTriees.flatMap((phase) => {
+          const appel = appelsDuLot.find((a) => a.phase.nom === phase.nom)
+          return [
+            appel?.dateEmission ? formatMontant(appel.montant) : '',
+            appel?.dateReglement ? formatDate(appel.dateReglement) : '',
+          ]
+        }),
+        formatMontant(payeLot),
+        formatMontant(lot.prixTTC - payeLot),
+      ]
+    })
+
+    // Trois lignes de total (même principe que le pied de tableau "Lots") :
+    // TTC (montants réellement émis), TVA, puis HT = TTC / (1 + taux) —
+    // calculées en nombres bruts, formatées seulement à la fin (jamais en
+    // reparsant un texte déjà formaté, plus fiable).
+    const totauxTTCParPhase = phasesTriees.map((phase) =>
+      appels
+        .filter((a) => a.phase.nom === phase.nom && a.dateEmission)
+        .reduce((s, a) => s + a.montant, 0),
+    )
+    function construireLigneTotal(libelle, montantPrixTTC, montantsParPhase, montantPaye, montantReste) {
+      return [
+        libelle, '', formatMontant(montantPrixTTC),
+        ...montantsParPhase.flatMap((montant) => [formatMontant(montant), '']),
+        formatMontant(montantPaye), formatMontant(montantReste),
+      ]
+    }
+    const ligneTTC = construireLigneTotal('Montant total TTC', totalPrixTTCRecap, totauxTTCParPhase, totalPaye, soldeRestant)
+    const ligneHT = construireLigneTotal(
+      'Montant total HT',
+      totalPrixTTCRecap / (1 + tauxTva),
+      totauxTTCParPhase.map((m) => m / (1 + tauxTva)),
+      totalPaye / (1 + tauxTva),
+      soldeRestant / (1 + tauxTva),
+    )
+    const ligneTVA = construireLigneTotal(
+      `TVA (${Math.round(tauxTva * 100)}%)`,
+      totalPrixTTCRecap - totalPrixTTCRecap / (1 + tauxTva),
+      totauxTTCParPhase.map((m) => m - m / (1 + tauxTva)),
+      totalPaye - totalPaye / (1 + tauxTva),
+      soldeRestant - soldeRestant / (1 + tauxTva),
+    )
+
+    return {
+      nomFichier: `appels-de-fonds-detail-par-phase-${programme.nom}`,
+      titre: `Récapitulatif détaillé par phase — ${programme.nom}`,
+      entetes,
+      lignes,
+      lignesTotal: [ligneTTC, ligneTVA, ligneHT],
+      // Beaucoup de colonnes (2 par phase du barème) : sur ce modèle précis
+      // (voir PDF fourni par Nicolas), tout doit tenir sur une seule page
+      // PDF plutôt que se répartir sur plusieurs pages côte à côte comme
+      // les autres exports (ex: Lots) — voir `pageUnique` dans export.js.
+      pageUnique: true,
+      // Colonne "Client" (index 1) plafonnée à 40mm — sans ça elle recevait
+      // toute la place restante de la page (remarque de Nicolas : "très
+      // large"). Un nom plus long que ce plafond revient alors à la ligne,
+      // seul cas encore permis avec les en-têtes.
+      largeursMax: { 1: 40 },
     }
   }
 
@@ -346,6 +489,9 @@ function AppelsDeFonds() {
               lotsPourPhase,
               generer: genererAppelsDeFonds,
             },
+            { valeur: 'statistiques', libelle: 'Statistiques (cartes)', donnees: donneesExportStatistiques },
+            { valeur: 'recap-par-lot', libelle: 'Récapitulatif par lot', donnees: donneesExportRecapParLot },
+            { valeur: 'detail-par-phase', libelle: 'Récapitulatif détaillé par phase', donnees: donneesExportDetailParPhase },
           ]}
           onFermer={() => setExportOuvert(false)}
         />
@@ -379,10 +525,21 @@ function AppelsDeFonds() {
                   <td>{formatMontant(lot.prixTTC)}</td>
                   <td>{formatMontant(emisLot)}</td>
                   <td>{formatMontant(payeLot)}</td>
-                  <td>{formatMontant(emisLot - payeLot)}</td>
+                  <td>{formatMontant(lot.prixTTC - payeLot)}</td>
                 </tr>
               ))}
             </tbody>
+            {recapParLot.length > 0 && (
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td>{formatMontant(totalPrixTTCRecap)}</td>
+                  <td>{formatMontant(totalEmis)}</td>
+                  <td>{formatMontant(totalPaye)}</td>
+                  <td>{formatMontant(soldeRestant)}</td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       )}

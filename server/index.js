@@ -18,6 +18,7 @@ import './models/Entreprise.js'
 import './models/Utilisateur.js'
 import './models/HistoriqueAnnulation.js'
 import './models/HistoriqueModificationPrix.js'
+import './models/Compteur.js'
 
 import programmeRouter from './routes/programme.js'
 import lotsRouter from './routes/lots.js'

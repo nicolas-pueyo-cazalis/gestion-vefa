@@ -8,6 +8,11 @@ const tmaEntrepriseSchema = new mongoose.Schema({
   // référentiel Entreprise change plus tard, ça ne doit pas modifier
   // rétroactivement une ligne déjà créée.
   corpsDeTravaux: String,
+  // Description libre de ce qui est demandé à CETTE entreprise (21/07/2026,
+  // remarque de Nicolas) — distincte de `Tma.description` (la demande
+  // globale du client) : une même TMA peut nécessiter des interventions
+  // différentes selon l'entreprise sollicitée.
+  description: String,
   dateEnvoi: { type: Date, default: Date.now },
   // Date à laquelle l'entreprise a effectivement répondu (devis reçu) —
   // distincte de dateEnvoi. Pas encore exploitée dans un calcul, gardée

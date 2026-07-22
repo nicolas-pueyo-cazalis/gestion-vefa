@@ -39,14 +39,19 @@ tout moment depuis le bandeau.
   postal complété automatiquement depuis la commune saisie.
 - **TMA** : création de demandes depuis l'interface, machine à états
   pilotée par les dates (comme les formules Excel d'origine), détail
-  multi-entreprises par TMA, alerte de retard entreprise, montant client
-  calculé automatiquement (taux de marge + frais d'ouverture de dossier
-  paramétrables) ou modifiable manuellement, verrouillé une fois validé.
+  multi-entreprises par TMA (avec description et n° de lot de travaux
+  propres à chaque entreprise), n° de demande par logement, alerte de
+  retard entreprise, montant client calculé automatiquement (taux de
+  marge + frais d'ouverture de dossier paramétrables) ou modifiable
+  manuellement, verrouillé une fois validé, génération d'un devis client
+  PDF (numéro réservé côté serveur, jamais réutilisé) regroupant une ou
+  plusieurs demandes d'un même logement.
 - **Appels de fonds** : générés automatiquement par phase (la
   "Réservation" dès que le lot est réservé, les suivantes à l'Acté),
   attestation MOE saisie en masse par phase, règlement et date
   d'émission calculés seuls, barème modifiable par logement en cas de
-  négociation.
+  négociation, génération collective des appels par phase (courrier PDF
+  par logement + date d'émission renseignée automatiquement).
 - **Suivi de prêt** / **Signature acte** : deux pages dédiées avec
   coordonnées complètes (banque, courtier, notaire), dates limites
   calculées depuis la réservation, gestion des acquisitions sans prêt.
@@ -57,7 +62,10 @@ tout moment depuis le bandeau.
 - **Transversal** : authentification JWT sur toute l'application (aucune
   page accessible sans être connecté), barre de recherche multi-mots-clés
   sur chaque page principale, fenêtre d'alertes de retard au démarrage
-  (prêt, notaire, appels de fonds, entreprises TMA, factures TMA).
+  (prêt, notaire, appels de fonds, entreprises TMA, factures TMA), export
+  Excel/PDF sur chaque page (tableaux avec totaux, statistiques, documents
+  générés — courrier d'appel de fonds, devis TMA), entièrement côté
+  navigateur (aucune donnée renvoyée au serveur pour un export).
 
 ## Où trouver quoi
 
@@ -69,11 +77,11 @@ tout moment depuis le bandeau.
   l'authentification (`AuthContext`) et le programme actif
   (`ProgrammeContext`).
 - [`server/`](server/) — étape 3 : API Express + MongoDB/Mongoose. Modèles
-  des 12 collections (Programme, Lot, Annexe, Acquereur, AppelDeFonds,
+  des 13 collections (Programme, Lot, Annexe, Acquereur, AppelDeFonds,
   TMA, TmaEntreprise, Entreprise, Utilisateur, HistoriqueAnnulation,
-  HistoriqueModificationPrix), script de seed (`npm run seed`), routes de
-  lecture/écriture complètes — toutes filtrables par programme actif
-  (`?programme=<id>`), authentification JWT sur toute l'API.
+  HistoriqueModificationPrix, Compteur), script de seed (`npm run seed`),
+  routes de lecture/écriture complètes — toutes filtrables par programme
+  actif (`?programme=<id>`), authentification JWT sur toute l'API.
 - [`références/`](références/) — fichiers Excel de référence (usage
   interne, non déployés).
 

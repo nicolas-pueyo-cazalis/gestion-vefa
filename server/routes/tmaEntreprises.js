@@ -15,7 +15,7 @@ const router = Router()
 // "chiffre") n'est considéré définitif que si TOUTES les entreprises
 // sollicitées ont répondu — une seule entreprise encore en attente doit
 // garder la TMA en "étude", même si les autres ont déjà répondu.
-async function recalculerTma(tmaId) {
+export async function recalculerTma(tmaId) {
   const lignes = await TmaEntreprise.find({ tma: tmaId })
   // Peuple lot.programme (17/07/2026) : calculerMontantClient a besoin de
   // tauxMargeTma/regleMontantNegatifTma, propres à CE programme — un bug
@@ -82,7 +82,7 @@ router.get('/', async (req, res) => {
       filtre = { tma: { $in: tmaDuProgramme.map((t) => t._id) } }
     }
     const lignes = await TmaEntreprise.find(filtre)
-      .populate('entreprise', 'nom corpsDeTravaux')
+      .populate('entreprise', 'nom corpsDeTravaux numeroLot')
       .populate({ path: 'tma', select: 'lot statut', populate: { path: 'lot', select: 'reference' } })
       .sort({ createdAt: 1 })
     res.json(lignes)
@@ -100,7 +100,7 @@ router.get('/', async (req, res) => {
 // utils/statuts.js) ne se déclenchait donc jamais correctement.
 router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { tma, entreprise, montantDevis, dateEnvoi, dateRetour } = req.body
+    const { tma, entreprise, montantDevis, dateEnvoi, dateRetour, description } = req.body
     if (!tma || !entreprise) {
       return res.status(400).json({ message: 'Les champs "tma" et "entreprise" sont requis' })
     }
@@ -115,6 +115,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
       tma,
       entreprise,
       corpsDeTravaux: entrepriseDoc.corpsDeTravaux, // figé au moment de l'ajout
+      description: description || null,
       montantDevis,
       dateEnvoi: dateEnvoi || undefined, // undefined déclenche le défaut du schéma (aujourd'hui) si vraiment omis
       dateRetour: dateRetour || null,
@@ -135,7 +136,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
 // dates de l'appli.
 router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { dateEnvoi, montantDevis, dateRetour } = req.body
+    const { dateEnvoi, montantDevis, dateRetour, description } = req.body
     const ligne = await TmaEntreprise.findById(req.params.id)
 
     if (!ligne) {
@@ -151,6 +152,9 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     }
     if (dateRetour !== undefined) {
       ligne.dateRetour = dateRetour
+    }
+    if (description !== undefined) {
+      ligne.description = description
     }
 
     await ligne.save()

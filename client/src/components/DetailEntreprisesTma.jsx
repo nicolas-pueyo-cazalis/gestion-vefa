@@ -8,7 +8,7 @@ function versDateInput(valeur) {
   return valeur ? valeur.slice(0, 10) : ''
 }
 
-function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
+function DetailEntreprisesTma({ tma, colonnes, delaiRetourEntrepriseTmaJours, onChangement, onFermer }) {
   const [lignes, setLignes] = useState([])
   const [entreprisesDisponibles, setEntreprisesDisponibles] = useState([])
   const [chargement, setChargement] = useState(true)
@@ -23,6 +23,11 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
   const [dateEnvoi, setDateEnvoi] = useState(versDateInput(tma.dateEnvoiEntreprises) || new Date().toISOString().slice(0, 10))
   const [montantDevis, setMontantDevis] = useState('')
   const [dateRetour, setDateRetour] = useState('')
+  // Description (21/07/2026, remarque de Nicolas) : ce qui est demandé à
+  // CETTE entreprise précisément, distinct de la description globale de la
+  // TMA (une même TMA peut nécessiter des interventions différentes selon
+  // l'entreprise sollicitée).
+  const [description, setDescription] = useState('')
 
   useEffect(() => {
     async function chargerDonnees() {
@@ -57,6 +62,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
         dateEnvoi,
         montantDevis: montantDevis === '' ? null : Number(montantDevis),
         dateRetour: dateRetour || null,
+        description: description || null,
       }),
     })
     if (!reponse.ok) {
@@ -71,6 +77,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
     setDateEnvoi(versDateInput(tma.dateEnvoiEntreprises) || new Date().toISOString().slice(0, 10))
     setMontantDevis('')
     setDateRetour('')
+    setDescription('')
     onChangement()
   }
 
@@ -100,7 +107,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
     setLignes((liste) =>
       liste.map((ligne) =>
         ligne._id === id
-          ? { ...ligne, montantDevis: ligneMiseAJour.montantDevis, dateRetour: ligneMiseAJour.dateRetour, statut: ligneMiseAJour.statut }
+          ? { ...ligne, montantDevis: ligneMiseAJour.montantDevis, dateRetour: ligneMiseAJour.dateRetour, statut: ligneMiseAJour.statut, description: ligneMiseAJour.description }
           : ligne,
       ),
     )
@@ -122,6 +129,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
               <LigneEntreprise
                 key={ligne._id}
                 ligne={ligne}
+                delaiRetourEntrepriseTmaJours={delaiRetourEntrepriseTmaJours}
                 onEnregistrer={modifierLigne}
                 onSupprimer={supprimerLigne}
               />
@@ -129,6 +137,12 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
           </ul>
         )}
 
+        {/* Séparateur + titre (21/07/2026, remarque de Nicolas, même
+            principe que "Ajouter un lot" — point 185, SectionLots.jsx) :
+            sans ça, ce formulaire enchaînait directement sur la liste des
+            entreprises déjà ajoutées, au point de les confondre. */}
+        <hr className="separateur-ajout" />
+        <h3>Ajouter une entreprise</h3>
         <form onSubmit={ajouterLigne}>
           <label>
             Entreprise
@@ -140,7 +154,7 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
             >
               <option value="" disabled>Choisir...</option>
               {entreprisesDisponibles.map((e) => (
-                <option key={e._id} value={e._id}>{e.corpsDeTravaux} — {e.nom}</option>
+                <option key={e._id} value={e._id}>{e.corpsDeTravaux} — Lot {e.numeroLot ?? '—'} — {e.nom}</option>
               ))}
             </select>
           </label>
@@ -158,6 +172,15 @@ function DetailEntreprisesTma({ tma, colonnes, onChangement, onFermer }) {
               Complétez le "Nombre d'entreprises concernées" avant d'ajouter une entreprise.
             </p>
           )}
+          <label>
+            Description
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ce qui est demandé à cette entreprise"
+            />
+          </label>
           <label>
             Date d'envoi
             <input type="date" value={dateEnvoi} onChange={(e) => setDateEnvoi(e.target.value)} required />

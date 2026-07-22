@@ -60,9 +60,13 @@ function FenetreExport({ options, onFermer }) {
   // `exporterExcel` est asynchrone (exceljs construit le fichier en
   // mémoire avant de le proposer au téléchargement) — `await` avant de
   // fermer la fenêtre, pour ne pas fermer avant que le fichier soit prêt.
+  // `option.donnees` peut lui-même être asynchrone (21/07/2026, "Générer
+  // devis client" : réserve le numéro de devis auprès du serveur avant de
+  // construire le document) — `await` ne change rien pour les exports
+  // classiques, dont `donnees()` reste synchrone.
   async function exporter(format) {
     if (!option) return
-    const donnees = option.donnees(sousChoix)
+    const donnees = await option.donnees(sousChoix)
     if (format === 'excel') await exporterExcel(donnees)
     else exporterPDF(donnees)
     onFermer()
@@ -113,7 +117,13 @@ function FenetreExport({ options, onFermer }) {
         {estGeneration && (
           <>
             <label className="sous-choix-export">
-              Quelle phase ?
+              {/* Libellés personnalisables (21/07/2026, "Générer devis
+                  client", TMA) : ce mode à deux niveaux (choix N°1 → liste à
+                  cocher du choix N°2) sert maintenant aussi à choisir un
+                  logement puis ses demandes, pas seulement une phase puis
+                  ses lots — valeurs par défaut inchangées pour "Générer un
+                  appel de fonds". */}
+              {option.libelleChoix1 ?? 'Quelle phase ?'}
               <select value={phaseChoisie} onChange={(e) => choisirPhase(option, e.target.value)}>
                 {option.phases.map((p) => (
                   <option key={p.valeur} value={p.valeur}>{p.libelle}</option>
@@ -122,10 +132,10 @@ function FenetreExport({ options, onFermer }) {
             </label>
 
             <fieldset className="choix-export choix-lots-generation">
-              <legend>Logements concernés</legend>
+              <legend>{option.libelleChoix2 ?? 'Logements concernés'}</legend>
               {lotsDisponibles.length === 0 && (
                 <p className="avertissement-cellule">
-                  Aucun logement prêt pour cette phase (attestation MOE manquante, ou déjà émis).
+                  {option.messageChoix2Vide ?? 'Aucun logement prêt pour cette phase (attestation MOE manquante, ou déjà émis).'}
                 </p>
               )}
               {lotsDisponibles.map((lot) => (

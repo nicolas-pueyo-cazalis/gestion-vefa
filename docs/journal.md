@@ -2109,3 +2109,80 @@ points l'étaient.
      le filtre de la page Appels de fonds, mais jamais réellement affiché
      dans le JSX — repéré par Nicolas ("je ne vois pas la barre de
      recherche"), une ligne oubliée.
+
+## 2026-07-21 — Statut "À émettre", chantier des exports Appels de fonds puis TMA
+
+Fin de la partie "généraliste" du chantier des exports (README, catch-up
+`demandes.md`) — reprise du fil pages par pages, en commençant par un
+correctif sur Appels de fonds avant de passer aux 3 exports restants de
+cette page, puis à ceux de TMA.
+
+**Appels de fonds**
+
+- **Nouveau statut "À émettre"** (point 204) : ajouté entre "En attente" et
+  "Émis" dans `statutAppel()` (client/src/utils/statuts.js) — dès qu'une
+  attestation MOE est saisie sans que l'appel ait encore été généré. Carte
+  de stat dédiée, couleur orange (#ea580c) dans `$couleurs-statut`.
+- **Correctif "Solde restant dû"** : calculé jusqu'ici comme "Total émis −
+  Total payé", ce qui ignorait les phases pas encore émises (donc pas
+  encore dues, alors qu'elles le sont). Corrigé en "Prix TTC du lot − Total
+  payé", à la fois sur la carte de stat et dans le récapitulatif par lot.
+- **3 nouveaux exports** : "Statistiques (cartes)", "Récapitulatif par lot"
+  (avec une ligne de total sous chaque colonne, ajoutée aussi à l'écran) et
+  "Récapitulatif détaillé par phase" (une colonne montant + date de
+  règlement par phase du barème, sur le modèle d'un tableau Excel fourni
+  par Nicolas). Ce dernier a demandé plusieurs itérations avant de tenir
+  sur une seule page PDF sans retour à la ligne (voir `decisions.md`,
+  "PDF forcé sur une seule page").
+
+**TMA**
+
+- **Bug corrigé** : corriger `nombreEntreprisesConcernees` après avoir déjà
+  saisi tous les devis entreprises ne relançait jamais le calcul du montant
+  entreprises/statut (voir `bugs.md`).
+- **Champ "Description" par entreprise sollicitée** (`TmaEntreprise.
+  description`) — distinct de la description globale de la TMA. Le n° de
+  lot de travaux (`Entreprise.numeroLot`, existant depuis longtemps mais
+  jamais affiché) apparaît maintenant aussi dans le panneau "Entreprises
+  concernées", avec un séparateur + titre "Ajouter une entreprise" avant le
+  formulaire d'ajout.
+- **3 exports** : "Statistiques (cartes)", "Demandes clients" (tableau à
+  l'écran + 3 lignes de total TTC/TVA/HT, ajoutées aussi à l'écran) et
+  "Détail entreprises" — plusieurs allers-retours sur ce dernier avant la
+  bonne structure : une ligne "demande" en gras, UNE ligne de titres en
+  italique (pas répétée par entreprise), puis une ligne de valeurs par
+  entreprise sollicitée, en réutilisant les colonnes du tableau plutôt
+  qu'en ajoutant des colonnes à droite (1ʳᵉ tentative jugée "pas ça").
+  "En retard" (entreprise qui n'a pas répondu à temps) s'affiche en rouge,
+  aussi bien dans cet export que dans le panneau "Entreprises concernées"
+  (à la place de "reçu le ...").
+- **Colonne "N° demande"** : rang chronologique de la demande parmi celles
+  du même logement (une 2ᵉ demande TMA sur le même lot affiche "2"), jamais
+  stockée. Le tableau est maintenant classé par lot (puis n° de demande)
+  plutôt que par ordre d'ajout.
+- **Export "Générer devis client"** (modèle PDF fourni par Nicolas) :
+  fenêtre en deux temps (logement, puis demandes de ce logement à cocher —
+  un devis peut en regrouper plusieurs), même mécanique que "Générer un
+  appel de fonds". Numéro de devis réservé côté serveur à chaque
+  génération, jamais réutilisé (voir `decisions.md`, nouvelle collection
+  `Compteur`).
+- **Reporté** : l'adresse du maître d'ouvrage (vide sur le devis, comme sur
+  le courrier d'appel de fonds) — à ajouter dans Paramètres du programme
+  plus tard, puis à répercuter sur les deux documents.
+
+**Généralisations côté `export.js` / `FenetreExport.jsx`** (réutilisables
+par de futurs exports) :
+- `lignesTotal` : une ou plusieurs lignes de total alignées sous chaque
+  colonne du tableau (en plus de `totaux`, la liste libellé/valeur déjà
+  existante).
+- `stylesLignes` : un style optionnel par ligne (`'gras'` / `'italique'`),
+  en Excel comme en PDF.
+- `pageUnique` + `largeursMax` : force un export PDF sur une seule page en
+  calculant des largeurs de colonnes exactes (voir `decisions.md`).
+- `option.donnees` peut désormais être asynchrone dans `FenetreExport.jsx`
+  (nécessaire pour réserver un numéro de devis côté serveur avant de
+  construire le document) ; le mode `type: 'generation'` (jusque-là
+  spécifique aux appels de fonds) accepte maintenant des libellés
+  personnalisés (`libelleChoix1`/`libelleChoix2`/`messageChoix2Vide`),
+  réutilisé tel quel pour "Générer devis client" (logement → demandes à
+  cocher) sans dupliquer le composant.

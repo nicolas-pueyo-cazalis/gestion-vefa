@@ -2,8 +2,10 @@ import { Router } from 'express'
 import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique, calculerMontantClient } from '../models/Tma.js'
 import Lot from '../models/Lot.js'
 import TmaEntreprise from '../models/TmaEntreprise.js'
+import Compteur from '../models/Compteur.js'
 import { autoriserRoles } from '../middleware/auth.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
+import { recalculerTma } from './tmaEntreprises.js'
 
 const STATUTS_NON_RECALCULABLES = ['termine', 'refuse', 'annule']
 
@@ -291,14 +293,56 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
       tma.montantClientManuel = true
       tma.montantClient = montantClient
     }
+    const nombreEntreprisesConcerneesModifie =
+      nombreEntreprisesConcernees !== undefined && nombreEntreprisesConcernees !== tma.nombreEntreprisesConcernees
     if (nombreEntreprisesConcernees !== undefined) tma.nombreEntreprisesConcernees = nombreEntreprisesConcernees
 
     await tma.save()
-    const tmaPeuplee = await tma.populate([
+
+    // Bug signalé le 21/07/2026 par Nicolas : corriger ce nombre APRÈS avoir
+    // déjà saisi tous les devis entreprises (ex: 3 renseigné par erreur au
+    // lieu de 2) ne redéclenchait jamais le calcul du montant
+    // entreprises/statut — celui-ci n'a normalement lieu que lors de
+    // l'ajout/modification/suppression d'une ligne TmaEntreprise (voir
+    // recalculerTma, routes/tmaEntreprises.js), jamais quand c'est CE nombre
+    // qui change alors que les lignes existent déjà.
+    if (nombreEntreprisesConcerneesModifie) {
+      await recalculerTma(tma._id)
+    }
+
+    const tmaPeuplee = await Tma.findById(tma._id).populate([
       { path: 'lot', select: 'reference statut acquereur', populate: { path: 'acquereur', select: 'civilite prenom nom' } },
       { path: 'acquereur', select: 'civilite prenom nom' },
     ])
     res.json(tmaPeuplee)
+  } catch (erreur) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+  }
+})
+
+// POST /api/tma/:id/devis-numero — réserve le prochain numéro de devis
+// client pour cette TMA (21/07/2026, remarque de Nicolas : "Générer devis
+// client"). Une suite par programme et par année (`devis-tma-<idProgramme>-
+// <année>`, ex: "TMA-2026-005") — incrémentée à CHAQUE génération, même en
+// cas de double-clic ou de devis regénéré après correction : un numéro,
+// une fois délivré, n'est jamais réutilisé (pratique standard de
+// numérotation de devis/factures). Incrément atomique (`$inc`) pour éviter
+// qu'une génération concurrente ne récupère deux fois le même numéro.
+router.post('/:id/devis-numero', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
+  try {
+    const tma = await Tma.findById(req.params.id).populate({ path: 'lot', populate: { path: 'programme' } })
+    if (!tma) {
+      return res.status(404).json({ message: 'TMA introuvable' })
+    }
+    const annee = new Date().getFullYear()
+    const cle = `devis-tma-${tma.lot.programme._id}-${annee}`
+    const compteur = await Compteur.findOneAndUpdate(
+      { cle },
+      { $inc: { valeur: 1 } },
+      { upsert: true, new: true },
+    )
+    const numeroDevis = `TMA-${annee}-${String(compteur.valeur).padStart(3, '0')}`
+    res.json({ numeroDevis })
   } catch (erreur) {
     res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
   }

@@ -212,3 +212,43 @@ lit à l'écran". Conséquence directe : la comparaison doit aussi neutraliser
 les différences purement typographiques entre "ce qu'on tape" et "ce qui
 s'affiche" (espace insécable des milliers, virgule décimale à la
 française vs point tapé au clavier) — voir `utils/recherche.js`.
+
+## PDF forcé sur une seule page : largeurs de colonnes calculées, pas devinées (décision du 21/07/2026)
+
+Deux exports (récap détaillé par phase des appels de fonds, détail
+entreprises des TMA) ont beaucoup de colonnes chiffrées/dates et devaient
+tenir sur une seule page PDF, sans retour à la ligne — contrairement au
+reste de l'appli, qui préfère répartir les colonnes en trop sur des pages
+supplémentaires (`horizontalPageBreak`, ex: page Lots) plutôt que de les
+compresser.
+
+**Décision :** plutôt que de deviner une largeur de colonne ou de réduire
+la police au hasard jusqu'à ce que ça rentre, `calculerLargeursColonnesFigees()`
+(client/src/utils/export.js) mesure la largeur RÉELLE du texte le plus
+long de chaque colonne avec la police de jsPDF (`doc.getTextWidth()`), puis
+redistribue l'espace restant de la page à toutes les colonnes au prorata de
+leur largeur — pour qu'aucune colonne ne revienne à la ligne inutilement,
+et que le tableau occupe quand même toute la largeur imprimable. Un plafond
+optionnel par colonne (`largeursMax`) permet de laisser certaines colonnes
+(texte libre : Client, Description, Commentaire) revenir à la ligne plutôt
+que de s'étirer sans limite. Découvert au passage : l'espace insécable des
+montants formatés (`Intl.NumberFormat('fr-FR')`) n'existe pas dans la
+police "helvetica" intégrée à jsPDF et s'affichait comme un "/" —
+remplacé par un espace normal avant tout envoi à jsPDF (`nettoyerPourPdf`),
+un bug qui touchait potentiellement tous les exports PDF de l'appli, pas
+seulement ceux-ci.
+
+## Numérotation des devis TMA : une suite par programme (décision du 21/07/2026)
+
+Le numéro de devis (ex: "TMA-2026-005") doit changer à chaque génération,
+même en régénérant le même devis après correction — jamais réutilisé.
+Question posée à Nicolas : une seule suite pour toute l'application, ou une
+suite séparée par programme ?
+
+**Décision :** séparée par programme (chaque programme repart à 001) —
+chaque programme peut avoir son propre maître d'ouvrage/sa propre
+comptabilité de devis. Implémenté via un compteur générique (`Compteur`,
+voir `schema-donnees.md`), clé `devis-tma-<idProgramme>-<année>`,
+incrémenté de façon atomique côté serveur (`POST /api/tma/:id/devis-numero`)
+— jamais calculé côté client, pour éviter deux générations concurrentes qui
+récupéreraient le même numéro.

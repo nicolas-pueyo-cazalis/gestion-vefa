@@ -810,7 +810,7 @@ totaux (point 115) — traitées une par une comme le reste.
      montant formaté ("5 444,00 €") contient un espace insécable que le
      clavier ne tape pas, la recherche ignore donc maintenant tous les
      espaces (texte tapé ET texte affiché) pour comparer.
-188. ✅ Dans les docs : demandes, cocher ce qui a été fait, comme par
+(il188. ✅ Dans les docs : demandes, cocher ce qui a été fait, comme par
      exemple 172, 173… ✅ fait le 20/07/2026 (rattrapage rétroactif sur
      l'ensemble des points 1 à 179, tenu à jour au fil de l'eau ensuite).
 
@@ -925,6 +925,45 @@ des remarques déjà faites sur les exports avant ce chantier : voir #18,
      Ajouté dans `statutAppel()` (client/src/utils/statuts.js), carte de
      stat dédiée sur la page, et couleur orange (#ea580c) dans la palette
      de badges (`$couleurs-statut`, client/src/styles/_variables.scss).
+
+**TMA**
+205. ✅ Bug signalé : corriger `nombreEntreprisesConcernees` après avoir déjà
+     saisi tous les devis entreprises (ex: 3 au lieu de 2) ne redéclenchait
+     jamais le calcul du montant entreprises/statut. Corrigé
+     (`PATCH /api/tma/:id/infos`, server/routes/tma.js) : ce recalcul
+     (`recalculerTma`, exporté depuis routes/tmaEntreprises.js) se déclenche
+     maintenant aussi quand ce nombre change réellement.
+206. ✅ Nouveau champ "Description" par entreprise sollicitée (`TmaEntreprise.
+     description`) — ce qui est demandé à CETTE entreprise précisément,
+     distinct de la description globale de la TMA. Affiché aussi dans le
+     panneau "Entreprises concernées" avec le n° de lot de travaux
+     (`Entreprise.numeroLot`, existant depuis le point 53, jamais affiché
+     jusqu'ici). Séparateur + titre "Ajouter une entreprise" ajoutés avant
+     le formulaire d'ajout (même principe que "Ajouter un lot").
+207. ✅ 3 exports TMA : "Statistiques (cartes)", "Demandes clients" (tableau
+     affiché à l'écran + 3 lignes de total TTC/TVA/HT, ajoutées aussi à
+     l'écran) et "Détail entreprises" (ligne "demande" en gras, une ligne de
+     titres en italique puis une ligne de valeurs par entreprise sollicitée,
+     réutilisant les colonnes du tableau plutôt que d'en ajouter). "En
+     retard" (entreprise n'ayant pas répondu à temps) s'affiche en rouge à
+     la fois dans cet export et dans le panneau "Entreprises concernées" (à
+     la place de "reçu le ...").
+208. ✅ Nouvelle colonne "N° demande" à côté de "Lot" (tableau à l'écran et
+     exports "Demandes clients"/"Détail entreprises") : rang chronologique
+     de la demande parmi celles du même logement (ex: 2ᵉ demande TMA du lot
+     A01 = "2"), jamais stocké, déduit de `dateDemande`. Tableau TMA classé
+     par référence de lot (puis n° de demande) plutôt que par ordre d'ajout.
+209. ✅ Export "Générer devis client" (modèle PDF fourni) : choix en deux
+     temps dans la fenêtre d'export (même mécanique que "Générer un appel
+     de fonds") — le LOGEMENT, puis les DEMANDES de ce logement à cocher
+     (un même devis peut regrouper plusieurs demandes). Numéro de devis
+     (ex: "TMA-2026-005") réservé côté serveur à CHAQUE génération, jamais
+     réutilisé — nouveau compteur atomique par programme et par année
+     (`Compteur`, server/models/Compteur.js, POST /api/tma/:id/devis-numero).
+210. ⏳ **Reporté** : le champ "Adresse" du maître d'ouvrage reste vide sur
+     le devis (pas de donnée correspondante en base) — à rajouter dans
+     Paramètres > Informations du programme, puis à répercuter aussi sur le
+     courrier d'appel de fonds (point 201), qui a le même trou.
 
 ---
 

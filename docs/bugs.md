@@ -846,3 +846,37 @@ composant" sont deux étapes distinctes qui peuvent chacune être oubliées
 indépendamment — copier un motif déjà posé sur 5 pages sur une 6ᵉ page
 reste un copier-coller manuel, avec le même risque d'oubli qu'une
 implémentation de zéro.
+
+---
+
+## TMA bloquée à "Étude" après correction de "Nombre d'entreprises concernées"
+
+**Symptôme** (21/07/2026) : Nicolas avait saisi 3 comme nombre
+d'entreprises concernées par erreur (la bonne valeur était 2), puis
+complété les 2 entreprises avec montant et date de retour. Le montant TTC
+entreprises restait vide et le statut bloqué à "Étude", même après avoir
+corrigé le nombre à 2.
+
+**Cause** : le calcul du montant entreprises/statut (`recalculerTma()`,
+server/routes/tmaEntreprises.js) ne se déclenche normalement que lors de
+l'ajout/modification/suppression d'une ligne `TmaEntreprise` — la route qui
+modifie `nombreEntreprisesConcernees` (`PATCH /api/tma/:id/infos`,
+server/routes/tma.js) se contentait de sauvegarder la nouvelle valeur, sans
+jamais redéclencher ce calcul. Corriger ce nombre APRÈS avoir déjà saisi
+tous les devis ne changeait donc rien tant qu'aucune ligne entreprise
+n'était retouchée.
+
+**Correction** : `recalculerTma()` exportée depuis `routes/tmaEntreprises.js`
+et appelée aussi depuis `PATCH /api/tma/:id/infos`, mais seulement quand
+`nombreEntreprisesConcernees` change réellement (pas à chaque sauvegarde du
+panneau, qui renvoie systématiquement ce champ). Une TMA déjà bloquée avant
+le correctif ne se corrige pas toute seule (la valeur n'a "pas changé" du
+point de vue du nouveau code) : il faut retoucher une ligne entreprise
+existante (ouvrir "Modifier" puis "Enregistrer", même sans rien changer)
+pour relancer le calcul une bonne fois.
+
+**Leçon** : un calcul dérivé qui dépend de PLUSIEURS champs doit être
+redéclenché depuis TOUS les points d'entrée qui modifient un de ces champs
+— pas seulement celui déjà couvert au départ (ici, l'ajout d'une ligne
+entreprise était couvert depuis le début, mais la correction du nombre
+attendu de lignes, ajoutée plus tard au point 136, ne l'a jamais été).

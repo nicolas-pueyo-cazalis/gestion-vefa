@@ -406,3 +406,28 @@ ici c'est uniquement du vocabulaire **technique**.
   (`formatMontant`, `formatDate`...) — pour que "ce qu'on tape" corresponde
   à "ce qu'on lit à l'écran", pas à une représentation interne invisible
   pour l'utilisateur.
+
+## Compteur atomique et jsPDF avancé (étape 4, point 209, numéro de devis TMA)
+
+- **Incrément atomique avec `findOneAndUpdate` + `$inc`** : pour un numéro
+  qui ne doit JAMAIS être attribué deux fois (un numéro de devis), il ne
+  faut surtout pas faire "lire la valeur, l'augmenter de 1 en JavaScript,
+  la réenregistrer" — si deux générations arrivent en même temps, elles
+  peuvent lire la même valeur de départ et repartir avec le même numéro.
+  `Compteur.findOneAndUpdate({ cle }, { $inc: { valeur: 1 } }, { upsert:
+  true, new: true })` demande à MongoDB de faire l'incrément lui-même, en
+  une seule opération indivisible ("atomique") — impossible que deux
+  requêtes se marchent dessus. `upsert: true` crée le compteur à 1 s'il
+  n'existe pas encore ; `new: true` renvoie le document APRÈS l'incrément
+  (sinon Mongoose renverrait l'ancienne valeur, avant le +1).
+- **`doc.getTextWidth(texte)` (jsPDF)** : mesure la largeur réelle (en mm)
+  qu'un texte va occuper avec la police et la taille actuellement réglées
+  sur le document (`doc.setFontSize(...)` juste avant) — utilisé pour
+  calculer des largeurs de colonnes qui collent exactement au contenu,
+  plutôt que de deviner une valeur fixe qui serait soit trop large (place
+  perdue), soit trop étroite (texte qui revient à la ligne).
+- **`didParseCell` (jspdf-autotable)** : une fonction de rappel appelée par
+  la librairie pour CHAQUE cellule du tableau, juste avant de la dessiner —
+  permet de changer son style (gras, italique, couleur) au cas par cas, en
+  fonction de son contenu ou de sa position (numéro de ligne/colonne),
+  plutôt que d'appliquer le même style à tout le tableau.

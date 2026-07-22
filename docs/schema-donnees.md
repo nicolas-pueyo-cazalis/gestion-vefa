@@ -617,6 +617,7 @@ entreprises (ex: un percement de mur = maçon + électricien).
 | `tma` | ObjectId → `TMA` | |
 | `entreprise` | ObjectId → `Entreprise` | référence (10/07/2026 : remplace l'ancien texte libre) |
 | `corpsDeTravaux` | String | **copie figée** du corps de métier de l'entreprise au moment de l'ajout — même principe que `AppelDeFonds.phase` : si le référentiel change plus tard, une ligne déjà créée ne doit pas changer rétroactivement |
+| `description` | String | ajouté le 21/07/2026 : ce qui est demandé à CETTE entreprise précisément — distinct de `TMA.description` (la demande globale du client), une même TMA pouvant nécessiter des interventions différentes selon l'entreprise |
 | `dateEnvoi` | Date | défaut à la création — sert de point de départ à l'alerte "entreprise n'a pas répondu à temps" |
 | `dateRetour` | Date | ajouté le 10/07/2026, **saisie manuelle** (pas déduite automatiquement, contrairement à d'autres dates de l'appli) — demandé par Nicolas pour le suivi, pas encore exploité dans un calcul |
 | `montantDevis` | Number | montant → convention "€" en début de document |
@@ -641,6 +642,19 @@ export des TMA envoyé directement aux entreprises.
 | `corpsDeTravaux` | String | ex: "GROS OEUVRE", "MENUISERIES INTERIEURES" |
 | `numeroLot` | String | ajouté le 10/07/2026 : n° du lot de travaux (ex: "01", "02"), saisi à la main — numérotation propre aux marchés de travaux, distincte des `Lot` (logements) du programme |
 | `contact` | sous-document `Contact` | même sous-schéma que `banque`/`courtier` sur `Acquereur` (extrait dans `server/models/contactSchema.js`, réutilisé plutôt que dupliqué) |
+
+---
+
+## `Compteur` (ajouté le 21/07/2026)
+
+Compteur générique à clé libre, pour tout besoin de numérotation
+auto-incrémentée (1ᵉʳ usage : numéro de devis TMA, "TMA-2026-005") — évite
+de créer une collection dédiée à chaque nouveau besoin de ce genre.
+
+| Champ | Type | Remarque |
+|---|---|---|
+| `cle` | String, unique | ex: `devis-tma-<idProgramme>-<année>` — une suite par programme et par année |
+| `valeur` | Number, défaut 0 | incrémentée de façon **atomique** (`findOneAndUpdate` + `$inc`), jamais lue puis réécrite à la main — évite qu'une génération concurrente ne récupère deux fois le même numéro |
 
 ---
 

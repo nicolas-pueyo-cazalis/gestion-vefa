@@ -45,7 +45,14 @@ const app = express()
 // réponse) — minimal mais suffisant pour un projet solo, pas un vrai
 // système de logs structurés/centralisés (voir docs/decisions.md).
 app.use(morgan('dev'))
-app.use(cors())
+// `CORS_ORIGIN` (21/07/2026, préparation au déploiement) : optionnelle,
+// n'importe quel site peut appeler l'API tant qu'elle n'est pas définie
+// (comportement actuel, nécessaire en local où le front tourne sur une
+// origine différente — localhost:5173 — de l'API — localhost:4000). Une
+// fois en ligne, réglée sur l'adresse exacte du front déployé (ex:
+// "https://gestion-vefa.vercel.app") pour qu'un autre site ne puisse pas
+// appeler cette API depuis le navigateur d'un utilisateur connecté.
+app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }))
 app.use(express.json())
 
 app.get('/', (req, res) => {

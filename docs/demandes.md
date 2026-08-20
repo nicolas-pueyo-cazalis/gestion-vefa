@@ -1067,6 +1067,74 @@ assumée comme limite de projet solo pour l'instant.
      planifiée) vers un stockage externe — pas mis en place, décision
      d'infrastructure à prendre par Nicolas, pas un correctif de code.
 
+### Décisions en attente (Nicolas) — issues de cet audit
+
+Pas de code bloqué dessus, mais à trancher à un moment donné :
+
+224. ❓ **Sauvegarde MongoDB** : vérifier le tier Atlas actuel (M0 gratuit =
+     pas de sauvegarde continue), puis choisir entre (a) mettre en place un
+     `mongodump` périodique vers un stockage externe soi-même, ou (b)
+     upgrader vers un tier payant (M10+) avec sauvegarde continue incluse.
+     Voir point 223.
+225. ❓ **Mise à jour d'`exceljs`** : la dernière vulnérabilité npm restante
+     côté client (`uuid`, modérée) ne se corrige qu'en changeant de version
+     majeure d'`exceljs`. À faire quand Nicolas est prêt à retester tous
+     les exports Excel de l'appli derrière (5 pages) — pas urgent (sévérité
+     modérée, dépendance transitive, pas le code de l'appli). Voir points
+     221 et `decisions.md`.
+226. ❓ **Nommage `/api/programme` et `/api/tma`** (singulier, alors que le
+     reste de l'API est au pluriel — `/api/lots`, `/api/entreprises`...) :
+     laissé tel quel pour l'instant (renommer casserait toutes les URLs
+     déjà utilisées côté client, pour un gain purement cosmétique). À
+     confirmer si Nicolas veut que ce soit corrigé avant de montrer le
+     projet en entretien, ou si c'est un détail assumable tel quel. Voir
+     point 215.
+
+---
+
+## Audit infrastructure (21/07/2026)
+
+Nicolas ne connaît pas le sujet ("je n'y connais rien") — demande d'un
+état des lieux pédagogique : ce qui est prêt, ce qui manque, points positifs
+et négatifs, avant de déployer l'appli quelque part (aujourd'hui tout tourne
+en local, README point 5 "⬜ Déploiement").
+
+227. ✅ **État des lieux** : rien n'est déployé nulle part — back (Express),
+     front (React/Vite) et personne d'autre que Nicolas n'y accède. Seule
+     la base de données est déjà "dans le cloud" (MongoDB Atlas).
+     - **Points positifs** : base de données déjà hébergée ; front et back
+       déjà découplés en deux applications communiquant via une adresse
+       configurable (`VITE_API_URL`) — architecture prête pour l'hébergement
+       séparé le plus simple/gratuit ; secrets déjà proprement gérés par
+       variables d'environnement (rien à changer dans le code) ; route de
+       "santé" déjà présente (`GET /`) ; `npm run build` (front) testé et
+       fonctionnel, `npm start` (back) déjà prêt ; CI (GitHub Actions) déjà
+       en place, bonne base pour un déploiement automatique plus tard.
+     - **Points négatifs** : aucune configuration d'hébergement (normal,
+       jamais déployé) ; CORS grand ouvert (`cors()` sans réglage) — sans
+       danger en local, à restreindre une fois en ligne ; version de Node
+       non figée (`engines` absent des `package.json`) ; paquet JS du front
+       assez lourd au 1ᵉʳ chargement (~540 Ko compressés, jsPDF/exceljs
+       chargés même sans utiliser les exports) — optimisable plus tard (pas
+       urgent) ; pas de nom de domaine/HTTPS (mais géré automatiquement par
+       les hébergeurs recommandés, rien à faire à la main).
+228. ✅ **2 corrections de préparation** faites dans la foulée (sans attendre
+     le déploiement, sans rien casser) :
+     - `"engines": { "node": ">=20" }` ajouté aux deux `package.json`.
+     - CORS rendu configurable : nouvelle variable d'environnement
+       optionnelle `CORS_ORIGIN` (server/.env.example) — vide par défaut
+       (comportement actuel conservé, nécessaire en local), à remplir avec
+       l'adresse du front une fois déployé.
+229. ❓ **Plan de déploiement proposé**, en attente de la décision de
+     Nicolas sur quand s'y mettre : back (Express) sur **Render** (compte
+     gratuit, déploiement automatique à chaque `git push`, variables
+     d'environnement à recopier depuis `.env` — seul défaut du tier
+     gratuit : le serveur s'endort après inactivité, réveil en quelques
+     secondes) ; front (React) sur **Vercel** ou **Netlify** (gratuit,
+     détecte Vite automatiquement, HTTPS + nom de domaine offerts) ; base
+     de données déjà prête (juste autoriser Render à s'y connecter, un
+     réglage dans Atlas).
+
 ---
 
 ## Notes

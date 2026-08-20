@@ -8,7 +8,9 @@ import mongoose from 'mongoose'
 // lot est supprimé par la suite (cas d'une vente d'annexe annulée).
 const historiqueModificationPrixSchema = new mongoose.Schema({
   lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true },
-  programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true },
+  // `index: true` (21/07/2026, audit performance) : filtré directement par
+  // `?programme=<id>` (route dédiée, `historiqueModificationsPrix.js`).
+  programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true, index: true },
   referenceLot: { type: String, required: true },
   ancienPrix: { type: Number, required: true },
   nouveauPrix: { type: Number, required: true },

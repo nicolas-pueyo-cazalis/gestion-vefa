@@ -7,6 +7,7 @@ import {
   statutPret, statutSignature, statutAppel,
   estEntrepriseEnRetard, estFactureTmaEnRetard, formatDate,
 } from '../utils/statuts.js'
+import { useFermerAvecEchap } from '../hooks/useFermerAvecEchap.js'
 
 function nomComplet(acquereur) {
   return [acquereur?.civilite, acquereur?.prenom, acquereur?.nom].filter(Boolean).join(' ') || '—'
@@ -36,6 +37,11 @@ function AlerteRetards() {
     charger()
   }, [programme._id])
 
+  // Avant le `if` ci-dessous (21/07/2026, audit accessibilité) : un Hook ne
+  // peut jamais être appelé après un retour anticipé, sous peine de casser
+  // l'ordre des Hooks d'un rendu à l'autre.
+  useFermerAvecEchap(() => setVisible(false))
+
   if (!donnees || !visible) return null
 
   const { lots, appels, tmaList, tmaEntreprises } = donnees
@@ -59,7 +65,7 @@ function AlerteRetards() {
 
   return (
     <div className="fenetre-fond" onClick={() => setVisible(false)}>
-      <div className="fenetre-contenu fenetre-alertes" onClick={(e) => e.stopPropagation()}>
+      <div className="fenetre-contenu fenetre-alertes" role="dialog" aria-modal="true" aria-label={`${total} retard${total > 1 ? 's' : ''} à traiter`} onClick={(e) => e.stopPropagation()}>
         <h3>{total} retard{total > 1 ? 's' : ''} à traiter</h3>
 
         {lotsRetardPret.length > 0 && (

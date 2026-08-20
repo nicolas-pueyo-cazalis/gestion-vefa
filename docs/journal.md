@@ -2212,3 +2212,17 @@ client, connexion MongoDB ratée au démarrage laissant le process "vivant"
 sans jamais écouter), et tests (nouvelle checklist manuelle pré-déploiement,
 `docs/checklist-tests-manuels.md`, couvrant les parcours critiques de
 chaque page).
+
+**Priorité basse** ("on continue", même jour) : accessibilité (aria-label
+manquant sur `BarreRecherche`, contraste insuffisant sur les cartes de
+stats, 4 fenêtres modales sans rôle accessible ni fermeture au clavier —
+nouveau hook `useFermerAvecEchap`), performance (index MongoDB ajoutés sur
+les champs de jointure les plus filtrés — `Lot.programme` en tête, jamais
+indexé jusqu'ici), logging (`morgan` pour les requêtes HTTP, rien
+n'existait avant l'audit), dépendances (`npm audit fix` : 1 vulnérabilité
+corrigée côté serveur, 6 sur 8 côté client — les 2 restantes nécessiteraient
+un downgrade cassant d'`exceljs`, laissé en l'état, voir `decisions.md`),
+CI/CD (nouveau `.github/workflows/ci.yml`, lint front + vérification
+syntaxe back à chaque push). Sauvegarde/récupération : pas de correctif de
+code, juste une recommandation (le tier gratuit MongoDB Atlas n'inclut pas
+de sauvegarde continue) — décision d'infrastructure à prendre par Nicolas.

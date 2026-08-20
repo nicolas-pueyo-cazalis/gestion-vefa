@@ -343,7 +343,11 @@ main {
   .label {
     font-size: 0.68rem;
     font-weight: 600;
-    color: #8896a3;
+    // #52606d (21/07/2026, audit accessibilité) : remplace #8896a3, dont le
+    // contraste sur fond clair (~3:1) était insuffisant pour du texte de
+    // cette taille (norme WCAG AA : 4.5:1 minimum) — cette teinte est déjà
+    // utilisée partout ailleurs dans l'appli comme texte secondaire, ~6.5:1.
+    color: #52606d;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: block;
@@ -396,7 +400,11 @@ main {
       order: 1;
       font-size: 0.68rem;
       font-weight: 600;
-      color: #8896a3;
+      // #52606d (21/07/2026, audit accessibilité) : remplace #8896a3, dont le
+    // contraste sur fond clair (~3:1) était insuffisant pour du texte de
+    // cette taille (norme WCAG AA : 4.5:1 minimum) — cette teinte est déjà
+    // utilisée partout ailleurs dans l'appli comme texte secondaire, ~6.5:1.
+    color: #52606d;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 0.25rem;
@@ -416,7 +424,11 @@ main {
       order: 3;
       margin-top: 0.15rem;
       font-size: 0.75rem;
-      color: #8896a3;
+      // #52606d (21/07/2026, audit accessibilité) : remplace #8896a3, dont le
+    // contraste sur fond clair (~3:1) était insuffisant pour du texte de
+    // cette taille (norme WCAG AA : 4.5:1 minimum) — cette teinte est déjà
+    // utilisée partout ailleurs dans l'appli comme texte secondaire, ~6.5:1.
+    color: #52606d;
       font-variant-numeric: tabular-nums;
     }
   }

@@ -252,3 +252,19 @@ voir `schema-donnees.md`), clé `devis-tma-<idProgramme>-<année>`,
 incrémenté de façon atomique côté serveur (`POST /api/tma/:id/devis-numero`)
 — jamais calculé côté client, pour éviter deux générations concurrentes qui
 récupéreraient le même numéro.
+
+## Vulnérabilité `uuid` (via `exceljs`) laissée en l'état (décision du 21/07/2026)
+
+`npm audit` (client) signale une vulnérabilité modérée sur `uuid`, une
+dépendance transitive d'`exceljs`. Le correctif automatique proposé
+(`npm audit fix --force`) downgrade `exceljs` en version 3, un changement
+que npm signale lui-même comme cassant.
+
+**Décision :** ne PAS appliquer ce downgrade automatiquement. `exceljs`
+est au cœur de tous les exports Excel de l'appli (5 pages), tout juste
+terminés et testés ce mois-ci — un downgrade risquerait de casser des
+fonctionnalités qui marchent, pour corriger une vulnérabilité modérée (pas
+critique) dans une dépendance transitive, pas le code de l'appli
+lui-même. À rediscuter avec Nicolas plus tard (upgrade contrôlé
+d'`exceljs` vers une version majeure plus récente qui ne dépend plus
+d'`uuid` vulnérable, avec retest complet des exports), pas dans l'urgence.

@@ -69,7 +69,9 @@ export function calculerMontantClient(montantEntreprises, parametres) {
 }
 
 const tmaSchema = new mongoose.Schema({
-  lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true },
+  // `index: true` (21/07/2026, audit performance) : filtré à chaque
+  // requête `{ lot: { $in: idsLots } }` (une par programme).
+  lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true, index: true },
   acquereur: { type: mongoose.Schema.Types.ObjectId, ref: 'Acquereur', required: true },
   localisation: String,
   description: String,

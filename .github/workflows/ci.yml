@@ -1,0 +1,45 @@
+name: CI
+
+# Vérifications minimales à chaque push/pull request (21/07/2026, audit
+# CI/CD) — avant, tout dépendait de la vigilance manuelle (lancer le lint
+# soi-même avant de commiter, ou pas). Volontairement restreint à ce qui
+# existe déjà et fonctionne (lint front, vérification de syntaxe back) :
+# pas de suite de tests automatisés à ce stade (voir README.md), donc pas
+# d'étape "test" qui échouerait à coup sûr.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-front:
+    name: Lint front-end (oxlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+        working-directory: client
+      - run: npm run lint
+        working-directory: client
+
+  verifie-back:
+    name: Vérification de syntaxe back-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - name: node --check sur chaque fichier .js
+        working-directory: server
+        run: find . -name "*.js" -not -path "./node_modules/*" -print0 | xargs -0 -n1 node --check

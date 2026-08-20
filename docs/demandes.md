@@ -1019,6 +1019,54 @@ assumée comme limite de projet solo pour l'instant.
      de chaque page, avec les cas déjà responsables d'un bug réel
      signalés (⚠️).
 
+**Priorité basse — "on continue" (21/07/2026, suite)**
+
+218. ✅ **Accessibilité** : `BarreRecherche` sans nom accessible (placeholder
+     seul, jamais fiable pour un lecteur d'écran) — `aria-label` ajouté.
+     Contraste insuffisant (~3:1, sous le seuil WCAG AA de 4.5:1) sur les
+     libellés/pourcentages des cartes de stats (`#8896a3`) — remplacé par
+     `#52606d` (~6.5:1), déjà utilisé partout ailleurs comme texte
+     secondaire. Les 4 fenêtres modales de l'appli n'avaient ni rôle
+     accessible ni fermeture au clavier — `role="dialog"`/`aria-modal` +
+     nouveau hook `useFermerAvecEchap` (fermeture à la touche Échap).
+219. ✅ **Performance** : aucun index MongoDB sur les champs de jointure les
+     plus filtrés (`Lot.programme`, interrogé par `getIdsLotsDuProgramme`
+     à quasiment chaque requête multi-programme) — invisible avec le volume
+     actuel, deviendrait un vrai ralentissement à plus grande échelle
+     (500 programmes). Ajout de `index: true` sur `Lot.programme`,
+     `AppelDeFonds.lot`, `Tma.lot`, `TmaEntreprise.tma`,
+     `HistoriqueAnnulation.programme`, `HistoriqueModificationPrix.programme`.
+     Côté React : pas de risque identifié — chaque page ne charge jamais
+     que le programme actif (jamais les 500 à la fois), la taille réelle à
+     afficher reste celle d'UN programme (quelques centaines de lignes au
+     pire), largement dans les capacités de React sans virtualisation.
+220. ✅ **Logging/monitoring** : aucune requête HTTP journalisée jusqu'ici.
+     Ajout de `morgan('dev')` (une ligne par requête : méthode, URL, code,
+     temps de réponse) — minimal mais suffisant pour un projet solo, pas un
+     vrai système de logs structurés/centralisés.
+221. ✅ **Dépendances** : `npm audit` — 1 vulnérabilité haute côté serveur
+     (transitive), corrigée sans rien casser (`npm audit fix`). Côté
+     client : 8 vulnérabilités (3 modérées, 5 hautes), 6 corrigées sans
+     rien casser ; les 2 restantes (`uuid`, via `exceljs`) nécessiteraient
+     de downgrader `exceljs` en version 3 (changement cassant signalé par
+     npm lui-même) — **laissé en l'état volontairement**, à rediscuter
+     avec Nicolas plutôt que de risquer de casser les exports Excel tout
+     juste terminés.
+222. ✅ **CI/CD** : aucune automatisation avant ce point (tout dépendait de
+     la vigilance manuelle). Nouveau `.github/workflows/ci.yml` : lint
+     front (`oxlint`, déjà 0 erreur) + vérification de syntaxe de chaque
+     fichier back (`node --check`, pas de lint serveur configuré) à chaque
+     push/pull request sur `main`. Pas d'étape "test" : aucune suite
+     automatisée à ce stade, une étape qui échouerait à coup sûr n'aurait
+     aucun intérêt.
+223. ⏳ **Sauvegarde/récupération** : pas de correctif de code — question
+     d'infrastructure. Le tier gratuit MongoDB Atlas (M0) n'inclut pas de
+     sauvegarde continue automatique (contrairement aux tiers payants
+     M10+) ; à vérifier sur le tableau de bord Atlas de Nicolas. Recommandé
+     en attendant : un export périodique (`mongodump`, manuel ou en tâche
+     planifiée) vers un stockage externe — pas mis en place, décision
+     d'infrastructure à prendre par Nicolas, pas un correctif de code.
+
 ---
 
 ## Notes

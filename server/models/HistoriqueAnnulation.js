@@ -27,7 +27,9 @@ const appelSnapshotSchema = new mongoose.Schema({
 // signalées par un avertissement plutôt que déplacées.
 const historiqueAnnulationSchema = new mongoose.Schema({
   lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true },
-  programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true },
+  // `index: true` (21/07/2026, audit performance) : filtré directement par
+  // `?programme=<id>` (route dédiée, `historiqueAnnulations.js`).
+  programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true, index: true },
   referenceLot: { type: String, required: true },
   statutAvantAnnulation: {
     type: String,

@@ -1,7 +1,10 @@
 import mongoose from 'mongoose'
 
 const tmaEntrepriseSchema = new mongoose.Schema({
-  tma: { type: mongoose.Schema.Types.ObjectId, ref: 'Tma', required: true },
+  // `index: true` (21/07/2026, audit performance) : filtré à chaque
+  // requête `?tma=<id>` (panneau "Entreprises concernées") et
+  // `{ tma: { $in: ... } }` (une par programme).
+  tma: { type: mongoose.Schema.Types.ObjectId, ref: 'Tma', required: true, index: true },
   entreprise: { type: mongoose.Schema.Types.ObjectId, ref: 'Entreprise', required: true },
   // Copie figée du corps de travaux de l'entreprise au moment de l'ajout —
   // même principe que AppelDeFonds.phase (docs/schema-donnees.md) : si le

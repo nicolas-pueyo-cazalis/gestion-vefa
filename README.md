@@ -119,8 +119,17 @@ tout moment depuis le bandeau.
 - **Tests** : pas de suite de tests automatisés à ce stade — chaque
   fonctionnalité a été validée manuellement au fil du développement
   (scénarios réels rejoués à la main), avec les bugs rencontrés et leur
-  correction tracés dans [`docs/bugs.md`](docs/bugs.md). C'est une limite
-  connue du projet, pas un point laissé dans le flou.
+  correction tracés dans [`docs/bugs.md`](docs/bugs.md), et une
+  [checklist de tests manuels pré-déploiement](docs/checklist-tests-manuels.md).
+  C'est une limite connue du projet, pas un point laissé dans le flou.
+- **Intégration continue** : [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+  lance le lint front et une vérification de syntaxe du back à chaque push/
+  pull request sur `main`.
+- **Performance/logging** : index MongoDB sur les champs de jointure les
+  plus filtrés (voir [`docs/decisions.md`](docs/decisions.md)), requêtes
+  HTTP journalisées (`morgan`), erreurs serveur toujours logguées côté
+  serveur (`console.error`) et renvoyées au client seulement hors
+  production.
 
 ## Installation locale
 
@@ -176,4 +185,7 @@ Le projet avance par étapes (détail dans [`docs/decisions.md`](docs/decisions.
 | Front-end | React 19, Vite, React Router, Sass |
 | Back-end | Node.js, Express 5, MongoDB / Mongoose |
 | Authentification | JWT, bcrypt |
+| Exports | exceljs, jsPDF / jspdf-autotable |
+| Logging | morgan |
 | Hébergement base de données | MongoDB Atlas |
+| CI | GitHub Actions |

@@ -1,7 +1,9 @@
 import mongoose from 'mongoose'
 
 const appelDeFondsSchema = new mongoose.Schema({
-  lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true },
+  // `index: true` (21/07/2026, audit performance) : filtré à chaque
+  // requête `{ lot: { $in: idsLots } }` (une par programme).
+  lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true, index: true },
   // Copie figée de la phase au moment de l'émission (docs/schema-donnees.md) :
   // le barème du programme peut changer après coup, un appel déjà émis ne
   // doit pas être recalculé rétroactivement.

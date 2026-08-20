@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { exporterExcel, exporterPDF } from '../utils/export.js'
+import { useFermerAvecEchap } from '../hooks/useFermerAvecEchap.js'
 
 // Fenêtre d'export unique (20/07/2026, chantier des exports) : un seul
 // bouton "Exporter" par page ouvre cette fenêtre, qui propose la liste
@@ -22,6 +23,7 @@ import { exporterExcel, exporterPDF } from '../utils/export.js'
 //    cocher/décocher) suivi d'une action métier (pas juste un
 //    téléchargement) fournie par la page, pas les boutons Excel/PDF.
 function FenetreExport({ options, onFermer }) {
+  useFermerAvecEchap(onFermer)
   const [typeChoisi, setTypeChoisi] = useState(options[0]?.valeur ?? '')
   const option = options.find((o) => o.valeur === typeChoisi)
   const estGeneration = option?.type === 'generation'
@@ -84,7 +86,7 @@ function FenetreExport({ options, onFermer }) {
 
   return (
     <div className="fenetre-fond" onClick={onFermer}>
-      <div className="fenetre-contenu" onClick={(e) => e.stopPropagation()}>
+      <div className="fenetre-contenu" role="dialog" aria-modal="true" aria-label="Exporter" onClick={(e) => e.stopPropagation()}>
         <h3>Exporter</h3>
 
         <fieldset className="choix-export">

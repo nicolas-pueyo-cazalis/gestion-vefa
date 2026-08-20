@@ -1,7 +1,11 @@
 import mongoose from 'mongoose'
 
 const lotSchema = new mongoose.Schema({
-  programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true },
+  // `index: true` (21/07/2026, audit performance) : ce champ est filtré à
+  // CHAQUE requête multi-programme (`getIdsLotsDuProgramme`, server/utils/
+  // programme.js, appelé par la quasi-totalité des routes) — sans index,
+  // MongoDB doit parcourir toute la collection `Lot` à chaque appel.
+  programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true, index: true },
   reference: { type: String, required: true },
   etage: String,
   type: String,

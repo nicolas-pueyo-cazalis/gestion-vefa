@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import morgan from 'morgan'
 import mongoose from 'mongoose'
 
 // Enregistre tous les modèles Mongoose au démarrage, même ceux non
@@ -36,6 +37,14 @@ import { verifierToken } from './middleware/auth.js'
 
 const app = express()
 
+// Journalisation des requêtes HTTP (21/07/2026, audit "logging/monitoring")
+// — avant, aucune trace de ce qui arrivait au serveur (aucun `console.log`
+// nulle part) : impossible de diagnostiquer un incident en production sans
+// avoir accès à la machine et pouvoir reproduire le problème à la main.
+// `morgan('dev')` : une ligne par requête (méthode, URL, code, temps de
+// réponse) — minimal mais suffisant pour un projet solo, pas un vrai
+// système de logs structurés/centralisés (voir docs/decisions.md).
+app.use(morgan('dev'))
 app.use(cors())
 app.use(express.json())
 

@@ -967,6 +967,60 @@ des remarques déjà faites sur les exports avant ce chantier : voir #18,
 
 ---
 
+## Audit qualité/sécurité en vue des entretiens (21/07/2026)
+
+Nicolas a transmis une liste de 18 axes d'audit possibles (vérification
+fonctionnelle, sécurité, qualité de code, gestion d'erreurs, performance,
+architecture, tests, secrets, RGPD, dépendances, documentation, déploiement,
+logging, accessibilité, versioning, sauvegarde, cohérence API, CI/CD), avec
+sa propre priorisation : **haute** (secrets/.env, RGPD, README, git) traitée
+en premier, **moyenne** (cohérence API, gestion d'erreurs, tests) ensuite,
+**basse** (CI/CD, monitoring, backup, accessibilité, perf à grande échelle)
+assumée comme limite de projet solo pour l'instant.
+
+211. ✅ **Secrets/.env** : audit — rien à corriger. `.env` jamais commité
+     (vérifié sur tout l'historique git), `.gitignore` correct,
+     `.env.example` bien templaté, aucun secret en dur trouvé dans le code.
+212. ✅ **RGPD** : audit — pas de coordonnées bancaires ni de situation
+     fiscale d'acheteur stockées (précision par rapport à la description
+     de Nicolas : `Acquereur.banque/courtier/notaire` ne sont que des
+     coordonnées de contact d'organismes, pas un RIB client ; le seul
+     IBAN de l'appli est celui du promoteur). Mots de passe bcrypt, jamais
+     en clair. Bug corrigé : `erreur.message` brut renvoyé au client sur
+     toute erreur 500, y compris en production — nouveau helper
+     `repondreErreurServeur()` (server/utils/erreurs.js), utilisé dans
+     les 12 fichiers de routes (46 occurrences) : détail loggué
+     `console.error` côté serveur toujours, renvoyé au client seulement
+     hors production.
+213. ✅ **README** : audit — jugé déjà solide (installation claire,
+     architecture expliquée, absence de tests assumée explicitement plutôt
+     que cachée). Complété avec les exports (chantier de la semaine) et le
+     nombre de collections (13, ajout de `Compteur`).
+214. ✅ **Git** : audit — jugé déjà propre (44 commits descriptifs, aucun
+     "wip"/"fix" isolé, `node_modules`/`.env`/`dist` jamais trackés). Rien
+     à corriger.
+215. ✅ **Cohérence API** : audit — statuts HTTP cohérents partout (400/401/
+     403/404/201/204/500), 401 (non connecté) bien distingué de 403 (mauvais
+     rôle), chaque route d'écriture protégée par `autoriserRoles(...)` (ou
+     `router.use(...)` pour `/api/utilisateurs`, réservée aux admins) —
+     aucune faille d'autorisation trouvée. Un point relevé mais **laissé
+     tel quel** (pas de vraie gêne, renommer casserait des URLs déjà
+     utilisées partout côté client) : `/api/programme` et `/api/tma` sont
+     au singulier alors que le reste de l'API est au pluriel
+     (`/api/lots`, `/api/entreprises`...).
+216. ✅ **Gestion d'erreurs** : audit + 2 bugs corrigés (voir `bugs.md`) —
+     une panne serveur totale (backend arrêté, coupure réseau) échouait en
+     silence sur la quasi-totalité des actions de l'appli (créer/modifier/
+     supprimer), sans le moindre message ; et un échec de connexion
+     MongoDB au démarrage laissait le process Node "vivant" sans jamais
+     écouter sur le port, invisible pour un gestionnaire de process.
+217. ✅ **Tests** : nouvelle checklist de tests manuels pré-déploiement
+     (`docs/checklist-tests-manuels.md`), couvrant les parcours critiques
+     de chaque page, avec les cas déjà responsables d'un bug réel
+     signalés (⚠️).
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

@@ -156,6 +156,7 @@ le premier jour du projet :
 - [`concepts-techniques.md`](docs/concepts-techniques.md) — fiche de révision des notions de code vues (vanilla, React, Mongoose...)
 - [`bugs.md`](docs/bugs.md) — bugs rencontrés (symptôme / cause / correction / leçon)
 - [`demandes.md`](docs/demandes.md) — liste chronologique complète des demandes, cochées au fur et à mesure
+- [`checklist-tests-manuels.md`](docs/checklist-tests-manuels.md) — parcours critiques à revérifier avant chaque déploiement
 
 ## Avancement
 

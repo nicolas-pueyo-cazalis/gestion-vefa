@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import Utilisateur from '../models/Utilisateur.js'
 import { verifierToken } from '../middleware/auth.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -41,7 +42,7 @@ router.post('/connexion', async (req, res) => {
       utilisateur: { id: utilisateur._id, email: utilisateur.email, nom: utilisateur.nom, role: utilisateur.role },
     })
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -56,7 +57,7 @@ router.get('/moi', verifierToken, async (req, res) => {
     }
     res.json({ utilisateur })
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

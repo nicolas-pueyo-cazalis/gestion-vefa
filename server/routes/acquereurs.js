@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Acquereur from '../models/Acquereur.js'
 import { autoriserRoles } from '../middleware/auth.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
     const acquereurs = await Acquereur.find(filtre).sort({ nom: 1, prenom: 1 }).populate('lots', 'reference')
     res.json(acquereurs)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -44,7 +45,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     })
     res.status(201).json(acquereur)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -61,7 +62,7 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     }
     res.json(acquereur)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

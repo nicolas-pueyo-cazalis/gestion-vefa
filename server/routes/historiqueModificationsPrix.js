@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import HistoriqueModificationPrix from '../models/HistoriqueModificationPrix.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -12,7 +13,7 @@ router.get('/', async (req, res) => {
     const historique = await HistoriqueModificationPrix.find(filtre).sort({ createdAt: -1 })
     res.json(historique)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

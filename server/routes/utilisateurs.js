@@ -2,6 +2,7 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import Utilisateur from '../models/Utilisateur.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -17,7 +18,7 @@ router.get('/', async (req, res) => {
     const utilisateurs = await Utilisateur.find({}, 'email nom role createdAt').sort({ nom: 1 })
     res.json(utilisateurs)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -36,7 +37,7 @@ router.post('/', async (req, res) => {
     if (erreur.code === 11000) {
       return res.status(400).json({ message: 'Un compte existe déjà avec cet email' })
     }
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -63,7 +64,7 @@ router.patch('/:id', async (req, res) => {
     await utilisateur.save()
     res.json({ id: utilisateur._id, email: utilisateur.email, nom: utilisateur.nom, role: utilisateur.role })
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -80,7 +81,7 @@ router.delete('/:id', async (req, res) => {
     }
     res.status(204).end()
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

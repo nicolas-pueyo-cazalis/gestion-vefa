@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Entreprise from '../models/Entreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -11,7 +12,7 @@ router.get('/', async (req, res) => {
     const entreprises = await Entreprise.find().sort({ corpsDeTravaux: 1, nom: 1 })
     res.json(entreprises)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -22,7 +23,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     const entreprise = await Entreprise.create({ nom, corpsDeTravaux, numeroLot, contact })
     res.status(201).json(entreprise)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -35,7 +36,7 @@ router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) 
     }
     res.status(204).end()
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

@@ -3,6 +3,7 @@ import Programme from '../models/Programme.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
 import { autoriserRoles } from '../middleware/auth.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
     const programmes = await Programme.find().sort({ nom: 1 })
     res.json(programmes)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -28,7 +29,7 @@ router.get('/:id', async (req, res) => {
     }
     res.json(programme)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -44,7 +45,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     const programme = await Programme.create({ nom })
     res.status(201).json(programme)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -91,7 +92,7 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     await programme.save()
     res.json(programme)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

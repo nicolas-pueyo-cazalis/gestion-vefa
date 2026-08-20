@@ -880,3 +880,45 @@ redéclenché depuis TOUS les points d'entrée qui modifient un de ces champs
 — pas seulement celui déjà couvert au départ (ici, l'ajout d'une ligne
 entreprise était couvert depuis le début, mais la correction du nombre
 attendu de lignes, ajoutée plus tard au point 136, ne l'a jamais été).
+
+---
+
+## Panne serveur : échecs silencieux, trouvés lors d'un audit (pas signalés par un test réel)
+
+**Contexte** (21/07/2026) : audit "gestion d'erreurs" demandé par Nicolas —
+"que se passe-t-il actuellement si la base de données est indisponible ?".
+Deux failles trouvées en lisant le code, sans reproduction manuelle.
+
+**Faille n°1 — actions de l'appli, côté client** : `apiFetch()`
+(client/src/utils/api.js) enveloppe `fetch()` pour ajouter le jeton JWT et
+gérer les 401, mais ne protégeait pas contre `fetch()` qui **lève une
+exception** (pas une réponse HTTP) quand le serveur est totalement
+injoignable — arrêté, coupure réseau. Seul le CHARGEMENT initial de
+chaque page a un `try/catch` (affiche "Erreur : ...") ; tous les autres
+appels (créer/modifier/supprimer — des dizaines de fonctions à travers
+toutes les pages) n'en ont pas. Résultat : cliquer "Enregistrer" pendant
+une panne serveur échouait en silence, sans le moindre message, l'écran
+restant figé sans explication.
+
+**Correction** : `try/catch` ajouté directement DANS `apiFetch()` (un seul
+endroit, pas des dizaines) — sur une erreur réseau, affiche un message
+explicite (`alert`) puis relance l'exception, pour ne rien changer au
+comportement des pages qui l'attrapaient déjà elles-mêmes.
+
+**Faille n°2 — démarrage du serveur** : un échec de connexion à MongoDB au
+démarrage (`server/index.js`) se contentait d'un `console.error` — le
+process Node restait "vivant" (jamais de `process.exit`) sans jamais
+écouter sur le port. Un gestionnaire de process (PM2, healthcheck Docker)
+l'aurait cru fonctionnel alors qu'aucune requête n'aurait jamais abouti.
+
+**Correction** : `process.exit(1)` sur l'échec initial (le démarrage
+échoue clairement) + écouteurs `mongoose.connection.on('error'/
+'disconnected'/'reconnected')` pour logguer une coupure survenant APRÈS
+le démarrage (ex: maintenance Atlas) — Mongoose retente de se reconnecter
+tout seul, mais rien n'était loggué en attendant.
+
+**Leçon** : "que se passe-t-il si le serveur est indisponible" ne se
+découvre pas en testant les cas qui marchent — un audit ciblé du code
+(pas un rejeu manuel) a trouvé les deux failles en quelques minutes, alors
+qu'aucun test manuel du quotidien ne les aurait révélées (la base est
+quasiment toujours disponible en développement).

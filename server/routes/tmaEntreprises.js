@@ -4,6 +4,7 @@ import TmaEntreprise from '../models/TmaEntreprise.js'
 import Entreprise from '../models/Entreprise.js'
 import { autoriserRoles } from '../middleware/auth.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const STATUTS_NON_RECALCULABLES = ['termine', 'refuse', 'annule']
 
@@ -87,7 +88,7 @@ router.get('/', async (req, res) => {
       .sort({ createdAt: 1 })
     res.json(lignes)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -124,7 +125,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     await recalculerTma(tma)
     res.status(201).json(ligne)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -161,7 +162,7 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     await recalculerTma(ligne.tma)
     res.json(ligne)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -175,7 +176,7 @@ router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) 
     await recalculerTma(ligne.tma)
     res.status(204).end()
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

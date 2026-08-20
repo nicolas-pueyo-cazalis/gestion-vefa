@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Annexe from '../models/Annexe.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -20,7 +21,7 @@ router.get('/', async (req, res) => {
       .populate('lot', 'reference')
     res.json(annexes)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -38,7 +39,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     if (erreur.code === 11000) {
       return res.status(400).json({ message: `Le numéro ${req.body.numero} est déjà utilisé pour ce type d'annexe.` })
     }
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -64,7 +65,7 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     if (erreur.code === 11000) {
       return res.status(400).json({ message: `Le numéro ${req.body.numero} est déjà utilisé pour ce type d'annexe.` })
     }
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -84,7 +85,7 @@ router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) 
     await annexe.deleteOne()
     res.status(204).end()
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

@@ -2186,3 +2186,29 @@ par de futurs exports) :
   personnalisés (`libelleChoix1`/`libelleChoix2`/`messageChoix2Vide`),
   réutilisé tel quel pour "Générer devis client" (logement → demandes à
   cocher) sans dupliquer le composant.
+
+## 2026-07-21 (suite) — Audit qualité/sécurité en vue des entretiens
+
+Nicolas a transmis une liste de 18 axes d'audit (vérification
+fonctionnelle, sécurité, RGPD, architecture, tests, secrets, dépendances,
+documentation, déploiement, logging, accessibilité, versioning, backup,
+cohérence API, CI/CD...), avec sa propre priorisation. Traité en 2 passes
+(voir `docs/demandes.md`, section dédiée, points 211-217) :
+
+**Priorité haute** : secrets/.env, RGPD, README, git — tous les 4 audités,
+seul un vrai correctif en ressort : `erreur.message` brut renvoyé au
+client sur toute erreur 500, y compris en production. Nouveau helper
+`repondreErreurServeur()` (server/utils/erreurs.js), utilisé dans les 12
+fichiers de routes (46 occurrences) — le détail est toujours loggué côté
+serveur, renvoyé au client seulement hors production.
+
+**Priorité moyenne** : cohérence API (rien à corriger — statuts HTTP
+cohérents, chaque écriture protégée par rôle ; seul un défaut de nommage
+mineur relevé et sciemment laissé tel quel : `/api/programme`/`/api/tma`
+au singulier vs le reste au pluriel, renommer casserait des URLs déjà
+utilisées partout), gestion d'erreurs (2 bugs réels trouvés et corrigés,
+voir `docs/bugs.md` — panne serveur totale échouant en silence côté
+client, connexion MongoDB ratée au démarrage laissant le process "vivant"
+sans jamais écouter), et tests (nouvelle checklist manuelle pré-déploiement,
+`docs/checklist-tests-manuels.md`, couvrant les parcours critiques de
+chaque page).

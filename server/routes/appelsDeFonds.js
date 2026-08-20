@@ -5,6 +5,7 @@ import Programme from '../models/Programme.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -35,7 +36,7 @@ router.get('/', async (req, res) => {
       .sort({ createdAt: 1 })
     res.json(appels)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -123,7 +124,7 @@ router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res)
 
     res.json({ nombreMisAJour: appels.length })
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -166,7 +167,7 @@ router.patch('/lot/:lotId/bareme', autoriserRoles('admin', 'gestionnaire'), asyn
       .sort({ 'phase.ordre': 1 })
     res.json(appelsMisAJour)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -217,7 +218,7 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     const appelPeuple = await appel.populate('lot', 'reference prixTTC')
     res.json(appelPeuple)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

@@ -62,6 +62,26 @@ app.use('/api/appels-de-fonds', appelsDeFondsRouter)
 app.use('/api/historique-annulations', historiqueAnnulationsRouter)
 app.use('/api/historique-modifications-prix', historiqueModificationsPrixRouter)
 
+// Connexion + résilience (21/07/2026, audit "gestion d'erreurs") : avant,
+// un échec de connexion au démarrage se contentait d'un `console.error` —
+// le processus Node restait "vivant" sans jamais écouter sur le port,
+// invisible pour un gestionnaire de process (PM2, Docker healthcheck...)
+// qui l'aurait cru fonctionnel. `process.exit(1)` fait échouer clairement
+// le démarrage. `connection.on('error'/'disconnected')` couvre le cas
+// d'une coupure APRÈS le démarrage (ex: maintenance Atlas) — Mongoose
+// retente de se reconnecter tout seul, mais rien n'était loggué en
+// attendant, ni les requêtes qui échouaient pendant la coupure (elles
+// passent par `repondreErreurServeur`, qui logge déjà chaque échec).
+mongoose.connection.on('error', (erreur) => {
+  console.error('Erreur de connexion MongoDB :', erreur.message)
+})
+mongoose.connection.on('disconnected', () => {
+  console.error('Connexion MongoDB perdue — nouvelle tentative en cours...')
+})
+mongoose.connection.on('reconnected', () => {
+  console.log('Connexion MongoDB rétablie')
+})
+
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
@@ -71,5 +91,6 @@ mongoose
     })
   })
   .catch((erreur) => {
-    console.error('Échec de connexion à MongoDB :', erreur.message)
+    console.error('Échec de connexion à MongoDB au démarrage :', erreur.message)
+    process.exit(1)
   })

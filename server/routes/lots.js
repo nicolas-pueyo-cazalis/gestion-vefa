@@ -10,6 +10,7 @@ import HistoriqueModificationPrix from '../models/HistoriqueModificationPrix.js'
 import { calculerEmissionAppel } from '../utils/appelsDeFonds.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
 import { autoriserRoles } from '../middleware/auth.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const router = Router()
 
@@ -234,7 +235,7 @@ router.get('/', async (req, res) => {
       .populate('annexes')
     res.json(lots)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -279,7 +280,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     const lotPeuple = await lot.populate('annexes')
     res.status(201).json(lotPeuple)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -423,7 +424,7 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     await lotPeuple.populate('annexes')
     res.json(lotPeuple)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -481,7 +482,7 @@ router.patch('/:id/prix', autoriserRoles('admin', 'gestionnaire'), async (req, r
     const lotPeuple = await lot.populate('annexes')
     res.json(lotPeuple)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -590,7 +591,7 @@ router.post('/:id/annuler', autoriserRoles('admin', 'gestionnaire'), async (req,
 
     res.json(lot)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -624,7 +625,7 @@ router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) 
     await Annexe.updateMany({ lot: lot._id }, { lot: null })
     res.status(204).end()
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

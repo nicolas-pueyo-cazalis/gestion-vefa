@@ -6,6 +6,7 @@ import Compteur from '../models/Compteur.js'
 import { autoriserRoles } from '../middleware/auth.js'
 import { getIdsLotsDuProgramme } from '../utils/programme.js'
 import { recalculerTma } from './tmaEntreprises.js'
+import { repondreErreurServeur } from '../utils/erreurs.js'
 
 const STATUTS_NON_RECALCULABLES = ['termine', 'refuse', 'annule']
 
@@ -38,7 +39,7 @@ router.get('/', async (req, res) => {
       .sort({ createdAt: 1 })
     res.json(tmaList)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -80,7 +81,7 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     ])
     res.status(201).json(tmaPeuplee)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -109,7 +110,7 @@ router.patch('/:id/acquereur', autoriserRoles('admin', 'gestionnaire'), async (r
     }
     res.json(tma)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -144,7 +145,7 @@ router.patch('/:id/statut', autoriserRoles('admin', 'gestionnaire'), async (req,
     await tma.save()
     res.json(tma)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -185,7 +186,7 @@ router.patch('/:id/dates', autoriserRoles('admin', 'gestionnaire'), async (req, 
     await tma.save()
     res.json(tma)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -206,7 +207,7 @@ router.patch('/:id/annuler-refus', autoriserRoles('admin', 'gestionnaire'), asyn
     await tma.save()
     res.json(tma)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -228,7 +229,7 @@ router.patch('/:id/annuler-annulation', autoriserRoles('admin', 'gestionnaire'),
     await tma.save()
     res.json(tma)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -253,7 +254,7 @@ router.patch('/:id/annuler-termine', autoriserRoles('admin', 'gestionnaire'), as
     await tma.save()
     res.json(tma)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -316,7 +317,7 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
     ])
     res.json(tmaPeuplee)
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 
@@ -344,7 +345,7 @@ router.post('/:id/devis-numero', autoriserRoles('admin', 'gestionnaire'), async 
     const numeroDevis = `TMA-${annee}-${String(compteur.valeur).padStart(3, '0')}`
     res.json({ numeroDevis })
   } catch (erreur) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: erreur.message })
+    repondreErreurServeur(res, erreur)
   }
 })
 

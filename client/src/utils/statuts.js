@@ -28,7 +28,7 @@ export function calculerDateLimiteMois(date, mois) {
 // appel de fonds", page Appels de fonds) — sert de repère visuel sur ce
 // qui reste à générer. Ne s'applique jamais à la phase "Réservation"
 // (jamais attestée, auto-émise dès la réservation du lot) ni au cas où
-// l'acte a été signé avant/le jour même de l'attestation (l'appel est
+// l'acte a été signé après (ou le jour même) l'attestation (l'appel est
 // alors automatiquement émis ET réglé, voir emettreAttestation() côté
 // serveur) : dans les deux cas, `dateEmission` est déjà renseigné.
 export function statutAppel(appel) {

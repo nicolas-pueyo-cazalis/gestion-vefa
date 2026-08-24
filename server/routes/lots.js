@@ -501,7 +501,14 @@ router.patch('/:id/prix', autoriserRoles('admin', 'gestionnaire'), async (req, r
 // supprimer (bouton à venir, point 128).
 router.post('/:id/annuler', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const lot = await Lot.findById(req.params.id).populate('acquereur')
+    // Projection explicite (21/07/2026, audit exposition de données) :
+    // seuls les champs réellement lus plus bas (snapshot dans
+    // HistoriqueAnnulation + `acquereur.lots`) — avant, l'acquéreur entier
+    // était chargé en mémoire (email/téléphone/adresse compris) sans être
+    // utilisé ; jamais renvoyé au client (`lot.acquereur` est vidé avant la
+    // réponse), mais inutile à charger côté serveur.
+    const lot = await Lot.findById(req.params.id)
+      .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret lots')
     if (!lot) {
       return res.status(404).json({ message: 'Lot introuvable' })
     }

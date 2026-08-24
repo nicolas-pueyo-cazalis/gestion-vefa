@@ -157,6 +157,7 @@ Le dossier [`docs/`](docs/) sert à la fois de mémoire de travail et de
 support d'entretien — la trace de chaque décision, bug et demande depuis
 le premier jour du projet :
 
+- [`contexte-projet.md`](docs/contexte-projet.md) — fiche de reprise rapide (stack, règles métiers, décisions, pièges, points sensibles)
 - [`journal.md`](docs/journal.md) — journal de bord, une entrée par étape
 - [`decisions.md`](docs/decisions.md) — choix techniques et leur justification
 - [`glossaire.md`](docs/glossaire.md) — vocabulaire métier (VEFA, TMA, appel de fonds...)

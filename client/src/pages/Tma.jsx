@@ -705,7 +705,16 @@ function Tma() {
                     onEnregistrer={enregistrerInfos}
                     onFermer={() => setIdPanneauOuvert(null)}
                   />
-                  {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && (
+                  {/* "valide" exclu en plus de STATUTS_NON_RECALCULABLES
+                      (21/07/2026, audit "fidélité code/doc") : sans ça, ce
+                      panneau restait modifiable même une fois la TMA
+                      validée — effacer "Date de retour client" après coup
+                      faisait redescendre le statut vers "facture", à
+                      l'encontre de la règle "pas de retour en arrière une
+                      fois validé" (déjà respectée pour le bouton
+                      "Refuser"). Même principe que le montant client,
+                      déjà verrouillé une fois "Validé" (point 182). */}
+                  {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && tma.statut !== 'valide' && (
                     <FormulaireDatesTma
                       tma={tma}
                       colonnes={NB_COLONNES}

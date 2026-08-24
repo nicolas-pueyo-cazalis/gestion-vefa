@@ -156,6 +156,18 @@ router.patch('/:id/statut', autoriserRoles('admin', 'gestionnaire'), async (req,
 // elles. Ne touche plus à montantEntreprises/montantClient : ces champs
 // sont désormais entièrement pilotés par les lignes TmaEntreprise (voir
 // recalculerTma dans routes/tmaEntreprises.js).
+//
+// Deux garde-fous ajoutés le 21/07/2026 (audit "fidélité code/doc" — la
+// règle "on ne peut pas sauter d'étape" n'était en réalité vérifiée que
+// sur PATCH /:id/statut, pas ici) :
+// 1. Impossible de renseigner "Date de retour client" tant que "Date
+//    d'envoi facture" est vide — sans ça, calculerStatutAutomatique()
+//    fait directement passer la TMA à "valide" en sautant "facture".
+// 2. Dates verrouillées une fois "Validé" — même principe que le montant
+//    client (point 182) : sans ça, effacer "Date de retour client" après
+//    coup faisait redescendre automatiquement le statut vers "facture",
+//    à l'encontre de la règle "on ne revient pas en arrière une fois
+//    validé" (qui, elle, était bien respectée pour le bouton "Refuser").
 router.patch('/:id/dates', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { dateEnvoiEntreprises, dateEnvoiFactureClient, dateRetourClient } = req.body
@@ -163,6 +175,12 @@ router.patch('/:id/dates', autoriserRoles('admin', 'gestionnaire'), async (req, 
 
     if (!tma) {
       return res.status(404).json({ message: 'TMA introuvable' })
+    }
+
+    if (tma.statut === 'valide') {
+      return res.status(400).json({
+        message: 'TMA validée : les dates ne sont plus modifiables.',
+      })
     }
 
     // Répercute la date d'envoi entreprises sur les lignes déjà créées
@@ -178,6 +196,12 @@ router.patch('/:id/dates', autoriserRoles('admin', 'gestionnaire'), async (req, 
     }
     if (dateEnvoiFactureClient !== undefined) tma.dateEnvoiFactureClient = dateEnvoiFactureClient
     if (dateRetourClient !== undefined) tma.dateRetourClient = dateRetourClient
+
+    if (tma.dateRetourClient && !tma.dateEnvoiFactureClient) {
+      return res.status(400).json({
+        message: 'Impossible de renseigner la date de retour client avant la date d\'envoi de la facture.',
+      })
+    }
 
     if (!STATUTS_NON_RECALCULABLES.includes(tma.statut)) {
       tma.statut = calculerStatutAutomatique(tma)

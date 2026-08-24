@@ -1137,6 +1137,53 @@ en local, README point 5 "⬜ Déploiement").
 
 ---
 
+## Audit "fidélité code/doc" — TMA (21/07/2026)
+
+Nicolas a demandé le même principe que l'audit qualité (comparer ce que dit
+le code à ce que disent nos fichiers de contexte) appliqué à d'autres
+fonctions du projet. A révélé un vrai écart de comportement sur les dates
+TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
+
+230. ✅ **Bug corrigé — on pouvait sauter l'étape "Facturé"** : rien
+     n'empêchait de renseigner "Date de retour client" sans avoir rempli
+     "Date d'envoi facture" avant, ce qui faisait passer la TMA
+     directement à "Validé" en sautant "Facturé". La règle "on ne peut pas
+     sauter une étape" n'était en réalité vérifiée que sur
+     `PATCH /api/tma/:id/statut` (les boutons), pas sur ce formulaire de
+     dates. Corrigé : la route renvoie maintenant une erreur claire dans
+     ce cas.
+231. ✅ **Bug corrigé, mais règle mise en pause** — le panneau "Modifier les
+     dates" restait modifiable même une fois la TMA "Validé" ; effacer
+     "Date de retour client" après coup faisait redescendre le statut vers
+     "Facturé", à l'encontre de "pas de retour en arrière une fois
+     validé". Corrigé (verrouillage complet du panneau une fois "Validé",
+     même principe que le montant client déjà verrouillé — point 182).
+     **Nicolas veut y réfléchir avant de confirmer qu'on garde cette
+     règle** — le code reste tel quel pour l'instant (verrouillé), mais ne
+     pas considérer ce point comme définitivement tranché tant qu'il n'a
+     pas donné suite.
+232. ⏳ **Étendu à TOUTES les fonctions du projet, pas juste aux autres
+     pages** (précision de Nicolas) : passer en revue, une par une, chaque
+     fonction du code (pas seulement Lots/Clients/Suivi de prêt/Signature
+     acte/Paramètres restants — TMA et Appels de fonds eux-mêmes ne sont
+     pas forcément épuisés non plus). Pour chacune : Claude explique ce
+     qu'elle fait à partir du CODE réel (pas des commentaires ni de la
+     doc), puis compare à ce que disent `docs/schema-donnees.md` et les
+     autres fichiers de contexte — objectif : retrouver d'éventuels autres
+     écarts du même genre que ceux déjà trouvés (règle "après/avant"
+     inversée dans des commentaires, garde-fou manquant sur les dates
+     TMA). Gros chantier, à dérouler par lots de quelques fonctions à la
+     fois (comme les 3 déjà faites), pas en une seule fois.
+233. ⏳ **Tableau de suivi de l'audit sécurité** (note pour plus tard,
+     demandée par Nicolas) : consolider tous les points d'audit
+     sécurité/RGPD/qualité éparpillés dans cette liste (211-232 et ceux à
+     venir) en un vrai tableau de suivi — probablement un nouveau fichier
+     dédié (`docs/audit-securite.md`), avec au minimum : le point trouvé,
+     sa sévérité, son statut (corrigé / en attente / décision à prendre),
+     et la date. Pas encore fait, juste noté.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

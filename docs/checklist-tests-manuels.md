@@ -55,7 +55,7 @@ seed`), jamais sur des données réelles.
       concernés se mettent à jour, la phase précédente doit être attestée
       avant.
 - [ ] ⚠️ Attestation MOE seule n'émet PAS l'appel (statut "À émettre") —
-      sauf si l'acte a été signé avant/le jour même (émis + réglé
+      sauf si l'acte a été signé après/le jour même (émis + réglé
       automatiquement).
 - [ ] "Générer un appel de fonds" (phase + logements cochés) : PDF
       téléchargé par logement, "Envoyé le" rempli automatiquement.

@@ -158,6 +158,8 @@ support d'entretien — la trace de chaque décision, bug et demande depuis
 le premier jour du projet :
 
 - [`contexte-projet.md`](docs/contexte-projet.md) — fiche de reprise rapide (stack, règles métiers, décisions, pièges, points sensibles)
+- [`programme-formation-ia.md`](docs/programme-formation-ia.md) — programme personnel de Nicolas sur l'usage encadré de l'IA en développement (16 jours), qui structure une bonne partie de la méthode de travail avec Claude sur ce projet
+- [`template-spec.md`](docs/template-spec.md) — modèle à copier pour rédiger une spec avant toute nouvelle fonctionnalité (workflow spec-first, Jour 7 du programme)
 - [`journal.md`](docs/journal.md) — journal de bord, une entrée par étape
 - [`decisions.md`](docs/decisions.md) — choix techniques et leur justification
 - [`glossaire.md`](docs/glossaire.md) — vocabulaire métier (VEFA, TMA, appel de fonds...)

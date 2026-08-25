@@ -1181,6 +1181,38 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      dédié (`docs/audit-securite.md`), avec au minimum : le point trouvé,
      sa sévérité, son statut (corrigé / en attente / décision à prendre),
      et la date. Pas encore fait, juste noté.
+234. ✅ **`docs/programme-formation-ia.md` créé** : copie intégrale du
+     programme personnel de Nicolas (16 jours, 20 août → 14 sept. 2026),
+     jusque-là seulement dans son dossier Téléchargements. Explique le
+     "pourquoi" de plusieurs demandes de cette session (l'exercice
+     "fidélité code/doc" = Jour 1 exercice 3, `git diff` = Jour 6, les
+     sous-agents = Leçon F, l'audit sécurité 3 points = Jour 2).
+     ⏳ **À réalimenter au fil de l'eau** (note de Nicolas) : au fur et à
+     mesure des checkpoints de fin de semaine, exercices réalisés, et
+     réponses aux questions pièges — pas un simple copier-coller figé.
+235. ⏳ **Relire et reprendre `docs/contexte-projet.md`** (note de Nicolas,
+     pas encore fait) : le programme (point 234 ci-dessus) précise que ce
+     fichier doit rester **court** ("un résumé d'une demi-page des points
+     les plus critiques") si le reste de `docs/` couvre déjà tout — hors,
+     `contexte-projet.md` fait aujourd'hui ~180 lignes, largement plus
+     qu'une demi-page, et une section ("Processus de travail — vérification
+     par diff") n'est même pas dans la structure d'origine proposée par le
+     programme. À revoir : soit le raccourcir pour vraiment coller à
+     l'esprit "résumé transversal", soit assumer consciemment qu'il est
+     plus détaillé que ce que le programme suggère.
+236. ⏳ **3 code smells trouvés (Jour 10, audit sans correction) — à traiter
+     plus tard**, pas de correction faite pour l'instant :
+     - `nomAcquereur()` dupliquée à l'identique dans 3 pages (Lots.jsx,
+       Tma.jsx, AppelsDeFonds.jsx) — à extraire dans un utilitaire partagé.
+     - `versDateInput()` dupliquée à l'identique dans **8 composants**
+       (DetailEntreprisesTma, FormulaireAppelDeFonds, FormulaireDatesTma,
+       FormulaireEditionLot, FormulaireSignatureActe, FormulaireSuiviPret,
+       LigneEntreprise, SectionInfosProgramme) — le smell le plus net des
+       trois, à extraire en priorité.
+     - "God components" : `Tma.jsx` (777 lignes, 21 fonctions internes),
+       `Lots.jsx` (895 lignes, 13 fonctions), `AppelsDeFonds.jsx` (641
+       lignes, 10 fonctions) — trop de responsabilités par fichier, à
+       découper (pas encore décidé comment).
 
 ---
 

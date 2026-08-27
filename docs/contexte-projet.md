@@ -4,6 +4,17 @@ Fiche de reprise rapide, à lire en premier dans une nouvelle conversation.
 Le détail complet reste dans les autres fichiers de `docs/` — cette fiche
 n'en est qu'un résumé volontairement court.
 
+> **[`docs/protocole-ia-vefa.md`](protocole-ia-vefa.md) : à prendre en
+> compte en permanence, à partir du 21/07/2026.** Décrit comment travailler
+> au quotidien sur ce projet précis (spec + section "Impact sur
+> l'existant" pour toute nouvelle fonctionnalité, `git diff --stat`
+> systématique, audit sécurité 3 points sur tout fichier touchant des
+> données d'acquéreurs, gestion de la dette technique sur les parties les
+> plus anciennes, fréquence de contrôle indépendant). Distinct du
+> programme de formation général de Nicolas (apprentissage sur 16 jours,
+> retiré du dépôt le 21/07/2026) : celui-ci est le protocole du quotidien,
+> pas un cursus.
+
 ## Stack
 
 - **Front** : React 19 + Vite + React Router + Sass (`client/`). Une

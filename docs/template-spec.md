@@ -1,7 +1,12 @@
 <!--
-Modèle de spec (Jour 7 du programme de formation, voir
-docs/programme-formation-ia.md) — copié depuis le PDF fourni par Nicolas
-pour être modifiable directement en Markdown plutôt que resté figé en PDF.
+Modèle de spec (Jour 7 du programme de formation personnel de Nicolas) —
+copié depuis le PDF fourni par Nicolas pour être modifiable directement
+en Markdown plutôt que resté figé en PDF.
+
+⚠️ À COMPLÉTER (voir docs/protocole-ia-vefa.md, Étape 2) : ce modèle
+générique n'a pas encore de section "Impact sur l'existant", pourtant
+exigée par le protocole VEFA pour toute nouvelle fonctionnalité touchant
+l'existant — voir docs/demandes.md, point 239.
 
 Usage : copier ce fichier (ex: docs/specs/nom-de-la-fonctionnalite.md,
 dossier à créer au premier usage) et remplir chaque section pour toute

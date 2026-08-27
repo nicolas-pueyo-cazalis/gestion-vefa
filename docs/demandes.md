@@ -1213,6 +1213,62 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
        `Lots.jsx` (895 lignes, 13 fonctions), `AppelsDeFonds.jsx` (641
        lignes, 10 fonctions) — trop de responsabilités par fichier, à
        découper (pas encore décidé comment).
+237. ⏳ **Check-up "développeur confirmé"** — grille de questions à dérouler
+     plus tard, pas encore exécutée (Nicolas a demandé de le noter pour la
+     suite) :
+     - Cohérence d'une même règle métier appliquée à plusieurs endroits
+       (codée une seule fois vs réimplémentée différemment ailleurs ;
+       vérifiée aussi côté serveur, pas seulement côté front).
+     - Cas limites et données aux extrêmes (montant à 0/négatif, tableau
+       vide, donnée créée avant l'ajout d'un champ récent).
+     - Concurrence et actions rejouées (double-clic, deux utilisateurs sur
+       la même fiche en même temps).
+     - Validation des entrées à la frontière de chaque route (pas
+       seulement une confiance implicite dans ce que le front envoie).
+     - Cohérence des unités/formats (pourcentages 0-1 partout, montants
+       toujours en `Number` brut).
+     - Dette technique visible (`TODO`, contournements temporaires non
+       traités).
+238. ⏳ **Liste récapitulative de tout ce qui a été réalisé côté "check up"**
+     — pas encore faite, demandée par Nicolas pour plus tard. Plus large
+     que le point 233 (tableau de suivi de l'audit **sécurité** seul) :
+     couvrir ici l'ensemble des audits menés cette session (secrets, RGPD,
+     gestion d'erreurs, cohérence API, performance, accessibilité,
+     logging, dépendances, CI/CD, fidélité code/doc, code smells) — quoi a
+     été trouvé, corrigé, laissé en l'état par choix, ou reporté. À
+     rapprocher du point 233 le moment venu (probablement le même document
+     `docs/audit-securite.md`, ou un nom plus large type
+     `docs/audit-checkup.md` vu que ça dépasse la seule sécurité).
+239. ✅ **`docs/protocole-ia-vefa.md` créé** : copie du "Protocole IA —
+     Projet VEFA (déjà avancé)" fourni par Nicolas — protocole de travail
+     quotidien (distinct du programme de formation général), à prendre en
+     compte en permanence à partir de maintenant. Référencé en haut de
+     `docs/contexte-projet.md` et sauvegardé en mémoire persistante
+     (`feedback_protocole_ia_vefa.md`) pour s'appliquer même hors
+     rechargement du fichier.
+
+     **Points à réaliser identifiés dans ce protocole, pas encore faits** :
+     - ⏳ Ajouter une section "Impact sur l'existant" à
+       `docs/template-spec.md` (le template actuel, générique "Jour 7",
+       ne l'a pas — le protocole VEFA l'exige pour toute nouvelle
+       fonctionnalité touchant l'existant).
+     - ⏳ Envisager de transformer l'audit sécurité 3 points (logs, secrets,
+       exposition) en Skill Claude réutilisable, comme suggéré
+       explicitement par le protocole (renvoie à la Leçon D du programme).
+     - ⏳ Programmer un audit de dette technique **périodique**, ciblé sur
+       les parties **les plus anciennes** du projet (pas juste ce qu'on
+       vient de toucher) — à distinguer du point 237 (check-up général) et
+       du point 236 (3 smells déjà trouvés, mais sur du code récent).
+     - ⏳ Ajouter un réflexe "test de non-régression sur une fonctionnalité
+       proche déjà existante" pour toute nouvelle fonctionnalité touchant
+       l'existant — à intégrer p. ex. dans `docs/checklist-tests-manuels.md`.
+     - ⏳ Refaire périodiquement le test de fidélité code/doc (fait une
+       fois le 21/07 sur 3+3 fonctions TMA) — pas une action ponctuelle,
+       un contrôle récurrent pour détecter une dérive documentaire
+       progressive.
+     - Rejoint aussi le point 235 (déjà noté) : `contexte-projet.md` à
+       raccourcir à une demi-page, explicitement redemandé par ce
+       protocole (Étape 0).
 
 ---
 

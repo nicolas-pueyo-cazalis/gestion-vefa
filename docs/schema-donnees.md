@@ -343,7 +343,7 @@ Un document par (lot × phase du barème).
 | `phase` | `{ nom: String, pourcentage: Number }` | **copie figée** de la phase au moment de la génération (voir ci-dessous) |
 | `montant` | Number | = `lot.prixTTC × phase.pourcentage`, figé à la génération ; montant → convention "€" en début de document |
 | `dateAttestationMOE` | Date | condition n°1 de déclenchement, **saisie manuelle** (en masse, par phase) — absente pour la 1ère phase du barème (voir plus bas) |
-| `dateEmission` | Date | posée automatiquement dès que `dateAttestationMOE` passe de vide à renseignée — la 2ᵉ condition (lot Acté) est déjà acquise puisque la ligne n'existe que pour un lot Acté |
+| `dateEmission` | Date | **plus automatique depuis le 20/07/2026** (point 171) : l'attestation MOE seule ne suffit plus à la poser. Posée soit via l'action "Générer un appel de fonds" (saisie explicite), soit automatiquement dans le seul cas "réglé à l'acte" (voir "Règlement automatique" ci-dessous) |
 | `dateLimiteReglement` | Date | calculée automatiquement en même temps que `dateEmission` = `dateEmission + programme.parametres.delaiReglementAppelJours` |
 | `dateReglement` | Date \| `null` | **saisie manuelle** en général, mais posée **automatiquement** dans deux cas précis où le règlement est factuellement acquis dès la génération (voir "Règlement automatique" ci-dessous) |
 | `commentaire` | String | ajouté le 20/07/2026, point 176, libre, optionnel — propre à CETTE échéance, pas au lot entier |

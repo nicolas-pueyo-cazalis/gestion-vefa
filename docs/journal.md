@@ -144,8 +144,8 @@ et librairies de validation").
 - Statuts codés sans accent dans les enums (valeurs techniques), l'accent
   restant réservé à l'affichage front.
 - Machine à états `TMA.statut` définitive : `demande → etude → chiffre →
-  valide → facture → travaux → termine`, avec `refuse` possible uniquement
-  avant `valide`.
+  facture → valide → termine`, avec `refuse` possible uniquement avant
+  `valide`.
 
 **Points laissés ouverts** (non bloquants, listés en fin de
 `schema-donnees.md`) : moment de génération des `AppelDeFonds`, référentiel
@@ -500,7 +500,7 @@ puis supprimer les données codées en dur une fois la bascule confirmée.
   au moment de la facturation. Ça a révélé une incohérence dans la machine à
   états documentée (`valide` était placé avant `facture`, ce qui n'avait pas
   de sens : la facture/devis est envoyée **avant** le retour signé du
-  client). Ordre corrigé partout : `chiffre → facture → valide → travaux`
+  client). Ordre corrigé partout : `chiffre → facture → valide`
   (`docs/schema-donnees.md`, `server/models/Tma.js`).
 
 **Prochaine étape**

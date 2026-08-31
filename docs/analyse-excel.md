@@ -1,5 +1,17 @@
 # Analyse des fichiers Excel de référence
 
+> **⚠ Document historique, plus une référence à jour à partir du
+> 31/08/2026.** Ce document capture les règles telles qu'elles existaient
+> dans l'Excel d'origine, au tout début du projet (09/07/2026). Plusieurs
+> règles ont depuis été volontairement changées ou affinées en cours de
+> développement (ex : condition de déclenchement d'un appel de fonds,
+> comportement sur un montant TMA négatif) — ce document n'a pas été
+> corrigé pour les suivre, pour garder une trace fidèle du point de départ.
+> **Pour la règle en vigueur aujourd'hui, se baser uniquement sur
+> [`docs/regles-metiers.md`](regles-metiers.md).** Ne pas relire ce fichier
+> pour vérifier un comportement actuel — seulement pour comprendre d'où
+> vient une règle et pourquoi elle a évolué (avec `docs/decisions.md`).
+
 Analyse des deux fichiers métier fournis (dossier `références/`) : structure des
 onglets, colonnes, et surtout les **formules** qui encodent la vraie logique
 métier (ce sont elles qui nous intéressent le plus, pas juste la mise en page).

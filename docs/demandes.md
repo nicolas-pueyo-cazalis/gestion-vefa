@@ -376,9 +376,11 @@ qui ont persisté dans la version finale.
     automatiquement, sans attestation MOE (la seule phase dans ce cas).
 89. ✅ L'ordre d'affichage des appels de fonds doit suivre celui défini dans
     Paramètres > Barème.
-90. ⏳ **Reporté** ("on verra plus tard") : export PDF par lot, détail par
+90. ✅ **Reporté** ("on verra plus tard") : export PDF par lot, détail par
     phase avec solde en fonction de ce qui est payé — à construire quand
-    Nicolas le redemandera explicitement.
+    Nicolas le redemandera explicitement. ✅ fait, voir le récapitulatif
+    détaillé par phase (points 200-201) — coché le 31/08/2026, trouvé
+    périmé lors d'une relecture de cette liste.
 
 ---
 
@@ -403,7 +405,9 @@ qui ont persisté dans la version finale.
     nouveau lot Acté.
 96. ⏳ **Question ouverte, non résolue** : cas d'un client négociant un autre
     système de règlement (ex: tout payé à l'acte) — pas de piste actée,
-    voir `docs/schema-donnees.md` ("Plan de règlement négocié").
+    voir `docs/schema-donnees.md` ("Plan de règlement négocié") et
+    `docs/regles-metiers.md` § 11. Même point que 241 ci-dessous (doublon
+    créé par erreur le 31/08/2026, fusionné ici).
 97. ✅ Incompréhension des totaux des cartes de stats (ex: 3 logements × 2
     phases émises chacun devrait afficher "6") — a mené à distinguer
     explicitement "émis au total" (cumulatif, quel que soit le sous-statut
@@ -496,9 +500,15 @@ chaque point est suivi en conversation, pas dans ce document.
 112. ✅ Plusieurs terrasses possibles : colonne supplémentaire créée
      seulement si besoin (une seule colonne par défaut), jusqu'à 3-4 —
      à prévoir à la fois dans Paramètres et dans Lots.
+     **Devenu obsolète le 13/07/2026 (point 156)** : ce mécanisme de
+     colonnes dynamiques par type a été remplacé par une seule colonne
+     "Annexes" qui empile toutes les catégories ligne par ligne — trouvé
+     et corrigé le 31/08/2026 lors d'une relecture avec Nicolas.
 113. ✅ En cas de colonnes supplémentaires, adapter la taille des lignes/
      écritures pour que tout reste visible sur un écran plein, sans
      barre de défilement horizontale.
+     **Devenu sans objet en même temps que le point 112 ci-dessus**
+     (colonnes dynamiques remplacées par la colonne "Annexes" unique).
 114. ✅ Message de rappel si un logement passe "Acté" sans date de
      réception d'offre de prêt renseignée (sauf si "sans prêt").
 115. ✅ Rendre la présentation des totaux plus esthétique (propositions à
@@ -522,9 +532,11 @@ chaque point est suivi en conversation, pas dans ce document.
      (plusieurs appels considérés comme envoyés et réglés le jour de
      l'acte) : la date "Envoyé le" doit alors correspondre à la date de
      signature de l'acte.
-122. ⏳ Note pour plus tard (exports) : générer les appels de fonds par
+122. ✅ Note pour plus tard (exports) : générer les appels de fonds par
      logement pour envoi direct au client (avec le déjà-réglé et le
-     nouvel appel généré) — à rediscuter le moment venu.
+     nouvel appel généré) — à rediscuter le moment venu. ✅ fait, voir
+     "Générer un appel de fonds" (point 202) — coché le 31/08/2026, trouvé
+     périmé lors d'une relecture de cette liste.
 123. ✅ Message d'erreur bloquant si le barème (phase/pourcentage) est
      modifié dans Paramètres alors que des appels de fonds ont déjà été
      émis — risque de fausser des montants déjà émis, explicitement
@@ -549,8 +561,9 @@ chaque point est suivi en conversation, pas dans ce document.
 130. ✅ Nouveau filtre en liste déroulante regroupant les statuts : "En
      cours" (demande/étude/chiffré/facturé), "Validé" (validé/travaux/
      terminé), "Refusé", "Annulé".
-131. ⏳ Note pour plus tard (exports) : bouton de génération d'un devis à
-     envoyer au client.
+131. ✅ Note pour plus tard (exports) : bouton de génération d'un devis à
+     envoyer au client. ✅ fait, voir "Générer devis client" (point 209) —
+     coché le 31/08/2026, trouvé périmé lors d'une relecture de cette liste.
 132. ⏳ Note pour plus tard (exports) : génération d'un envoi de demandes
      de TMA aux entreprises.
 133. ✅ Si un client annule sa réservation/option/acte, la TMA associée ne
@@ -582,7 +595,10 @@ chaque point est suivi en conversation, pas dans ce document.
      à faire).
 140. ✅ Remplissage automatique du code postal à partir de la commune
      saisie (souhaité, pas obligatoire).
-141. ⏳ Export Excel (en plus du PDF), à rediscuter au moment des exports.
+141. ✅ Export Excel (en plus du PDF), à rediscuter au moment des exports.
+     ✅ fait — choix acté au point 191, Excel et PDF partout dans le
+     chantier des exports — coché le 31/08/2026, trouvé périmé lors d'une
+     relecture de cette liste.
 142. ✅ Vérifier qu'il ne reste plus aucune donnée codée en dur (résidus
      des tout premiers tests), à l'exception de ce que Nicolas a
      lui-même saisi depuis.
@@ -702,19 +718,24 @@ totaux (point 115) — traitées une par une comme le reste.
      "Annulés" directement dans la page Lots ; cette page contiendrait
      alors un historique des annulations de ventes, mais aussi un
      historique des modifications de prix.
-170. ⏳ Réflexion en cours : plutôt que de garder la liste déroulante pour le
+170. ✅ Réflexion en cours : plutôt que de garder la liste déroulante pour le
      choix du statut, ne serait-il pas préférable que le statut se mette à
      jour automatiquement en fonction des dates remplies (ex: remplir la
      date d'option fait passer le statut à "Option", ainsi de suite) ?
+     ✅ adopté — c'est la règle en place depuis longtemps pour Lot/TMA/
+     appels de fonds (voir `docs/contexte-projet.md`, "Décisions déjà
+     prises") — coché le 31/08/2026, trouvé périmé lors d'une relecture de
+     cette liste.
 
 **Appels de fonds**
-171. ⏳ Lors du travail sur les exports : pouvoir générer un envoi d'appels
+171. ✅ Lors du travail sur les exports : pouvoir générer un envoi d'appels
      de fonds collectifs (une fois actés et qu'une attestation MOE est
      émise) — cette génération remplirait automatiquement la case
      "Envoyé le", tout en laissant la possibilité de la remplir à la
      main. Une fenêtre doit s'ouvrir à la génération, listant les appels
      de fonds qui vont être générés avec les logements correspondants,
-     avec la possibilité de décocher certains logements.
+     avec la possibilité de décocher certains logements. ✅ fait, voir
+     "Générer un appel de fonds" (point 202) — coché le 31/08/2026.
 
 **TMA**
 172. ✅ Retirer le statut "Travaux" (ne sert à rien). Pour le statut
@@ -758,24 +779,39 @@ totaux (point 115) — traitées une par une comme le reste.
 177. ⏳ Se renseigner pour voir s'il y a des choses à rajouter dans "Suivi
      de prêt" et "Signature acte".
 178. ⏳ À la fin : analyser l'ensemble de l'application et faire un point
-     sur ce qui peut être amélioré.
+     sur ce qui peut être amélioré. **Maintenu non résolu explicitement
+     par Nicolas le 31/08/2026** — malgré tous les audits déjà menés
+     (points 211-239), le projet n'est pas encore fini (pas déployé), donc
+     ce point de clôture reste ouvert tant que ce n'est pas vraiment "la
+     fin".
 179. ⏳ À réfléchir à la fin : faudra-t-il créer une version démo ?
 
 ## Remarques générales du 20/07/2026 (PDF)
 
 **Lots**
-180. Pour les taux notés sur les cartes mettre les textes : XX %
-     « du programme » pour les lots et XX % « du CA total ».
-181. Améliorer "voir l'historique…" — déjà le bouton en lui-même, et
+180. ✅ Pour les taux notés sur les cartes mettre les textes : XX %
+     « du programme » pour les lots et XX % « du CA total ». ✅ fait
+     (`libellePourcentage="du programme"`/`"du CA total"`, `Lots.jsx`) —
+     coché le 31/08/2026, trouvé fait mais jamais coché lors d'une
+     relecture de cette liste.
+181. ⏳ Améliorer "voir l'historique…" — déjà le bouton en lui-même, et
      ensuite les titres une fois que l'on a cliqué, ce n'est pas du tout
-     esthétique.
+     esthétique. Historique bien fusionné dans la page Lots depuis le
+     17/07/2026, mais le volet "esthétique" précis de cette demande n'a
+     pas pu être confirmé avec certitude lors de la relecture du
+     31/08/2026 — laissé ⏳ par prudence plutôt que coché à tort.
 
 **TMA**
-182. Lorsqu'une TMA est validée, il doit être impossible de modifier le
-     montant TTC client.
-183. Mettre des titres dans les sous-parties du crayon : "Modifier les
-     dates" et "Entreprises concernées".
-184. Rajouter dans paramètres une case "Frais d'ouverture de dossier",
+182. ✅ Lorsqu'une TMA est validée, il doit être impossible de modifier le
+     montant TTC client. ✅ fait (`montantClient` figé une fois "Validé",
+     voir `docs/regles-metiers.md` § 8) — coché le 31/08/2026, trouvé fait
+     mais jamais coché lors d'une relecture de cette liste.
+183. ✅ Mettre des titres dans les sous-parties du crayon : "Modifier les
+     dates" et "Entreprises concernées". ✅ fait
+     (`titre-sous-partie-crayon`, `FormulaireDatesTma.jsx`/
+     `DetailEntreprisesTma.jsx`) — coché le 31/08/2026, trouvé fait mais
+     jamais coché lors d'une relecture de cette liste.
+184. ✅ Rajouter dans paramètres une case "Frais d'ouverture de dossier",
      qui sera automatiquement répercutée dans le montant total TTC
      client (en plus des coûts des modifications en elles-mêmes). On
      peut mettre une case à cocher en dessous "À appliquer". Comme ça
@@ -787,11 +823,13 @@ totaux (point 115) — traitées une par une comme le reste.
      cette règle ne sont pas rattrapées rétroactivement).
 
 **Paramètres**
-185. À la fin des lots (sous la phrase en rouge "nombre maximum…"),
+185. ✅ À la fin des lots (sous la phrase en rouge "nombre maximum…"),
      bien distinguer les cases d'ajout d'un logement (par un trait sous
      la phrase, et un titre "Ajouter un lot"), car lorsque je modifie
      un lot plus haut, j'ai 2 fois toutes les cases qui s'affichent et
-     c'est perturbant.
+     c'est perturbant. ✅ fait (titre "Ajouter un lot", `SectionLots.jsx`)
+     — coché le 31/08/2026, trouvé fait mais jamais coché lors d'une
+     relecture de cette liste.
 
 **Généralité**
 186. ⏳ À voir à la fin (après les exports), mais il faudra pouvoir
@@ -1187,19 +1225,18 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      "pourquoi" de plusieurs demandes de cette session (l'exercice
      "fidélité code/doc" = Jour 1 exercice 3, `git diff` = Jour 6, les
      sous-agents = Leçon F, l'audit sécurité 3 points = Jour 2).
-     ⏳ **À réalimenter au fil de l'eau** (note de Nicolas) : au fur et à
-     mesure des checkpoints de fin de semaine, exercices réalisés, et
-     réponses aux questions pièges — pas un simple copier-coller figé.
-235. ⏳ **Relire et reprendre `docs/contexte-projet.md`** (note de Nicolas,
-     pas encore fait) : le programme (point 234 ci-dessus) précise que ce
-     fichier doit rester **court** ("un résumé d'une demi-page des points
-     les plus critiques") si le reste de `docs/` couvre déjà tout — hors,
-     `contexte-projet.md` fait aujourd'hui ~180 lignes, largement plus
-     qu'une demi-page, et une section ("Processus de travail — vérification
-     par diff") n'est même pas dans la structure d'origine proposée par le
-     programme. À revoir : soit le raccourcir pour vraiment coller à
-     l'esprit "résumé transversal", soit assumer consciemment qu'il est
-     plus détaillé que ce que le programme suggère.
+     **Fichier supprimé volontairement par Nicolas peu après** (confirmé
+     explicitement) — n'existe plus dans le dépôt. Note "à réalimenter au
+     fil de l'eau" devenue sans objet. Corrigé le 31/08/2026, trouvé
+     périmé lors d'une relecture de cette liste.
+235. ✅ **Relire et reprendre `docs/contexte-projet.md`** : fait le
+     31/08/2026 — "Règles métiers non négociables" remplacé par un renvoi
+     vers le nouveau `docs/regles-metiers.md` (point 240), le reste
+     resserré. Le fichier est passé d'environ 180 lignes à une version
+     nettement plus courte ; pas tout à fait la demi-page stricte suggérée
+     par le programme (retiré du dépôt depuis, voir point 234), mais un
+     resserrement réel et assumé, avec le détail renvoyé vers les fichiers
+     dédiés plutôt que dupliqué.
 236. ⏳ **3 code smells trouvés (Jour 10, audit sans correction) — à traiter
      plus tard**, pas de correction faite pour l'instant :
      - `nomAcquereur()` dupliquée à l'identique dans 3 pages (Lots.jsx,
@@ -1248,10 +1285,12 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      rechargement du fichier.
 
      **Points à réaliser identifiés dans ce protocole, pas encore faits** :
-     - ⏳ Ajouter une section "Impact sur l'existant" à
+     - ✅ Ajouter une section "Impact sur l'existant" à
        `docs/template-spec.md` (le template actuel, générique "Jour 7",
        ne l'a pas — le protocole VEFA l'exige pour toute nouvelle
-       fonctionnalité touchant l'existant).
+       fonctionnalité touchant l'existant). ✅ fait le 31/08/2026, en
+       préalable à la session du jour (protocole Étape 1) — inclut au
+       passage le réflexe "test de non-régression" dans la même section.
      - ⏳ Envisager de transformer l'audit sécurité 3 points (logs, secrets,
        exposition) en Skill Claude réutilisable, comme suggéré
        explicitement par le protocole (renvoie à la Leçon D du programme).
@@ -1269,6 +1308,115 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      - Rejoint aussi le point 235 (déjà noté) : `contexte-projet.md` à
        raccourcir à une demi-page, explicitement redemandé par ce
        protocole (Étape 0).
+
+240. ✅ **Nouveaux documents de référence créés** (31/08/2026), suite à la
+     relecture du point 235 : `docs/regles-metiers.md` (référence
+     exhaustive et canonique de toutes les règles métier, classées par
+     domaine — compilée à partir d'une relecture complète de
+     `analyse-excel.md`, `schema-donnees.md`, `decisions.md`,
+     `checklist-tests-manuels.md`, `journal.md`, `bugs.md`, `demandes.md`,
+     puis vérifiée contre le code réel) ; `docs/regles-a-confirmer-client.md`
+     (règles tranchées provisoirement par Nicolas, jamais confirmées par un
+     vrai client — 1ʳᵉ entrée : barème fixe 5%/95% d'une vente d'annexe
+     seule) ; `docs/a-prendre-en-compte.md` (réflexes à garder à l'esprit en
+     permanence, à compléter par Nicolas au fil des sessions).
+     `docs/contexte-projet.md` : la section "Règles métiers non
+     négociables" pointe désormais vers `regles-metiers.md` au lieu de
+     dupliquer son contenu ; `docs/analyse-excel.md` marqué explicitement
+     obsolète (bandeau en tête, gardé pour l'historique uniquement).
+241. **Doublon du point 96** (même question, découverte séparément le
+     31/08/2026 en relisant `docs/schema-donnees.md`) — fusionné dans 96,
+     rien à traiter ici en plus.
+242. ⏳ **Point resté ouvert (rôles)** : rôle "acquéreur" en lecture seule sur
+     ses propres données, évoqué en cadrage initial (09/07/2026), jamais
+     modélisé. Repéré dans `docs/schema-donnees.md` mais jamais tracké ici
+     jusqu'au 31/08/2026 ; maintenant aussi listé dans
+     `docs/regles-metiers.md` § 11.
+243. ⏳ **Boutons d'action pas encore masqués/désactivés pour le rôle
+     "lecture"** — le blocage est déjà effectif et suffisant côté serveur
+     (`autoriserRoles`), mais l'UI ne l'empêche pas visuellement (un clic
+     sur "Modifier"/"Supprimer" avec ce rôle échoue seulement après coup,
+     via l'erreur serveur). Amélioration UX à faire si ce rôle est
+     réellement utilisé en pratique. Repéré dans `docs/schema-donnees.md`
+     mais jamais tracké ici jusqu'au 31/08/2026 ; maintenant aussi listé
+     dans `docs/regles-metiers.md` § 11.
+244. ✅ **`docs/taches-a-traiter.md` créé** (31/08/2026) : liste consolidée
+     de toutes les tâches encore ⏳/❓ du projet, regroupée par thème
+     (suivi qualité, UX, règles métier, sécurité/infra, valorisation),
+     compilée à partir d'une relecture complète de cette liste. Réflexe de
+     mise à jour automatique ajouté dans `docs/a-prendre-en-compte.md`
+     (point 2) : toute tâche qui passe ⏳ y est ajoutée immédiatement, sans
+     attendre qu'on le redemande.
+     En relisant cette liste pour la compiler, plusieurs points trouvés
+     faits mais jamais cochés ont été corrigés au passage : 180, 182, 183,
+     185 (✅), 234 (fichier supprimé entre-temps, note devenue sans objet),
+     235 (fait aujourd'hui même). Doublon 96/241 fusionné.
+245. ⏳ **Réaliser le document `CLAUDE.md`** (demande directe de Nicolas,
+     31/08/2026) — pas encore fait.
+246. ⏳ **Test : sujet à approfondir** (demande directe de Nicolas,
+     31/08/2026, formulée telle quelle) — à préciser avec lui avant de
+     s'y mettre.
+247. ⏳ **Compléter le document `docs/regles-a-confirmer-client.md`**
+     (demande directe de Nicolas, 31/08/2026) — créé le même jour avec une
+     seule entrée (barème annexe seule), à alimenter au fil de l'eau.
+248. ⏳ **Compléter le document `docs/a-prendre-en-compte.md`** (demande
+     directe de Nicolas, 31/08/2026) — créé le même jour avec 2 entrées.
+     Complété une 1ʳᵉ fois le jour même (6 nouvelles entrées, 3 à 8) suite
+     à la question de Nicolas sur la prise en compte permanente de
+     `docs/protocole-ia-vefa.md` : extraction des déclencheurs concrets du
+     protocole (début de session, nouvelle fonctionnalité sur l'existant,
+     bug signalé, code smell repéré, fichier touchant des données
+     d'acquéreur, checklist des pièges) — le protocole lui-même reste la
+     référence détaillée, ce document ne garde que les réflexes courts et
+     actionnables. **Reste ⏳ en continu** (précision de Nicolas,
+     31/08/2026) : ce n'est pas une tâche ponctuelle qui se clôture, c'est
+     un document évolutif — Nicolas indiquera lui-même quand il a quelque
+     chose de nouveau à y ajouter, jamais coché ✅ pour ce motif.
+249. ⏳ **Retravailler le fichier `docs/contexte-projet.md`** (demande
+     directe de Nicolas, 31/08/2026) — déjà resserré une première fois le
+     jour même (point 235), Nicolas souhaite qu'on y retravaille encore.
+250. ✅ **`docs/protocole-ia-vefa.md` mis à jour** (31/08/2026) à partir de
+     `protocole-vefa-avance.md` (nouveau document fourni par Nicolas,
+     dossier Téléchargements) — changement principal : migration prévue de
+     `docs/contexte-projet.md` vers un vrai `CLAUDE.md` à la racine du
+     projet (chargé automatiquement par Claude Code, Étape 0), qui donne
+     enfin des étapes concrètes au point 245. Autres ajouts : réflexe
+     "demander à Claude de sauvegarder une règle en mémoire" si corrigé
+     plusieurs fois sur le même point en session (Étape 1, fait le lien
+     avec le système de mémoire persistante déjà utilisé) ; distinction
+     Skill (procédure à la demande) vs `CLAUDE.md` (contexte permanent
+     automatique) précisée (Étape 4) ; avertissement sur une très longue
+     session qui peut faire sortir `CLAUDE.md` de la fenêtre de contexte
+     malgré le chargement automatique (checklist des pièges).
+251. ✅ **Étape 0 du protocole réalisée** (31/08/2026) : `CLAUDE.md` créé à
+     la racine du projet (migration du contenu de
+     `docs/contexte-projet.md`, chemins adaptés + un renvoi ajouté vers
+     `docs/taches-a-traiter.md`) — chargé automatiquement par Claude Code
+     en début de session. Point 245 fait. `docs/contexte-projet.md`
+     transformé en simple redirection vers `CLAUDE.md` (contenu non
+     dupliqué, pour éviter toute dérive entre les deux). `README.md` mis à
+     jour pour pointer vers `CLAUDE.md`. `git status`/`git log` vérifiés :
+     rien de bloquant, historique propre. **Pas commité** — comme toujours,
+     Nicolas commite lui-même.
+     **Test de fidélité fait dans la foulée** (3 fonctions, jamais testées
+     avant, extension du point 232) : `recalculerTma()`
+     (`server/routes/tmaEntreprises.js`), `validerDatesCoherentesAvecStatut()`
+     (`server/routes/lots.js`), `statutPret()`/`statutSignature()`
+     (`client/src/utils/statuts.js`). 2 écarts réels trouvés et corrigés
+     dans `docs/regles-metiers.md` : (1) le statut TMA `annule` (bouton
+     "Annuler la TMA") était sous-documenté — c'est une vraie transition de
+     la machine à états, symétrique de `refuse` (mémorise
+     `statutAvantAnnulation`, route de restauration dédiée), pas juste une
+     "trace" comme écrit initialement ; (2) `statutPret()` peut aussi
+     retourner `sans_pret`, valeur absente de la liste des statuts dérivés.
+     `validerDatesCoherentesAvecStatut()` : aucun écart, doc confirmée
+     exacte.
+     ⏳ **Reste ouvert** : décision de Nicolas sur l'option
+     `~/.claude/CLAUDE.md` (préférences personnelles tous projets, pas
+     propre à VEFA) — pas tranchée, pas une décision à prendre à sa place.
+252. ⏳ **`~/.claude/CLAUDE.md` (niveau utilisateur, tous projets)** —
+     Nicolas a explicitement dit de laisser ça de côté pour l'instant
+     (31/08/2026), mais de le noter pour plus tard.
 
 ---
 

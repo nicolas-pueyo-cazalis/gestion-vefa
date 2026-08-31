@@ -157,7 +157,7 @@ Le dossier [`docs/`](docs/) sert à la fois de mémoire de travail et de
 support d'entretien — la trace de chaque décision, bug et demande depuis
 le premier jour du projet :
 
-- [`contexte-projet.md`](docs/contexte-projet.md) — fiche de reprise rapide (stack, règles métiers, décisions, pièges, points sensibles)
+- [`CLAUDE.md`](CLAUDE.md) — fiche de reprise rapide (stack, règles métiers, décisions, pièges, points sensibles), à la racine du projet, chargée automatiquement par Claude Code
 - [`template-spec.md`](docs/template-spec.md) — modèle à copier pour rédiger une spec avant toute nouvelle fonctionnalité (workflow spec-first, Jour 7 du programme)
 - [`protocole-ia-vefa.md`](docs/protocole-ia-vefa.md) — protocole de travail quotidien avec Claude sur ce projet précis (à jour en permanence, distinct du programme de formation général)
 - [`journal.md`](docs/journal.md) — journal de bord, une entrée par étape

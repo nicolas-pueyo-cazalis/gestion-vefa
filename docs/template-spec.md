@@ -3,10 +3,10 @@ Modèle de spec (Jour 7 du programme de formation personnel de Nicolas) —
 copié depuis le PDF fourni par Nicolas pour être modifiable directement
 en Markdown plutôt que resté figé en PDF.
 
-⚠️ À COMPLÉTER (voir docs/protocole-ia-vefa.md, Étape 2) : ce modèle
-générique n'a pas encore de section "Impact sur l'existant", pourtant
-exigée par le protocole VEFA pour toute nouvelle fonctionnalité touchant
-l'existant — voir docs/demandes.md, point 239.
+Complété le 31/08/2026 avec la section "Impact sur l'existant" exigée par
+docs/protocole-ia-vefa.md (Étape 2) pour toute nouvelle fonctionnalité sur
+un projet déjà avancé — absente du modèle générique d'origine
+(docs/demandes.md, point 239).
 
 Usage : copier ce fichier (ex: docs/specs/nom-de-la-fonctionnalite.md,
 dossier à créer au premier usage) et remplir chaque section pour toute
@@ -30,6 +30,21 @@ dans docs/decisions.md).
 1.
 2.
 3.
+
+## Impact sur l'existant
+
+*Spécifique à un projet déjà avancé (voir `docs/protocole-ia-vefa.md`,
+Étape 2) — absent d'une spec "projet neuf". Quels fichiers/fonctions déjà
+en place cette fonctionnalité pourrait toucher, même indirectement (ex:
+une route partagée, un composant réutilisé ailleurs, une règle métier déjà
+codée à un autre endroit). Vérifier notamment `docs/contexte-projet.md`
+("Règles métiers non négociables" et "En cours / à ne pas casser") pour
+tout ce qui ne doit surtout pas changer par effet de bord.*
+
+- Fichiers/fonctions concernés : ...
+- Règle(s) métier existante(s) à ne pas casser : ...
+- Test de non-régression à prévoir sur (fonctionnalité proche déjà
+  existante) : ...
 
 ## Cas limites
 

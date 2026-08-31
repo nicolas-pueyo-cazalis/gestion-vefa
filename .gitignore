@@ -11,3 +11,8 @@ node_modules/
 # Système
 .DS_Store
 Thumbs.db
+
+# Documents de travail personnels de Nicolas (remarques, brouillons) —
+# pas des livrables du projet
+Remarques sur rapport des règles métier.docx
+Remarques sur rapport des règles métier.pdf

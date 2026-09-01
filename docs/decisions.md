@@ -268,3 +268,90 @@ critique) dans une dépendance transitive, pas le code de l'appli
 lui-même. À rediscuter avec Nicolas plus tard (upgrade contrôlé
 d'`exceljs` vers une version majeure plus récente qui ne dépend plus
 d'`uuid` vulnérable, avec retest complet des exports), pas dans l'urgence.
+
+## Migration de `docs/contexte-projet.md` vers `CLAUDE.md` (décision du 31/08/2026)
+
+Nicolas a fourni un vrai "Protocole IA — Projet VEFA (déjà avancé)"
+(`docs/protocole-ia-vefa.md`), qui recommandait de migrer le fichier de
+contexte vers un vrai `CLAUDE.md` à la racine du projet : Claude Code le
+charge automatiquement en début de session, sans que Nicolas ait besoin de
+le coller manuellement à chaque fois (contrairement à
+`docs/contexte-projet.md`, jusque-là recollé à la main).
+
+**Décision :** `CLAUDE.md` créé à la racine, gardé en synthèse courte (les
+points les plus critiques seulement, pas une réécriture des fichiers de
+`docs/`) ; `docs/contexte-projet.md` devient un simple stub de
+redirection, gardé pour que les liens déjà en place dans les autres
+fichiers continuent de fonctionner, mais plus jamais modifié directement.
+Nouveaux documents de référence créés dans le même mouvement :
+`docs/regles-metiers.md` (référence exhaustive et canonique des règles
+métier, pour ne plus les disperser entre `journal.md`/`decisions.md`/le
+code), `docs/a-prendre-en-compte.md` (réflexes permanents pour l'IA),
+`docs/taches-a-traiter.md` (vue consolidée de tout ce qui reste ouvert,
+par thème plutôt que par ordre chronologique).
+
+## Tests d'intégration serveur sans passer par de vraies routes HTTP (décision du 01/09/2026)
+
+Le plan initial pour tester "en conditions réelles" les routes API
+critiques (génération des appels de fonds, recalcul TMA) prévoyait de
+scinder `server/index.js` en `app.js`/`index.js` pour pouvoir utiliser
+`supertest` sur de vraies requêtes HTTP. Nicolas a remis cette approche en
+question avant de s'y engager ("on est sûr que c'est la meilleure
+stratégie ?").
+
+**Décision :** version allégée — `mongodb-memory-server` (une vraie base
+MongoDB éphémère, en mémoire) mais appel direct aux fonctions exportées
+des routes (ex : `genererAppelsDeFonds()`) avec de vrais documents
+Mongoose, **sans** passer par Express/HTTP. Suffisant pour vérifier la
+logique métier contre une vraie base plutôt que des mocks, pour un coût
+d'infrastructure bien moindre que le split `app.js`/`index.js`. Ce split
+et `supertest` restent une option pour plus tard, si le besoin de tester
+de vraies routes HTTP (codes de statut, en-têtes, middleware) se fait
+vraiment sentir — pas un chantier obligatoire décidé d'avance.
+
+## Extraire les fonctions pures plutôt que refactorer, pour tester les "god components" (décision du 01/09/2026)
+
+Trois pages (`Lots.jsx`, `Tma.jsx`, `AppelsDeFonds.jsx`, 600 à 900 lignes
+chacune) n'avaient aucun test, et sont par ailleurs déjà trackées comme
+dette technique à découper en sous-composants (point 236). Deux approches
+possibles pour les tester : découper d'abord les composants puis tester
+les morceaux, ou tester ce qui est déjà isolable sans y toucher.
+
+**Décision :** extraire (au sens propre : ajouter le mot-clé `export`, ne
+rien déplacer) les fonctions déjà pures — sans JSX ni hooks — présentes en
+dehors du corps du composant, et les tester isolément dans un fichier
+`.test.js` dédié à chaque page. Le refactor/découpage complet des god
+components reste un sujet séparé, plus lourd et plus risqué, pas résolu
+par ce chantier. Bénéfice collatéral confirmé à l'usage : cette approche a
+aussi permis de régler pour de bon la duplication de `nomAcquereur()` dans
+les 3 pages (extraite dans `client/src/utils/acquereur.js`) et a fait
+apparaître un vrai bug de grammaire française (`pluraliser()`, accord
+d'un libellé à plusieurs mots) jamais repéré manuellement jusque-là.
+
+## Exécution strictement séquentielle des commandes WSL/npm (décision du 01/09/2026)
+
+Deux `npm install` lancés en parallèle dans WSL (pendant la mise en place
+de la couverture de code) ont bloqué la VM WSL entière (11 processus `wsl`
+accumulés, compteur mémoire `vmmemWSL` corrompu), résolu par
+`wsl --shutdown` (accord explicite de Nicolas) puis réinstallation en
+séquentiel.
+
+**Décision :** toute commande WSL impliquant `npm` (install, test, dev)
+s'exécute désormais strictement l'une après l'autre, jamais en parallèle,
+même quand deux tâches semblent indépendantes l'une de l'autre — le coût
+d'un blocage de VM dépasse largement le gain de temps d'une parallélisation.
+
+## Dépôt GitHub privé, sans protection de branche pour l'instant (décision du 01/09/2026)
+
+Premier dépôt GitHub créé et poussé (`nicolas-pueyo-cazalis/gestion-vefa`,
+privé) — le CI a tourné pour la première fois en conditions réelles.
+Ni les "Rulesets" (nouvelle interface GitHub) ni les "Branch protection
+rules" (interface classique) ne s'appliquent sur un dépôt **privé** avec
+un compte gratuit (message GitHub explicite : nécessite un compte
+Team/Enterprise). Deux options : passer le dépôt en public (protection
+gratuite et sans limite), ou rester privé sans cette protection.
+
+**Décision :** Nicolas choisit de rester privé pour l'instant, sans
+protection de branche active — décision explicite, pas un oubli, à
+reconsidérer s'il change d'avis sur la visibilité du dépôt (utile pour
+des recruteurs, mais expose le code publiquement).

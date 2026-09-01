@@ -54,9 +54,11 @@ plus haut). Le taux de TVA est un nouveau paramètre du programme,
 `programme.parametres.tauxTva` (défaut **20%**, modifiable — même logique de
 paramétrage que le reste, voir `decisions.md`).
 
-Le HT n'est pas encore affiché nulle part dans l'application (v1) — prévu
-pour plus tard, notamment dans les exports et au moment de la saisie des
-devis entreprises (souvent exprimés en HT à la base).
+Le HT est désormais affiché dans plusieurs exports (lignes de total
+TTC/TVA/HT : Lots, Appels de fonds, TMA — voir `decisions.md`, "PDF forcé
+sur une seule page"), toujours calculé à la volée à l'affichage/export,
+jamais stocké. La saisie des devis entreprises reste en TTC (pas de champ
+HT dédié à ce jour).
 
 ---
 
@@ -865,31 +867,26 @@ Trois demandes de Nicolas :
    ci-dessous). Seed enrichi avec 6 entreprises fictives, reprenant les
    corps de métier observés dans le fichier Excel de référence.
 
-2. **Page "Paramètres"** : nouvelle route React `/parametres` (lien dans le
-   bandeau, à côté de Lots/TMA). Rassemble tout ce qui est aujourd'hui dans
-   `programme.parametres` mais non modifiable ailleurs que dans `seed.js` :
-   infos programme, barème des phases, entreprises (référentiel du point 1),
-   liste des étages, règles TMA (marge, montant négatif), tous les délais.
-   Nécessite une route `PATCH /api/programme` (aujourd'hui lecture seule) et
-   les routes CRUD `Entreprise`. **À réserver aux rôles
-   admin/gestionnaire** une fois l'authentification JWT en place (pas encore
-   faite) — pas de contrôle d'accès pour l'instant.
+2. ✅ **Page "Paramètres"** — **fait**. Route React `/parametres` (lien
+   dans le bandeau), organisée en sections (`SectionLots`,
+   `SectionEntreprises`, `SectionDelaisEtTaux`...). Route
+   `PATCH /api/programme` et routes CRUD `Entreprise` en place, réservées
+   aux rôles admin/gestionnaire via `autoriserRoles(...)` (authentification
+   JWT posée le 13/07/2026, voir `journal.md`).
 
-3. **Deux nouvelles alertes**, dans le même esprit que l'alerte déjà prévue
-   le 09/07 (dates limites dépassées, prêt/notaire/appels de fonds) :
-   - **Entreprise qui n'a pas chiffré à temps** : le délai existe déjà
-     (`delaiRetourEntrepriseTmaJours`), mais `TmaEntreprise` n'a pas de date
-     de départ fiable — à ajouter : `dateEnvoi` (aujourd'hui seul `createdAt`
-     existe, pas modifiable).
-   - **Client qui n'a pas répondu à une facture TMA** : nouveau paramètre à
-     créer, `delaiReponseFactureTmaJours` (n'existe pas encore — on a
-     `delaiReglementAppelJours` pour les appels de fonds, mais rien
-     d'équivalent pour la réponse à une facture TMA). Alerte déclenchée si
-     `TMA.statut === 'facture'` et `dateEnvoiFactureClient + délai` dépassée
-     sans être passée à `valide` ou `refuse`.
+3. ✅ **Deux nouvelles alertes** — **faites**. `TmaEntreprise.dateEnvoi`
+   ajoutée (13/07/2026, référentiel `Entreprise`), utilisée par
+   `estEntrepriseEnRetard()` pour l'alerte "Entreprise qui n'a pas chiffré
+   à temps". Nouveau paramètre `delaiReponseFactureTmaJours`
+   (`server/models/Programme.js`, éditable dans
+   `SectionDelaisEtTaux.jsx`), utilisé par `estFactureTmaEnRetard()` pour
+   l'alerte "Client qui n'a pas répondu à une facture TMA" — les deux
+   affichées dans `AlerteRetards.jsx`, désactivables individuellement
+   depuis Paramètres.
 
 ---
 
-*Prochaine étape suggérée : commencer le développement effectif, étape 1 de
-la feuille de route (`decisions.md`) — une version HTML/CSS/JS vanilla pour
-afficher les données avant de passer à React.*
+*Section historique (10/07/2026) — les trois demandes ci-dessus sont
+maintenant toutes faites. Voir `docs/journal.md` pour la suite du
+développement, `docs/taches-a-traiter.md` pour ce qui reste ouvert
+aujourd'hui.*

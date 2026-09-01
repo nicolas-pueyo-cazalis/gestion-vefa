@@ -1,10 +1,14 @@
 # Checklist de tests manuels avant déploiement
 
-Pas de suite de tests automatisés à ce stade (voir `README.md`, section
-Architecture) — cette checklist couvre les parcours critiques à rejouer à
-la main avant chaque mise en production, pour limiter le risque de
-régression silencieuse. À dérouler avec des données de démo (`npm run
-seed`), jamais sur des données réelles.
+Complète la suite de tests automatisés (voir `README.md`, section
+Architecture, et `docs/specs/tests-automatises-*.md`) — celle-ci couvre les
+fonctions de calcul pur, l'authentification, l'intégration base de données
+et les composants React, mais pas les parcours de bout en bout via
+l'interface ni les vraies routes HTTP (`supertest`, pas encore mis en
+place). Cette checklist couvre donc les parcours critiques à rejouer à la
+main avant chaque mise en production, pour limiter le risque de régression
+silencieuse. À dérouler avec des données de démo (`npm run seed`), jamais
+sur des données réelles.
 
 **Légende** : ⚠️ = parcours qui a déjà causé un bug réel par le passé (voir
 `docs/bugs.md`), à tester en priorité.

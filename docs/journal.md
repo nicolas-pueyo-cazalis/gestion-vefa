@@ -2226,3 +2226,667 @@ CI/CD (nouveau `.github/workflows/ci.yml`, lint front + vérification
 syntaxe back à chaque push). Sauvegarde/récupération : pas de correctif de
 code, juste une recommandation (le tier gratuit MongoDB Atlas n'inclut pas
 de sauvegarde continue) — décision d'infrastructure à prendre par Nicolas.
+
+---
+
+## 2026-07-21 — Audit infrastructure : état des lieux avant déploiement
+
+Nicolas ne connaît pas le sujet ("je n'y connais rien") et demande un état
+des lieux pédagogique avant de déployer l'application quelque part —
+aujourd'hui tout tourne en local, rien n'est accessible ailleurs que sur
+sa machine.
+
+**Ce qui a été fait**
+
+- **État des lieux** : rien n'est déployé nulle part (back Express, front
+  React/Vite) ; seule la base de données est déjà "dans le cloud" (MongoDB
+  Atlas).
+  - **Points positifs** : base de données déjà hébergée ; front et back
+    déjà découplés en deux applications qui communiquent via une adresse
+    configurable (`VITE_API_URL`) — architecture déjà prête pour
+    l'hébergement séparé le plus simple/gratuit ; secrets déjà proprement
+    gérés par variables d'environnement (rien à changer dans le code) ;
+    route de "santé" déjà présente (`GET /`) ; `npm run build` (front) et
+    `npm start` (back) déjà testés et fonctionnels ; CI (GitHub Actions)
+    déjà en place, bonne base pour un déploiement automatique plus tard.
+  - **Points négatifs** : aucune configuration d'hébergement (normal,
+    jamais déployé) ; CORS grand ouvert (`cors()` sans réglage) — sans
+    danger en local, à restreindre une fois en ligne ; version de Node non
+    figée (`engines` absent des `package.json`) ; paquet JS du front assez
+    lourd au premier chargement (~540 Ko compressés, jsPDF/exceljs
+    chargés même sans utiliser les exports) — optimisable plus tard, pas
+    urgent ; pas de nom de domaine/HTTPS, mais géré automatiquement par les
+    hébergeurs recommandés, rien à faire à la main.
+- **2 corrections de préparation faites dans la foulée**, sans attendre le
+  déploiement et sans rien casser : `"engines": { "node": ">=20" }` ajouté
+  aux deux `package.json` ; CORS rendu configurable via une nouvelle
+  variable d'environnement optionnelle `CORS_ORIGIN`
+  (`server/.env.example`) — vide par défaut (comportement actuel
+  conservé, nécessaire en local), à remplir avec l'adresse du front une
+  fois déployé.
+- **Plan de déploiement proposé**, en attente de la décision de Nicolas
+  sur quand s'y mettre : back (Express) sur **Render** (compte gratuit,
+  déploiement automatique à chaque `git push`, variables d'environnement à
+  recopier depuis `.env` — seul défaut du tier gratuit : le serveur
+  s'endort après inactivité, réveil en quelques secondes) ; front (React)
+  sur **Vercel** ou **Netlify** (gratuit, détecte Vite automatiquement,
+  HTTPS + nom de domaine offerts) ; base de données déjà prête (juste
+  autoriser Render à s'y connecter, un réglage dans Atlas).
+
+**Prochaine étape**
+
+Décision de Nicolas en attente sur le moment de déployer (voir
+`CLAUDE.md`, "Décisions en attente de Nicolas") — pas tranché à sa place.
+
+---
+
+## 2026-07-21 (suite) — Audit "fidélité code/doc" étendu à TMA
+
+Même principe que l'audit qualité de la veille, appliqué cette fois à
+comparer ce que fait le code réel à ce que disent les fichiers de contexte
+— sur d'autres fonctions du projet. A révélé un vrai écart de
+**comportement** sur les dates TMA (`PATCH /api/tma/:id/dates`), pas
+seulement une documentation mal rédigée.
+
+**Bug corrigé** : rien n'empêchait de renseigner "Date de retour client"
+sans avoir rempli "Date d'envoi facture" avant, ce qui faisait passer la
+TMA directement à "Validé" en sautant l'étape "Facturé". La règle "on ne
+peut pas sauter une étape" n'était en réalité vérifiée que sur
+`PATCH /api/tma/:id/statut` (les boutons), jamais sur ce formulaire de
+dates — un même garde-fou posé à un seul des deux points d'entrée qui
+peuvent faire avancer le statut. Corrigé : la route renvoie désormais une
+erreur claire dans ce cas.
+
+**Bug corrigé, mais règle mise en pause** : le panneau "Modifier les
+dates" restait modifiable même une fois la TMA au statut "Validé" ;
+effacer "Date de retour client" après coup faisait redescendre le statut
+vers "Facturé", à l'encontre de la règle "pas de retour en arrière une
+fois validé". Corrigé par un verrouillage complet du panneau une fois
+"Validé" (même principe que le montant client déjà verrouillé). **Nicolas
+veut y réfléchir avant de confirmer qu'on garde cette règle** — le code
+reste tel quel pour l'instant (verrouillé), mais ce point n'est pas
+considéré comme définitivement tranché tant qu'il n'a pas donné suite.
+
+**Chantier ouvert, pas encore mené à bout** : Nicolas a précisé vouloir
+étendre cet exercice à **toutes** les fonctions du projet, pas seulement
+aux autres pages (TMA et Appels de fonds eux-mêmes ne sont pas
+nécessairement épuisés non plus) — pour chaque fonction, faire expliquer
+son fonctionnement à partir du code réel (jamais des commentaires ni de
+la doc), puis comparer à `docs/schema-donnees.md` et aux autres fichiers
+de contexte. Gros chantier, à dérouler par lots de quelques fonctions à
+la fois, jamais en une seule session.
+
+**Prochaine étape**
+
+Continuer l'audit fidélité code/doc par lots successifs (repris fin
+août, voir plus bas) ; noté pour plus tard : consolider tous les points
+d'audit sécurité/RGPD/qualité éparpillés dans `docs/demandes.md` en un
+vrai tableau de suivi dédié — pas encore fait à ce stade.
+
+---
+
+## 2026-08-31 — Restructuration de la documentation et migration vers `CLAUDE.md`
+
+Reprise du projet après plusieurs semaines de pause côté journal (le
+travail du jour s'appuie sur un programme personnel de formation
+développeur suivi par Nicolas en parallèle, 16 jours du 20 août au
+14 septembre 2026, documenté un temps dans `docs/programme-formation-ia.md`
+— copie intégrale du programme, supprimée volontairement par Nicolas peu
+après sa création, confirmé explicitement ; le fichier n'existe plus dans
+le dépôt). Ce programme explique le "pourquoi" de plusieurs réflexes déjà
+pris ces dernières sessions : l'exercice "fidélité code/doc" (Jour 1), les
+`git diff --stat` systématiques (Jour 6), les sous-agents en parallèle
+(Leçon F), l'audit sécurité en 3 points (Jour 2).
+
+**3 code smells trouvés sans correction** (Jour 10 de ce programme,
+courant fin août 2026), restés en dette technique trackée plutôt que
+corrigés dans l'instant :
+- `nomAcquereur()` dupliquée à l'identique dans 3 pages (`Lots.jsx`,
+  `Tma.jsx`, `AppelsDeFonds.jsx`).
+- `versDateInput()` dupliquée à l'identique dans **8 composants**
+  (`DetailEntreprisesTma`, `FormulaireAppelDeFonds`, `FormulaireDatesTma`,
+  `FormulaireEditionLot`, `FormulaireSignatureActe`, `FormulaireSuiviPret`,
+  `LigneEntreprise`, `SectionInfosProgramme`) — le smell le plus net des
+  trois.
+- 3 "god components" : `Tma.jsx` (777 lignes, 21 fonctions internes),
+  `Lots.jsx` (895 lignes, 13 fonctions), `AppelsDeFonds.jsx` (641 lignes,
+  10 fonctions) — trop de responsabilités par fichier, pas encore décidé
+  comment les découper.
+
+**Ce qui a été fait le 31/08/2026**
+
+- `docs/contexte-projet.md` relu et resserré : la section "Règles
+  métiers non négociables" remplacée par un renvoi vers un nouveau fichier
+  dédié plutôt que de dupliquer son contenu.
+- Nicolas fournit un "Protocole IA — Projet VEFA (déjà avancé)" :
+  `docs/protocole-ia-vefa.md` créé, référencé en haut de
+  `docs/contexte-projet.md` et sauvegardé en mémoire persistante
+  (`feedback_protocole_ia_vefa.md`) pour s'appliquer même hors
+  rechargement explicite du fichier.
+- **Nouveaux documents de référence créés** :
+  `docs/regles-metiers.md` (référence exhaustive et canonique de toutes
+  les règles métier, classées par domaine — compilée à partir d'une
+  relecture complète de `analyse-excel.md`, `schema-donnees.md`,
+  `decisions.md`, `checklist-tests-manuels.md`, `journal.md`, `bugs.md`,
+  `demandes.md`, puis vérifiée contre le code réel) ; `docs/regles-a-
+  confirmer-client.md` (règles tranchées provisoirement par Nicolas,
+  jamais confirmées par un vrai client — première entrée : le barème fixe
+  5%/95% d'une vente d'annexe seule) ; `docs/a-prendre-en-compte.md`
+  (réflexes à garder à l'esprit en permanence, à compléter par Nicolas au
+  fil des sessions). `docs/analyse-excel.md` marqué explicitement obsolète
+  (bandeau en tête, gardé pour l'historique uniquement).
+- `docs/taches-a-traiter.md` créé : liste consolidée de toutes les tâches
+  encore ouvertes du projet, regroupée par thème (suivi qualité, UX,
+  règles métier, sécurité/infra, valorisation), compilée à partir d'une
+  relecture complète de `docs/demandes.md`. Réflexe de mise à jour
+  automatique ajouté dans `docs/a-prendre-en-compte.md` : toute tâche qui
+  passe en attente y est ajoutée immédiatement, sans attendre qu'on le
+  redemande. Plusieurs points trouvés faits mais jamais cochés ont été
+  corrigés au passage en relisant `demandes.md` pour compiler cette liste.
+- `docs/protocole-ia-vefa.md` mis à jour vers une version 2, à partir d'un
+  nouveau document fourni par Nicolas (`protocole-vefa-avance.md`) —
+  changement principal : migration prévue de `docs/contexte-projet.md`
+  vers un vrai `CLAUDE.md` à la racine du projet, chargé automatiquement
+  par Claude Code en début de session. Autres ajouts : réflexe "demander
+  à Claude de sauvegarder une règle en mémoire" si corrigée plusieurs fois
+  sur le même point en session ; distinction claire entre une Skill
+  (procédure à la demande) et `CLAUDE.md` (contexte permanent automatique)
+  ; avertissement sur une très longue session qui peut faire sortir
+  `CLAUDE.md` de la fenêtre de contexte malgré le chargement automatique
+  en début de session.
+- **`CLAUDE.md` créé à la racine du projet** (migration du contenu de
+  `docs/contexte-projet.md`, chemins adaptés, renvoi ajouté vers
+  `docs/taches-a-traiter.md`) — chargé automatiquement par Claude Code en
+  début de session, plus besoin de le coller à la main. Un vrai retravail
+  du contenu reste attendu (la migration mécanique ne veut pas dire que le
+  contenu est figé). `docs/contexte-projet.md` transformé en simple
+  redirection vers `CLAUDE.md` (contenu non dupliqué, pour éviter toute
+  dérive entre les deux). `README.md` mis à jour pour pointer vers
+  `CLAUDE.md`. `git status`/`git log` vérifiés : rien de bloquant,
+  historique propre. Pas commité — comme toujours, Nicolas commite
+  lui-même.
+
+**Test de fidélité fait dans la foulée** (extension du chantier ouvert
+la veille), sur 3 fonctions jamais testées auparavant :
+`recalculerTma()` (`server/routes/tmaEntreprises.js`),
+`validerDatesCoherentesAvecStatut()` (`server/routes/lots.js`),
+`statutPret()`/`statutSignature()` (`client/src/utils/statuts.js`). 2
+écarts réels trouvés et corrigés dans `docs/regles-metiers.md` : (1) le
+statut TMA `annule` (bouton "Annuler la TMA") était sous-documenté — c'est
+une vraie transition de la machine à états, symétrique de `refuse`
+(mémorise `statutAvantAnnulation`, route de restauration dédiée), pas
+juste une "trace" comme écrit initialement ; (2) `statutPret()` peut
+aussi retourner `sans_pret`, une valeur absente jusque-là de la liste des
+statuts dérivés documentés. `validerDatesCoherentesAvecStatut()` : aucun
+écart, doc confirmée exacte.
+
+**Points restés ouverts, pas tranchés ce jour-là** :
+- Rôle "acquéreur" en lecture seule sur ses propres données, évoqué en
+  cadrage initial (09/07/2026) mais jamais modélisé — repéré dans
+  `docs/schema-donnees.md`, maintenant aussi listé dans
+  `docs/regles-metiers.md`.
+- Boutons d'action pas encore masqués/désactivés visuellement pour le
+  rôle "lecture" — le blocage est déjà effectif et suffisant côté serveur
+  (`autoriserRoles`), mais l'UI ne l'empêche pas visuellement (un clic sur
+  "Modifier"/"Supprimer" avec ce rôle échoue seulement après coup).
+- `~/.claude/CLAUDE.md` (niveau utilisateur, tous projets, pas propre à
+  VEFA) — Nicolas a explicitement dit de laisser ça de côté pour
+  l'instant, juste noté pour plus tard.
+- "Test : sujet à approfondir" — demande formulée telle quelle par
+  Nicolas, à préciser avec lui avant de s'y mettre.
+
+**Prochaine étape**
+
+Reprendre le protocole v2 en continu (audit de dette technique
+périodique sur le code le plus ancien, test de fidélité code/doc
+récurrent, réflexe de non-régression systématique) ; retravailler
+`CLAUDE.md` en profondeur, pas juste la migration mécanique déjà faite.
+
+---
+
+## 2026-09-01 — Liste de 23 tâches (PDF) : triage et mise en attente
+
+Nicolas transmet d'un coup une liste de tâches sous forme de PDF —
+éclatée en points individuels dans `docs/demandes.md` comme le reste des
+demandes, et reprise dans `docs/taches-a-traiter.md`. Aucune de ces tâches
+n'est codée à ce stade, juste tracée : Nicolas a préféré enchaîner sur
+deux exercices de revue externe avant de commencer à coder quoi que ce
+soit de cette liste (voir l'entrée suivante).
+
+**Ce qui a été tracé, par thème**
+
+- **Documentation** : passe de revue de l'ensemble des docs et des liens
+  entre eux, s'assurer qu'une mise à jour de chacun se fasse
+  automatiquement — rejoint le réflexe déjà en place, mais Nicolas veut
+  une vraie passe de revue, pas juste le réflexe au fil de l'eau ; mettre
+  à jour `docs/concepts-techniques.md`.
+- **Appels de fonds** : afficher un numéro d'appel suivant la phase (ex :
+  "Appel de fonds n°1 : Réservation"), après la colonne "Lot" dans le
+  tableau et répercuté dans tous les exports concernés ; règle métier à
+  ajouter une fois codée — le dernier appel de fonds d'un lot doit être
+  exactement égal au solde restant dû, pour éviter tout écart d'arrondi
+  cumulé sur les phases précédentes.
+- **Nouvelle page "TS" (Travaux Supplémentaires)** : clarifiée par
+  Nicolas — travaux demandés en cours de chantier, **hors marchés déjà
+  signés** (donc distincte de la TMA, qui couvre les modificatifs
+  acquéreur avant/pendant la vente). À traiter avec le même principe que
+  la page TMA (même logique de machine à états, mêmes types d'écrans),
+  adapté au cas TS plutôt que recopié — nécessitera une vraie spec avant
+  implémentation, avec une attention particulière à ne jamais confondre
+  TS et TMA, ni dans le code ni dans la doc.
+- **Exports, encore et toujours** : décimales à remettre sur le "Devis
+  client" TMA (vérifier la cohérence avec les autres exports au cas par
+  cas, certains les ont volontairement retirées) ; coordonnées banque/
+  courtier dans l'export "Suivi de prêt" ; coordonnées notaire dans
+  l'export "Signature acte" ; colonne "%" dans les statistiques de Suivi
+  de prêt et de Signature acte ; "En retard" en rouge sur le récapitulatif
+  détaillé par phase des Appels de fonds ; retravail global de tous les
+  exports statistiques, toutes pages confondues ; grosse amélioration de
+  tous les exports sans exception ; réflexion sur l'intégration d'un logo
+  client dans les entêtes d'export et dans le bandeau de l'application.
+- **Visuel** : aligner le signe "€" de la colonne "Prix TTC" (Lots) quel
+  que soit le nombre de chiffres du montant ; revoir les cartes de
+  statistiques de la page Appels de fonds ; améliorer visuellement le
+  bouton de réattribution des TMA ; aligner les boutons "Exporter" avec le
+  reste des boutons de chaque page.
+- **Idée à cadrer, hors périmètre immédiat** : faisabilité d'un agent IA
+  jouant le rôle d'un client professionnel de la promotion immobilière —
+  à cadrer avec une vraie spec et un coût réel avant toute implémentation
+  (Étape 6 du protocole).
+- **Ménage** : retirer physiquement du dossier les fichiers Word/PDF de
+  remarques envoyés pour traitement — déjà ignorés par Git, mais Nicolas
+  veut maintenant les faire disparaître du dossier lui-même, pas
+  seulement de Git.
+
+**Prochaine étape**
+
+Traiter cette liste au fil des sessions suivantes ; en parallèle, deux
+exercices de revue externe demandés par Nicolas avant d'y toucher (voir
+l'entrée suivante).
+
+---
+
+## 2026-09-01 (suite) — Check-up "développeur confirmé" (66/100)
+
+Claude dans la peau d'un développeur senior auditant le dépôt, sur une
+grille de questions fournie par Nicolas — en miroir de la revue "client
+professionnel" qui suit. Vérifications faites dans le code réel avant
+d'écrire quoi que ce soit (pas de supposition) : recherche de
+`TODO`/`FIXME`/`HACK` sur tout le projet, présence d'une librairie de
+validation dans `package.json`, mécanisme du `Compteur`
+(`findOneAndUpdate`+`$inc`), recherche de rate-limiting sur la connexion,
+lecture complète de `server/middleware/auth.js`.
+
+**Points forts** : erreurs serveur centralisées et disciplinées
+(`repondreErreurServeur()`, 46 points d'appel dans 12 fichiers, jamais de
+détail brut renvoyé au client en production) ; RBAC réellement côté
+serveur (`autoriserRoles`), pas seulement caché côté UI, `verifierToken`
+propre (401 non connecté / 403 mauvais rôle bien distingués, jeton ne
+contient que `{id, role}`) ; `Compteur` correctement atomique
+(`findOneAndUpdate`+`$inc`), évite le piège classique lire-puis-écrire sur
+une numérotation partagée ; logique financière partagée plutôt que
+dupliquée (`calculerEmissionAppel()` réutilisée par 2 routes) —
+exactement l'endroit où la duplication est la plus dangereuse ; pattern de
+"snapshot" (donnée figée vs donnée vivante) appliqué avec discernement à
+plusieurs endroits (phase figée à la génération, `corpsDeTravaux` figé,
+historiques en copies) ; traçabilité du "pourquoi" exceptionnelle
+(commentaires datés, renvoyés à un point `demandes.md`), **zéro**
+`TODO`/`FIXME`/`HACK` dans tout le projet ; CI minimale mais honnête
+(lint + syntaxe), sans prétendre avoir des tests qu'il n'y avait pas
+encore à ce stade.
+
+**Points faibles** : **zéro test automatisé** — le point le plus lourd
+d'un point de vue ingénierie sur du code qui calcule des pourcentages
+encadrés par la loi et de vrais montants ; **aucune couche de validation
+explicite aux frontières des routes** (pas de Joi/Zod/express-validator
+dans `package.json`, seulement 2 vérifications manuelles de type sur tout
+`server/routes/`, reposant presque entièrement sur les contraintes de
+schéma Mongoose) ; **aucun rate-limiting sur `POST /api/auth/connexion`**
+(bcrypt bien utilisé, mais rien ne freine les tentatives répétées) ; dette
+déjà trackée (les 3 "god components", `nomAcquereur()`/`versDateInput()`
+dupliquées) ; `Object.assign(lot, champs)` (`lots.js`, `PATCH`) : champs du
+corps de requête posés assez directement sur le document Mongoose, pas de
+liste blanche explicite de ce qu'une route/un rôle a le droit de modifier
+— pas une faille confirmée, un point à surveiller si le projet grandit.
+
+**Dette technique et risques** : concurrence non gérée — pas de
+verrouillage optimiste, deux utilisateurs qui modifient la même fiche en
+même temps se l'écrasent silencieusement (dernier "Enregistrer" gagne,
+sans avertissement), invisible avec un seul testeur, réel dès 2
+utilisateurs simultanés ; cas limites pas systématiquement vérifiés
+(tableau vide, montant à 0, donnée créée avant l'ajout d'un champ récent)
+— non vérifié, pas confirmé cassé.
+
+**Note : 66/100** — logique métier et traçabilité au-dessus de la
+moyenne (80+ à elles seules), mais rigueur défensive classique (tests,
+validation, rate-limiting, concurrence) pas encore acquise. **Avis
+général** : code écrit par quelqu'un qui comprend le métier en profondeur
+et documente ses décisions avec une rigueur rare sur un projet solo — la
+traçabilité est le point le plus fort. Ce qui manque n'est pas de la
+compréhension supplémentaire, c'est le réflexe d'ingénierie défensive qui
+s'acquiert avec l'exposition à des incidents réels — profil attendu d'un
+développeur en formation, pas un jugement négatif. **Ce qui manque avant
+une vraie mise en production** : suite de tests (au moins sur les calculs
+financiers et les routes critiques), validation explicite des entrées
+(Zod/Joi), rate-limiting sur la connexion, réflexion sur la concurrence
+(verrouillage optimiste ou avertissement "modifié entre-temps"), réduire
+la dette des god components avant qu'elle ne coûte plus cher à traiter.
+
+**Prochaine étape**
+
+Directement enchaîné avec la revue "professionnel de l'immobilier neuf"
+(voir entrée suivante), puis avec la série de chantiers de tests
+automatisés qui répond très directement au point faible n°1 de ce
+check-up.
+
+---
+
+## 2026-09-01 (suite) — Revue "professionnel de l'immobilier neuf" (62/100) et revue visuelle du code par 3 sous-agents
+
+**Exercice de revue externe** : Claude dans la peau d'un professionnel de
+l'immobilier neuf regardant l'application, à partir de la documentation
+et des règles métier (`regles-metiers.md`, `README.md`,
+`taches-a-traiter.md`) — pas encore d'une navigation visuelle réelle dans
+l'appli à ce stade (voir plus bas).
+
+**Points forts** : le cœur métier est vraiment compris, pas juste "codé"
+— la cascade "réglé à l'acte", le barème figé à la génération et
+verrouillé dès le premier appel émis, le dépôt de réservation réglé
+automatiquement dès la réservation, des subtilités qu'un développeur
+n'ayant jamais suivi un dossier VEFA n'aurait pas anticipées ; statuts
+déduits des dates, jamais cliqués à la main, éliminant une classe entière
+d'erreurs humaines (le piège classique d'un suivi Excel) ; historique et
+traçabilité pris au sérieux (annulations et modifications de prix
+conservées avec motif, jamais un simple écrasement silencieux) ;
+multi-programme et 3 rôles avec un vrai rôle lecture seule, correspondant
+à une vraie organisation plutôt qu'à un outil pensé pour un utilisateur
+unique ; alertes de retard proactives (prêt, notaire, appels de fonds,
+TMA).
+
+**Points faibles** : aucun test automatisé, alors que l'outil calcule des
+pourcentages d'appels de fonds encadrés par la loi ; toujours en local,
+jamais déployé — un back-office de promotion, c'est plusieurs personnes
+qui doivent y accéder en même temps ; pas de stratégie de sauvegarde
+tranchée (tier MongoDB gratuit, pas de sauvegarde continue) ; aucune
+pièce jointe possible (actes, attestations MOE, devis entreprises
+signés) — seules les dates existent, pas les documents eux-mêmes ; dette
+de code réelle, invisible pour l'utilisateur mais pesant sur la capacité
+à faire évoluer l'outil vite à plusieurs.
+
+**Fonctionnalités manquantes** : import/gestion documentaire, portail
+acquéreur en lecture seule, page "Travaux Supplémentaires", envoi de
+demandes de devis TMA aux entreprises, personnalisation visuelle (logo
+client), version mobile/responsive. **À améliorer** : les exports (chantier
+à reprendre en profondeur, souvent ce qui part directement chez le
+notaire/la banque/la direction), numérotation lisible des appels de
+fonds, alignement visuel des montants et boutons.
+
+**Note : 62/100** — pas une note de produit fini, une note d'un socle
+métier très solide (le cœur vaudrait 80+ tout seul) qui n'est pas encore
+un produit utilisable en conditions réelles (fiabilité, accès
+multi-utilisateur, documents, sauvegarde). **Ce qui manque pour le
+vendre** : un vrai hébergement pérenne, une garantie de fiabilité (tests
+automatisés au moins sur les calculs financiers), une politique de
+sauvegarde/reprise assumée, la gestion documentaire, un cadre juridique
+minimal (CGU, politique de confidentialité) dès lors que des données
+d'acquéreurs tiers y transitent, une identité personnalisable.
+
+**Complément à cette revue, par 3 sous-agents** : Nicolas a ensuite
+demandé une vraie navigation visuelle dans l'appli (captures d'écran,
+interaction réelle) — impossible dans cet environnement (aucun outil
+navigateur/capture d'écran disponible, `WebFetch` seul ne gère ni le
+login JWT ni l'interaction avec une page). Solution de repli validée par
+Nicolas : 3 sous-agents Explore ont lu intégralement les 9 pages React
+(JSX + composants importés + SCSS) et produit un inventaire strictement
+factuel de ce qui s'affiche réellement à l'écran, page par page — palette
+de couleurs de statut, structure de chaque écran, colonnes de tableau,
+éléments interactifs, composants transverses réutilisés. Synthèse faite
+ensuite à partir de cet inventaire.
+
+**Confirmé par la lecture du code, invisible depuis la doc seule** : une
+vraie cohérence visuelle (même palette de statuts, même composant de
+badge, même bouton crayon qui déplie une ligne d'édition en place plutôt
+qu'une modale, même style de fenêtre d'export sur toutes les pages) — se
+ressent comme un seul produit, pas cinq écrans assemblés au fil de l'eau.
+Des détails qui montrent un vrai souci de l'utilisateur final : fusion de
+cellules quand un dossier est "sans prêt" (pas de tirets répétés sur 5
+colonnes vides), pied de tableau qui recalcule toujours sur ce qui est
+filtré à l'écran, recherche qui retrouve "5 444" en tapant dans un montant
+affiché "5 444 €", aperçu de montant recalculé en direct sur le barème
+d'un lot, avec un total qui vire au rouge tant que ça ne fait pas 100%.
+
+**Points d'inquiétude supplémentaires, vus seulement en lisant le code
+réel** : la page Paramètres est un mur — 9 sections empilées sur un seul
+long scroll (infos programme, délais/taux, alertes, barème, étages,
+annexes, lots, entreprises, utilisateurs), sans onglets ; des
+`window.confirm()`/`alert()` natifs du navigateur pour des actions
+importantes (annuler une vente, barème qui ne fait pas 100%) — popups non
+stylées qui détonent dans une interface par ailleurs soignée ; aucune page
+d'accueil/tableau de bord transversal, atterrissage direct sur le tableau
+des lots après le choix du programme, pas de vue "ce qui demande
+attention aujourd'hui" au-delà de la fenêtre d'alertes au lancement ;
+écrans de connexion et de choix de programme très nus (aucun logo, carte
+blanche centrée sur fond neutre).
+
+Ce complément n'a pas fait bouger la note de 62/100 — il nuance l'avis
+plutôt qu'il ne le change : très abouti sur les écrans cœur de métier
+(Lots, TMA, Appels de fonds), nettement plus brut sur les écrans
+périphériques (connexion, paramètres, confirmations). Les 4 points UX
+qui en ressortent (onglets Paramètres, remplacer les popups natives,
+tableau de bord d'accueil, habillage des écrans nus) et le besoin d'un
+cadre juridique minimal (CGU, confidentialité) rejoignent
+`docs/taches-a-traiter.md`, pas encore traités.
+
+**Prochaine étape**
+
+Enchaîner sur ce qui répond le plus directement aux points faibles des
+deux revues : l'absence totale de tests automatisés (voir les deux
+entrées suivantes).
+
+---
+
+## 2026-09-01 (suite) — Tests automatisés "au bout du bout", chantiers 1 à 7 : fondations, et premier vrai passage en CI sur GitHub
+
+Lancement d'une série de chantiers de tests automatisés, en réponse
+directe au point faible n°1 des deux check-up de la veille ("zéro test
+automatisé"). Chaque chantier suivi selon l'Étape 2 du protocole : spec
+écrite d'abord (avec sa section "Impact sur l'existant"), commit vérifié
+propre avant génération, tests réellement exécutés — jamais juste
+supposés.
+
+**Chantier 1 (serveur)** — `docs/specs/tests-automatises-serveur.md`.
+Vitest installé (`server/package.json`), `Tma.test.js` (16 tests) et
+`appelsDeFonds.test.js` (4 tests), `npm test` 20/20 verts. Écart trouvé
+et corrigé avec l'accord explicite de Nicolas : `calculerEmissionAppel()`
+renvoyait `regleAutomatiquement: null` (pas `false`) avec un lot sans
+acte — `!!` ajouté dans `server/utils/appelsDeFonds.js`.
+
+**Chantier 2 (client)** — `docs/specs/tests-automatises-client.md`.
+Vitest installé (`client/package.json`),
+`client/src/utils/statuts.test.js` (25 tests, les 8 fonctions), `npm test`
+25/25 verts. Écart trouvé cette fois dans **le test lui-même**, pas le
+code source : comparaison UTC vs heure locale sur
+`calculerDateLimiteMois` au passage du changement d'heure d'été — corrigé
+en construisant les dates de test en heure locale.
+
+CI (`.github/workflows/ci.yml`) complétée avec 2 nouveaux jobs
+(`test-back`, `test-front`). `CLAUDE.md`/`README.md` corrigés (le statut
+"pas de tests" était devenu faux).
+
+**Suite de l'inventaire "pousser les tests au bout du bout"**, ordre de
+traitement A→B→C→D→E→F choisi par Nicolas :
+
+- **A. Utilitaires** — `docs/specs/tests-automatises-utilitaires.md`.
+  `validerDatesCoherentesAvecStatut()` et `nettoyerPourPdf()` exportées
+  (un seul mot-clé chacune, rien d'autre changé), puis testées avec
+  `correspondRecherche`, `apiFetch` et `chercherCodePostal` — 32 nouveaux
+  tests (49/49 client, 28/28 serveur). Aucun écart de comportement trouvé
+  cette fois. `calculerLargeursColonnesFigees()` volontairement laissée
+  de côté (dépend d'un vrai objet jsPDF, plus proche d'un test
+  d'intégration) — reprise plus tard (voir chantier 11).
+- **B. Middleware d'authentification** —
+  `docs/specs/tests-automatises-auth.md`. `server/middleware/auth.js`
+  (`verifierToken`, `autoriserRoles`) — 10 tests (jeton absent/malformé/
+  expiré/mauvais secret, rôles autorisés/refusés), 38/38 côté serveur.
+  Aucun écart trouvé, le middleware se comportait déjà comme documenté.
+  Non-régression vérifiée en conditions réelles (`GET /api/lots` sans
+  jeton → 401).
+- **C. Intégration, version allégée** —
+  `docs/specs/tests-automatises-integration.md`. Décision d'architecture
+  prise avec Nicolas : `mongodb-memory-server` (vraie base MongoDB
+  éphémère), **sans** passer par Express/HTTP — le plan initial demandait
+  de scinder `server/index.js` pour tester de vraies routes, jugé trop
+  invasif après remise en question, remplacé par des tests directs sur
+  `genererAppelsDeFonds()` avec de vrais documents Mongoose. 3 tests,
+  `server/test-setup.js` créé et réutilisable pour de futurs chantiers
+  d'intégration. 41/41 côté serveur. Tests HTTP sur les vraies routes
+  (`supertest` + split `app.js`/`index.js`) restent hors périmètre,
+  reportés à plus tard si le besoin s'en fait sentir.
+- **D. Composants React** —
+  `docs/specs/tests-automatises-composants.md`. `jsdom` +
+  `@testing-library/react`/`jest-dom` installés, `Badge`, `StatCard`,
+  `useFermerAvecEchap` testés (12 tests), 61/61 côté client. Vrai blocage
+  rencontré et corrigé : Vitest n'appliquait pas `@vitejs/plugin-react`
+  sans config dédiée (`React is not defined`) —
+  `client/vitest.config.js` créé (fusion de `vite.config.js` +
+  `esbuild.jsx: 'automatic'` explicite), réutilisable pour tout futur
+  test de composant.
+- **E. Couverture de code** —
+  `docs/specs/tests-automatises-coverage.md`. `@vitest/coverage-v8`
+  configuré (`npm run coverage`, serveur et client), `coverage/` ignoré
+  par Git. Chiffres à ce stade : **25,23%** côté serveur, **3,64%** côté
+  client — attendu vu la stratégie "par lots" (100% sur ce qui a été
+  testé, 0% sur le reste, pas encore touché). Incident d'infrastructure
+  rencontré et résolu en cours de route : les deux `npm install` lancés
+  en parallèle ont bloqué la VM WSL (11 processus accumulés) — corrigé
+  par `wsl --shutdown` (accord explicite de Nicolas) puis réinstallation
+  en séquentiel.
+- **F. Dépôt GitHub** — Nicolas a créé le dépôt
+  `nicolas-pueyo-cazalis/gestion-vefa` (**privé**) et poussé le code,
+  guidé pas à pas (aucun remote n'existait avant ce jour). **Le CI a
+  tourné pour la 1ʳᵉ fois réellement sur GitHub** (jamais arrivé avant,
+  malgré les audits antérieurs qui le décrivaient comme "en place") : les
+  4 jobs (`lint-front`, `verifie-back`, `test-back`, `test-front`) sont
+  passés au vert, 18-24s chacun.
+
+**Décision actée** : protection de branche bloquée — ni les "Rulesets"
+(nouvelle interface GitHub) ni les "Branch protection rules" (interface
+classique) ne s'appliquent sur un dépôt **privé** avec un compte GitHub
+gratuit (message GitHub explicite : nécessite un compte Team/Enterprise).
+Deux options identifiées : passer le dépôt en public (protection gratuite
+et sans limite), ou rester privé et laisser ce point de côté. **Nicolas
+choisit l'option 2** (rester privé, pas de protection de branche active)
+— décision explicite, pas un oubli, à reconsidérer plus tard s'il change
+d'avis sur la visibilité du dépôt.
+
+**Prochaine étape**
+
+Poursuivre l'inventaire avec des chantiers d'intégration plus poussés,
+puis attaquer les composants qui consomment un contexte, puis les pages
+entières (voir entrée suivante).
+
+---
+
+## 2026-09-01 (suite) — Tests automatisés, chantiers 8 à 14 : intégration approfondie, contextes, et les 3 "god components"
+
+Suite directe de la série de chantiers de tests. `resynchroniserMontantReservation()`
+exportée en premier (`server/routes/lots.js`), avec 3 tests ajoutés à
+`lots.integration.test.js` : montant de la phase Réservation qui suit une
+renégociation de prix avant l'Acté, figé une fois Acté, pas de plantage
+si aucun appel n'existe encore.
+
+**Chantier 8 (intégration, suite)** —
+`docs/specs/tests-automatises-integration-2.md`.
+`synchroniserAnnexesEtPrix()` et `genererAppelsAnnexeSeule()` exportées
+(`recalculerTma()` l'était déjà). 11 nouveaux tests (7 dans
+`lots.integration.test.js`, 4 dans le nouveau
+`tmaEntreprises.integration.test.js`). Un test corrigé **avant**
+exécution, pas un vrai bug : l'hypothèse "le statut d'une TMA validée ne
+bouge jamais" était imprécise — seul le **montant client** est réellement
+figé une fois "Validé", `recalculerTma()` re-dérive toujours le statut
+depuis les dates.
+
+**Chantier 9 (composants avec API/contexte)** —
+`docs/specs/tests-automatises-composants-2.md`. `AuthContext.jsx`
+(contexte + `fetch`) et `RouteProtegee.jsx` (composant qui consomme ce
+contexte) testés — 9 nouveaux tests, 70/70 côté client. Généré du premier
+coup, aucun blocage, aucun écart de comportement trouvé.
+
+**Chantier 10 (`ProgrammeContext`)** —
+`docs/specs/tests-automatises-composants-3.md`. Fonction plus riche que
+prévu (dépend d'`AuthContext`, contient le correctif d'un vrai bug
+historique déjà documenté) : 7 tests, dont un test explicite du
+garde-fou anti-régression. 77/77 côté client. Généré du premier coup.
+
+**Chantier 11 (`calculerLargeursColonnesFigees`)** —
+`docs/specs/tests-automatises-jspdf.md`. Fonction exportée, testée avec
+un objet jsPDF simulé (pas de vraie instance). 5 nouveaux tests, 82/82
+côté client. Précision découverte, pas un bug : `largeursMax` ne plafonne
+que la largeur de base, une colonne peut quand même dépasser ce plafond
+après redistribution du surplus. Clôture le point A de l'inventaire (la
+dernière fonction laissée de côté est maintenant testée).
+
+**Couverture de code relancée** après les chantiers 8 à 11 : **32,54%**
+côté serveur (était 25,23%), **5,47%** côté client (était 3,64%) —
+progression sur les deux. Nicolas a choisi de reporter l'explication
+pédagogique complète de tous ces tests (demandée dès le début de la
+série) à la toute fin, plutôt que maintenant.
+
+**Chantier 12 (`Bandeau` + `ChoixProgramme`)** —
+`docs/specs/tests-automatises-composants-4.md`. 12 nouveaux tests, 94/94
+côté client. **Vrai blocage d'infrastructure trouvé et corrigé** (pas un
+bug du code source) : `@testing-library/react` ne nettoie pas le DOM
+entre deux tests par défaut avec Vitest — 1ᵉʳ chantier avec plusieurs
+tests sur le même composant dans un fichier, jamais posé problème avant.
+Corrigé au niveau infrastructure : nouveau `client/src/test-setup.js`
+(nettoyage DOM + réinitialisation des mocks après chaque test), branché
+globalement dans `client/vitest.config.js` — profite à tous les tests du
+projet, présents et futurs, pas seulement ce chantier. `Connexion.jsx`/
+`AlerteRetards.jsx` restent en réserve pour un chantier ultérieur ; les
+pages entières (`Lots.jsx`, `Tma.jsx`, `AppelsDeFonds.jsx`) restent un
+sujet à part, à discuter avec Nicolas avant de s'y lancer.
+
+**Chantier 13 (page `Lots.jsx`)** —
+`docs/specs/tests-automatises-page-lots.md`. Premier chantier sur une
+page entière ("god component") : approche validée avec Nicolas — extraire
+les fonctions pures plutôt que tester la page comme une boîte noire.
+`nomAcquereur()`, dupliquée à l'identique dans
+`Lots.jsx`/`Tma.jsx`/`AppelsDeFonds.jsx` (le code smell repéré fin août),
+extraite dans un nouveau fichier partagé
+`client/src/utils/acquereur.js` et importée par les 3 pages —
+**duplication réglée pour de bon**. 11 autres fonctions de `Lots.jsx`
+exportées en place (`export` ajouté, rien déplacé) et testées dans
+`Lots.test.js`. 29 nouveaux tests (4 + 25), 123/123 côté client. **Vrai
+bug de grammaire trouvé en écrivant les tests** :
+`ligneAnnexesType`/`ligneSurfaces` accordaient le pluriel en ajoutant "s"
+à la fin de la phrase entière au lieu de chaque mot ("Parking extérieurs"
+au lieu de "Parkings extérieurs" pour un libellé à 2 mots) — Nicolas a
+demandé une vraie correction plutôt qu'un ajustement du test ; corrigé
+avec un nouveau helper `pluraliser()`, testé indépendamment.
+Non-régression vérifiée : suite complète verte, `oxlint` 0 erreur,
+serveur de dev Vite recompile sans erreur. Fonctions internes au
+composant `Lots()`, et les fonctions propres à `Tma.jsx`/`AppelsDeFonds.jsx`
+(`tmaObsolete`, `texteRechercheTma`, `texteRechercheAppel`) restent hors
+périmètre, pour un chantier ultérieur dédié à ces pages.
+
+**Chantier 14 (`Tma.jsx` + `AppelsDeFonds.jsx`)** —
+`docs/specs/tests-automatises-pages-tma-appels.md`. Suite du chantier 13,
+même approche : `tmaObsolete()` et `texteRechercheTma()` (`Tma.jsx`),
+`texteRechercheAppel()` (`AppelsDeFonds.jsx`) exportées en place et
+testées. 7 nouveaux tests, 130/130 côté client. Aucun bug trouvé cette
+fois. Lint et recompilation Vite vérifiés sans erreur. **Clôt le sujet
+"pages entières"** : les 3 god components ont désormais toutes leurs
+fonctions module-level pures testées — le découpage interne des
+composants eux-mêmes reste une dette distincte, pas encore tranchée.
+
+**Prochaine étape**
+
+Explication pédagogique complète de tous les tests automatisés
+(reportée à la toute fin de cette série de chantiers, comme demandé par
+Nicolas) — quels tests existent, pourquoi chacun a été écrit, à quoi il
+sert concrètement. Puis, en dehors du sujet tests : un check-up de
+présentation/qualité d'écriture de l'ensemble du code (indentation,
+cohérence de style, lisibilité — distinct des audits déjà faits sur
+l'architecture/la sécurité et sur la duplication/les god components), et
+une décision à prendre avec Nicolas sur le découpage interne des 3 god
+components eux-mêmes.

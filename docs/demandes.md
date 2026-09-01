@@ -1546,10 +1546,20 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 259. ⏳ **Page Lots — alignement visuel** : aligner le signe "€" de la
      colonne "Prix TTC" quel que soit le nombre de chiffres du montant
      (ex: 10 000 € et 100 000 € doivent avoir leur "€" aligné).
-260. ⏳ **Retirer du dossier les fichiers Word/PDF de remarques** envoyés
-     pour traitement — déjà ignorés par Git (`.gitignore`, commit
-     `2ce5f08`), mais Nicolas veut maintenant les faire disparaître
-     physiquement du dossier, pas juste de Git.
+260. ✅ **Retirer du dossier les fichiers Word/PDF de remarques fait
+     (01/09/2026)** — les 4 fichiers ignorés par Git (`.gitignore`, commit
+     `2ce5f08` : "Remarques sur rapport des règles métier"
+     `.docx`/`.pdf`, "Listes des taches à réaliser 010926" `.docx`/`.pdf`)
+     supprimés physiquement du dossier. **Découverte en marge** : une
+     quinzaine d'autres fichiers Word/PDF de remarques similaires (même
+     nature — notes de travail personnelles envoyées pour traitement,
+     "Remarques sur schéma données", "Nouvelles demandes générales",
+     etc.) sont en réalité **déjà versionnés dans Git** (jamais ajoutés au
+     `.gitignore`), contrairement à l'intention affichée du commentaire du
+     `.gitignore` ("pas des livrables du projet"). Un dossier `Exports/`
+     contenant des PDF générés par l'appli (tests manuels) est également
+     versionné. Signalé à Nicolas, pas retiré sans son accord (retrait de
+     l'historique Git = action plus lourde qu'une suppression physique).
 261. ⏳ **Export "Tableau de suivi de prêt"** : ajouter les colonnes
      coordonnées (adresse, commune, code postal, téléphone, email) de la
      banque et/ou du courtier.
@@ -1653,6 +1663,13 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 273. ⏳ **TMA : améliorer visuellement le bouton de réattribution des TMA.**
 274. ⏳ **Généralité : aligner les boutons "Exporter"** avec le reste des
      boutons de chaque page.
+275. ❌ **Demande annulée par Nicolas avant traitement.** Contenu original
+     non conservé : la demande a été annulée pendant la rédaction de ce
+     point (traitement de la liste de 23 tâches du 01/09/2026), avant
+     d'être committée où que ce soit — vérifié via `git log --all -p`,
+     aucune trace dans l'historique. Numéro laissé vacant plutôt que
+     renuméroté, pour ne pas décaler les points suivants déjà référencés
+     ailleurs dans la documentation.
 276. ✅ **Complément à la revue externe (point 271)** : fait le 01/09/2026.
      Nicolas a demandé une vraie navigation visuelle dans l'appli
      (captures d'écran, interaction réelle) — impossible dans cet

@@ -27,9 +27,10 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   — distinct des audits déjà faits (architecture/sécurité, duplication),
   ici uniquement la forme du code. *(point 285)*
 - **Explication complète et pédagogique de tous les tests automatisés**
-  (114 tests, chantiers 1 à 6) — Nicolas est novice, veut comprendre
-  quels tests existent, pourquoi, et leur utilité concrète, pas un
-  résumé rapide. *(point 282)*
+  (130 tests côté client + la suite serveur, chantiers 1 à 14) — Nicolas
+  est novice, veut comprendre quels tests existent, pourquoi, et leur
+  utilité concrète, pas un résumé rapide. Reportée à la toute fin de la
+  série de chantiers de tests (précision de Nicolas). *(point 282)*
 - **Étendre le test de fidélité code/doc à toutes les fonctions du projet**
   (pas seulement les 6 déjà faites) — chantier à dérouler par lots.
   *(point 232)*
@@ -58,19 +59,12 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   protection rules classiques ne s'appliquent). Nicolas a choisi de
   rester privé pour l'instant (01/09/2026) — à reconsidérer si un jour il
   passe le dépôt en public. *(point 281, F)*
-  - Tests HTTP sur de vraies routes Express (`supertest`, nécessite de
-    scinder `server/index.js` en `app.js`/`index.js`) — volontairement
-    reporté lors du chantier C (jugé trop invasif pour l'instant), à
-    reprendre si le besoin de vraies routes testées se fait sentir.
-  - Composants React avec appel API/contexte (`AuthContext`,
-    `ProgrammeContext`) — hors périmètre du chantier D (composants
-    purement présentationnels seulement), chantier de composants
-    ultérieur.
-  - **E.** Couverture de code (`vitest run --coverage`).
-  - **F.** Vérifier si la branche `main` est protégée sur GitHub contre un
-    échec de tests (à vérifier par Nicolas, pas accessible depuis ce
-    terminal).
-  *(point 281, complète le point 278)*
+- **Tests HTTP sur de vraies routes Express** (`supertest`, nécessite de
+  scinder `server/index.js` en `app.js`/`index.js`) — volontairement
+  reporté lors du chantier C (jugé trop invasif pour l'instant, remplacé
+  par des tests d'intégration directs sur `mongodb-memory-server`), à
+  reprendre si le besoin de vraies routes testées se fait sentir.
+  *(point 281, C)*
 - **Transformer l'audit sécurité 3 points en Skill Claude réutilisable.**
   *(point 239)*
 - **Programmer un audit de dette technique périodique**, ciblé sur les
@@ -201,8 +195,12 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   personnelles valables sur tous les projets, pas seulement VEFA) — laissé
   de côté pour l'instant, à reprendre plus tard. *(point 252)*
 - **Mettre à jour `docs/concepts-techniques.md`.** *(point 258)*
-- **Retirer physiquement du dossier** les fichiers Word/PDF de remarques
-  déjà ignorés par Git. *(point 260)*
+- **Décider du sort d'une quinzaine de fichiers Word/PDF de remarques
+  personnelles versionnées dans Git** (jamais ajoutées au `.gitignore`,
+  contrairement aux 2 dernières paires déjà retirées) — ainsi qu'un
+  dossier `Exports/` de PDF générés par l'appli, également versionné.
+  Retirer de l'historique Git est une action plus lourde qu'une simple
+  suppression physique, à valider avec Nicolas avant d'agir. *(point 260)*
 
 ## F. Présentation / valorisation (entretien, vente éventuelle)
 

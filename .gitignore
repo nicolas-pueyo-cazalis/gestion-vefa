@@ -13,15 +13,21 @@ node_modules/
 Thumbs.db
 
 # Documents de travail personnels de Nicolas (remarques, brouillons) —
-# pas des livrables du projet
-Remarques sur rapport des règles métier.docx
-Remarques sur rapport des règles métier.pdf
-Listes des taches à réaliser 010926.docx
-Listes des taches à réaliser 010926.pdf
+# pas des livrables du projet. Motif générique (01/09/2026) plutôt que
+# fichier par fichier : tout .docx/.pdf posé directement à la racine est
+# une remarque de travail, jamais un livrable (les vrais livrables sont
+# en Markdown dans docs/, les fichiers Excel source restent dans
+# Références/, non concernés par ce motif).
+/*.docx
+/*.pdf
 
 # Fichiers verrou temporaires de Microsoft Word (créés tant qu'un .docx
 # est ouvert, quel que soit son nom)
 ~$*
+
+# Exports de test manuels générés par l'appli (PDF/Excel) — artefacts de
+# test ponctuels, pas des livrables versionnés (01/09/2026)
+/Exports/
 
 # Rapport de couverture de tests (01/09/2026, `npm run coverage`) — généré
 # à la demande, pas un artefact à versionner

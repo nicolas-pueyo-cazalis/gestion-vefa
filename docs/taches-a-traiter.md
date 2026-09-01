@@ -195,12 +195,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   personnelles valables sur tous les projets, pas seulement VEFA) — laissé
   de côté pour l'instant, à reprendre plus tard. *(point 252)*
 - **Mettre à jour `docs/concepts-techniques.md`.** *(point 258)*
-- **Décider du sort d'une quinzaine de fichiers Word/PDF de remarques
-  personnelles versionnées dans Git** (jamais ajoutées au `.gitignore`,
-  contrairement aux 2 dernières paires déjà retirées) — ainsi qu'un
-  dossier `Exports/` de PDF générés par l'appli, également versionné.
-  Retirer de l'historique Git est une action plus lourde qu'une simple
-  suppression physique, à valider avec Nicolas avant d'agir. *(point 260)*
 
 ## F. Présentation / valorisation (entretien, vente éventuelle)
 

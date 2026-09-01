@@ -1550,16 +1550,23 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      (01/09/2026)** — les 4 fichiers ignorés par Git (`.gitignore`, commit
      `2ce5f08` : "Remarques sur rapport des règles métier"
      `.docx`/`.pdf`, "Listes des taches à réaliser 010926" `.docx`/`.pdf`)
-     supprimés physiquement du dossier. **Découverte en marge** : une
-     quinzaine d'autres fichiers Word/PDF de remarques similaires (même
-     nature — notes de travail personnelles envoyées pour traitement,
-     "Remarques sur schéma données", "Nouvelles demandes générales",
-     etc.) sont en réalité **déjà versionnés dans Git** (jamais ajoutés au
-     `.gitignore`), contrairement à l'intention affichée du commentaire du
-     `.gitignore` ("pas des livrables du projet"). Un dossier `Exports/`
-     contenant des PDF générés par l'appli (tests manuels) est également
-     versionné. Signalé à Nicolas, pas retiré sans son accord (retrait de
-     l'historique Git = action plus lourde qu'une suppression physique).
+     supprimés physiquement du dossier. **Découverte en marge, traitée le
+     jour même après confirmation de Nicolas** : 24 autres fichiers
+     Word/PDF de remarques similaires ("Remarques sur schéma données",
+     "Nouvelles demandes générales", etc.), plus les 14 fichiers du
+     dossier `Exports/` (PDF/Excel générés par l'appli en test manuel),
+     étaient en réalité **déjà versionnés dans Git** (jamais ajoutés au
+     `.gitignore`) — contrairement à l'intention affichée du commentaire
+     du `.gitignore` ("pas des livrables du projet"). Nicolas a confirmé
+     qu'ils ne contiennent rien de sensible et a demandé leur suppression.
+     **38 fichiers retirés du suivi Git et du disque** (`git rm`), motif
+     générique ajouté au `.gitignore` (`/*.docx`, `/*.pdf` à la racine,
+     `/Exports/`) plutôt que fichier par fichier — couvre aussi les futurs
+     fichiers du même genre. **Note** : ce nettoyage retire ces fichiers du
+     suivi à partir de maintenant, mais ils restent visibles dans les
+     anciens commits de l'historique Git tant qu'aucune réécriture
+     d'historique n'est faite (non demandée, jugée disproportionnée —
+     contenu confirmé non sensible).
 261. ⏳ **Export "Tableau de suivi de prêt"** : ajouter les colonnes
      coordonnées (adresse, commune, code postal, téléphone, email) de la
      banque et/ou du courtier.

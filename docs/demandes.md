@@ -1762,10 +1762,18 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        autorisés/refusés), 38/38 côté serveur. Aucun écart trouvé, le
        middleware se comportait déjà comme documenté. Non-régression
        vérifiée en conditions réelles (`GET /api/lots` sans jeton → 401).
-     - **C. Tests d'intégration sur les routes** — nécessite une vraie
-       décision d'architecture avant de pouvoir spec ce chantier : base
-       MongoDB en mémoire (`mongodb-memory-server`), base de test dédiée,
-       ou mock complet de Mongoose.
+     - **C. ✅ Fait (01/09/2026), version allégée** — voir
+       `docs/specs/tests-automatises-integration.md`. Décision
+       d'architecture prise avec Nicolas : `mongodb-memory-server` (vraie
+       base MongoDB éphémère), **sans** passer par Express/HTTP (le plan
+       initial demandait de scinder `server/index.js` pour tester de
+       vraies routes — jugé trop invasif après remise en question,
+       remplacé par des tests directs sur `genererAppelsDeFonds()` avec de
+       vrais documents Mongoose). 3 tests, `server/test-setup.js` créé et
+       réutilisable pour de futurs chantiers d'intégration. 41/41 côté
+       serveur. Tests HTTP sur les vraies routes (`supertest` + split
+       `app.js`/`index.js`) restent **hors périmètre**, reportés à plus
+       tard si le besoin s'en fait sentir.
      - **D. Tests de composants React** — nouvel outillage nécessaire
        (jsdom + React Testing Library), décision et mise en place à part.
      - **E. Couverture de code (coverage)** — `vitest run --coverage` pas

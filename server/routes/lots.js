@@ -86,7 +86,7 @@ async function synchroniserAnnexesEtPrix(lot, annexeIds) {
 // si le barème du programme est corrigé après coup, ça ne doit pas
 // changer rétroactivement un appel déjà généré — même principe que
 // `TmaEntreprise.corpsDeTravaux`.
-async function genererAppelsDeFonds(lot, { seulementReservation = false } = {}) {
+export async function genererAppelsDeFonds(lot, { seulementReservation = false } = {}) {
   const programme = await Programme.findById(lot.programme)
   const phases = [...programme.parametres.baremePhases].sort((a, b) => a.ordre - b.ordre)
   const delai = programme.parametres.delaiReglementAppelJours

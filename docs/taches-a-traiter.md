@@ -39,9 +39,8 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **Tests automatisés — reste de l'inventaire** (A, B, C et D faits le
-  01/09/2026, ordre choisi : E → F) :
-  - **E.** Couverture de code (`vitest run --coverage`).
+- **Tests automatisés — reste de l'inventaire** (A à E faits le
+  01/09/2026, reste : F) :
   - **F.** Vérifier si la branche `main` est protégée sur GitHub contre un
     échec de tests (à vérifier par Nicolas, pas accessible depuis ce
     terminal).

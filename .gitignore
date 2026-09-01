@@ -22,3 +22,7 @@ Listes des taches à réaliser 010926.pdf
 # Fichiers verrou temporaires de Microsoft Word (créés tant qu'un .docx
 # est ouvert, quel que soit son nom)
 ~$*
+
+# Rapport de couverture de tests (01/09/2026, `npm run coverage`) — généré
+# à la demande, pas un artefact à versionner
+coverage/

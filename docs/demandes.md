@@ -1783,9 +1783,16 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        — `client/vitest.config.js` créé (fusion de `vite.config.js` +
        `esbuild.jsx: 'automatic'` explicite), réutilisable pour tout futur
        test de composant.
-     - **E. Couverture de code (coverage)** — `vitest run --coverage` pas
-       configuré, donnerait une vision objective de ce qui reste non
-       testé plutôt que de le lister à la main.
+     - **E. ✅ Fait (01/09/2026)** — voir
+       `docs/specs/tests-automatises-coverage.md`. `@vitest/coverage-v8`
+       configuré (`npm run coverage`, serveur et client),
+       `coverage/` ignoré par Git. Chiffres actuels : **25,23%** côté
+       serveur, **3,64%** côté client (attendu vu la stratégie "par lots" —
+       100% sur tout ce qui a été testé, 0% sur le reste, pas encore
+       touché). Incident d'infrastructure rencontré et résolu en cours de
+       route : les deux `npm install` lancés en parallèle ont bloqué la VM
+       WSL (11 processus accumulés) — corrigé par `wsl --shutdown` (accord
+       explicite de Nicolas) puis réinstallation en séquentiel.
      - **F. Protection de la branche `main`** — vérifier si GitHub bloque
        un merge en cas d'échec des tests (réglage GitHub, pas un fichier
        du dépôt) ; pas vérifiable depuis le terminal actuel (`gh` non

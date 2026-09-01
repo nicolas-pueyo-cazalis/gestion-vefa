@@ -39,10 +39,8 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **Tests automatisés — reste de l'inventaire** (A fait le 01/09/2026,
-  ordre choisi : B → C → D → E → F) :
-  - **B.** `server/middleware/auth.js` — 0% de couverture alors qu'il
-    protège toute l'API, priorité haute.
+- **Tests automatisés — reste de l'inventaire** (A et B faits le
+  01/09/2026, ordre choisi : C → D → E → F) :
   - **C.** Tests d'intégration sur les routes (appels de fonds, TMA) —
     décision d'architecture de base de test à prendre d'abord.
   - **D.** Tests de composants React (jsdom + React Testing Library).

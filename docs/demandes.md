@@ -1756,10 +1756,12 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        côté** (dépend d'un vrai objet jsPDF, plus proche d'un test
        d'intégration) — reste ⏳, à reprendre avec un outillage dédié
        (mock jsPDF), confirmé avec Nicolas.
-     - **B. Angle mort de sécurité** : `server/middleware/auth.js`
-       (`verifierToken`, `autoriserRoles`) — protège **toute** l'API,
-       **0% de couverture** aujourd'hui malgré son rôle central. Priorité
-       haute, avant même le reste du point A.
+     - **B. ✅ Fait (01/09/2026)**, voir `docs/specs/tests-automatises-auth.md` :
+       `server/middleware/auth.js` (`verifierToken`, `autoriserRoles`) —
+       10 tests (jeton absent/malformé/expiré/mauvais secret, rôles
+       autorisés/refusés), 38/38 côté serveur. Aucun écart trouvé, le
+       middleware se comportait déjà comme documenté. Non-régression
+       vérifiée en conditions réelles (`GET /api/lots` sans jeton → 401).
      - **C. Tests d'intégration sur les routes** — nécessite une vraie
        décision d'architecture avant de pouvoir spec ce chantier : base
        MongoDB en mémoire (`mongodb-memory-server`), base de test dédiée,

@@ -30,7 +30,7 @@ const LIBELLES_STATUT = {
 
 // Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
 // la ligne, mêmes fonctions de formatage que le rendu du tableau.
-function texteRechercheAppel(appel) {
+export function texteRechercheAppel(appel) {
   return [
     appel.lot?.reference,
     appel.phase.nom,

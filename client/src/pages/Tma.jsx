@@ -49,13 +49,13 @@ const LIBELLES_GROUPES_FILTRE = {
 // l'acquéreur ACTUEL du lot — soit le lot est repassé "Libre" (vente
 // annulée, lot.acquereur absent), soit il a été revendu à quelqu'un
 // d'autre sans que la TMA n'ait encore été réattribuée.
-function tmaObsolete(tma) {
+export function tmaObsolete(tma) {
   return (tma.lot?.acquereur?._id ?? null) !== (tma.acquereur?._id ?? null)
 }
 
 // Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans
 // la ligne, mêmes fonctions de formatage que le rendu du tableau.
-function texteRechercheTma(tma) {
+export function texteRechercheTma(tma) {
   return [
     tma.lot?.reference,
     tmaObsolete(tma) ? null : nomAcquereur(tma.acquereur),

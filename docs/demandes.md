@@ -1920,6 +1920,17 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      (`tmaObsolete`, `texteRechercheTma`, `texteRechercheAppel`) restent
      hors périmètre, pour un chantier ultérieur dédié à ces pages.
 
+292. ✅ **Chantier 14 (tests, `Tma.jsx` + `AppelsDeFonds.jsx`) fait
+     (01/09/2026)** — voir `docs/specs/tests-automatises-pages-tma-appels.md`.
+     Suite du chantier 13, même approche : `tmaObsolete()` et
+     `texteRechercheTma()` (`Tma.jsx`), `texteRechercheAppel()`
+     (`AppelsDeFonds.jsx`) exportées en place et testées. 7 nouveaux
+     tests, 130/130 côté client. Aucun bug trouvé cette fois. Lint et
+     recompilation Vite vérifiés sans erreur. **Clôt le sujet "pages
+     entières"** (point 290) : les 3 god components ont désormais toutes
+     leurs fonctions module-level pures testées — le découpage interne
+     des composants eux-mêmes reste une dette distincte (point 236).
+
 ---
 
 ## Notes

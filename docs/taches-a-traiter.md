@@ -22,11 +22,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 
 ## A. Suivi qualité / audits du projet
 
-- **Tester les fonctions pures propres à `Tma.jsx` et `AppelsDeFonds.jsx`**
-  (`tmaObsolete`, `texteRechercheTma`, `texteRechercheAppel`) — approche
-  décidée et déjà appliquée avec succès à `Lots.jsx` (extraction des
-  fonctions pures plutôt que boîte noire), reste à faire pour ces deux
-  pages. *(points 290, 291)*
 - **Check-up de présentation/qualité d'écriture de l'ensemble du code**
   (indentation, alinéas, cohérence de style, lisibilité — front et back)
   — distinct des audits déjà faits (architecture/sécurité, duplication),

@@ -1811,6 +1811,32 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        oubli, à reconsidérer plus tard s'il change d'avis sur la
        visibilité du dépôt.
      **Ordre de traitement choisi par Nicolas : A → B → C → D → E → F.**
+282. ⏳ **Explication complète et pédagogique de tous les tests
+     automatisés** (demande explicite de Nicolas, 01/09/2026) : Nicolas
+     est novice et veut tout comprendre — quels tests existent, pourquoi
+     chacun a été écrit, à quoi il sert concrètement (pas juste "ça
+     teste X"). Couvre l'ensemble des 114 tests des chantiers 1 à 6
+     (points 278, 281 A-E) : fonctions de calcul (serveur et client),
+     middleware d'authentification, scénario d'intégration, composants
+     React, mécanisme de couverture. Pas encore fait — à traiter comme un
+     vrai temps pédagogique, pas un résumé expédié.
+283. ⏳ **`resynchroniserMontantReservation()` (`server/routes/lots.js`)** —
+     4ᵉ fonction candidate à un test d'intégration base de données,
+     repérée en préparant le chantier 8 (recalcul du montant de la phase
+     Réservation tant que le lot n'est pas Acté, suit une renégociation de
+     prix). Volontairement laissée hors périmètre du chantier 8 (resté
+     ciblé sur les 3 fonctions déjà annoncées) — à ne pas oublier pour un
+     chantier ultérieur.
+284. ✅ **Chantier 8 (tests d'intégration, suite) fait (01/09/2026)** —
+     voir `docs/specs/tests-automatises-integration-2.md`.
+     `synchroniserAnnexesEtPrix()` et `genererAppelsAnnexeSeule()`
+     exportées ; `recalculerTma()` déjà exportée. 11 nouveaux tests
+     (7 dans `lots.integration.test.js`, 4 dans le nouveau
+     `tmaEntreprises.integration.test.js`), 52/52 côté serveur. Un test
+     corrigé **avant** exécution (pas un vrai bug) : l'hypothèse "le
+     statut d'une TMA validée ne bouge jamais" était imprécise — seul le
+     **montant client** est réellement figé une fois "Validé",
+     `recalculerTma()` re-dérive toujours le statut depuis les dates.
 
 ---
 

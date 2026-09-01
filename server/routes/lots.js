@@ -53,7 +53,7 @@ export function validerDatesCoherentesAvecStatut(lot) {
 // changer le commentaire) ne doit pas leur écraser silencieusement leur
 // prixTTC existant, saisi à la main à l'époque — tant que ce champ n'est
 // pas rempli via le formulaire, l'ancien prixTTC reste intouché.
-async function synchroniserAnnexesEtPrix(lot, annexeIds) {
+export async function synchroniserAnnexesEtPrix(lot, annexeIds) {
   if (annexeIds !== undefined) {
     await Annexe.updateMany({ lot: lot._id, _id: { $nin: annexeIds } }, { lot: null })
     if (annexeIds.length > 0) {
@@ -156,7 +156,7 @@ export async function genererAppelsDeFonds(lot, { seulementReservation = false }
 // doublon par phase, même principe que genererAppelsDeFonds() ci-dessus.
 const POURCENTAGE_RESERVATION_ANNEXE_SEULE = 0.05
 
-async function genererAppelsAnnexeSeule(lot, { seulementReservation = false } = {}) {
+export async function genererAppelsAnnexeSeule(lot, { seulementReservation = false } = {}) {
   const programme = await Programme.findById(lot.programme)
   const pourcentageReservation = POURCENTAGE_RESERVATION_ANNEXE_SEULE
   const delai = programme.parametres.delaiReglementAppelJours

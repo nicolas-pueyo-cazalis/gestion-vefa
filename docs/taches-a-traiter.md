@@ -22,10 +22,11 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 
 ## A. Suivi qualité / audits du projet
 
-- **Décider comment aborder les tests des pages entières** (`Lots.jsx`,
-  `Tma.jsx`, `AppelsDeFonds.jsx`...) — discussion prévue avec Nicolas
-  avant de s'y lancer, à rattacher à la dette des "god components" (point
-  236) plutôt que de tester le code tel quel. *(point 290)*
+- **Tester les fonctions pures propres à `Tma.jsx` et `AppelsDeFonds.jsx`**
+  (`tmaObsolete`, `texteRechercheTma`, `texteRechercheAppel`) — approche
+  décidée et déjà appliquée avec succès à `Lots.jsx` (extraction des
+  fonctions pures plutôt que boîte noire), reste à faire pour ces deux
+  pages. *(points 290, 291)*
 - **Check-up de présentation/qualité d'écriture de l'ensemble du code**
   (indentation, alinéas, cohérence de style, lisibilité — front et back)
   — distinct des audits déjà faits (architecture/sécurité, duplication),
@@ -45,10 +46,11 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   revue "professionnel de l'immobilier" (271, 62/100), revue visuelle du
   code (276), check-up de présentation/écriture du code (285, pas encore
   fait). *(points 233, 238)*
-- **Corriger les 3 code smells déjà identifiés** (audit sans correction) :
-  `nomAcquereur()` dupliquée dans 3 pages, `versDateInput()` dupliquée dans
-  8 composants, 3 "god components" (Tma.jsx/Lots.jsx/AppelsDeFonds.jsx) à
-  découper. *(point 236)*
+- **Corriger les code smells restants déjà identifiés** (audit sans
+  correction) : `versDateInput()` dupliquée dans 8 composants, 3 "god
+  components" (Tma.jsx/Lots.jsx/AppelsDeFonds.jsx) à découper.
+  `nomAcquereur()` dupliquée dans 3 pages → **réglé** (chantier 13, point
+  291, extraite dans `client/src/utils/acquereur.js`). *(point 236)*
 - **5 trouvailles concrètes du check-up "développeur confirmé"** (fait le
   01/09/2026, note 66/100) : aucun rate-limiting sur la connexion, aucune
   couche de validation explicite des entrées aux frontières des routes,

@@ -1897,6 +1897,29 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      Nicolas avant de s'y lancer (rattaché à la dette des "god
      components", point 236) — pas encore tranché.
 
+291. ✅ **Chantier 13 (tests, page `Lots.jsx`) fait (01/09/2026)** — voir
+     `docs/specs/tests-automatises-page-lots.md`. Premier chantier sur
+     une page entière ("god component") : approche validée avec Nicolas
+     — extraire les fonctions pures plutôt que tester la page comme une
+     boîte noire. `nomAcquereur()`, dupliquée à l'identique dans
+     `Lots.jsx`/`Tma.jsx`/`AppelsDeFonds.jsx` (code smell point 236),
+     extraite dans un nouveau fichier partagé `client/src/utils/acquereur.js`
+     et importée par les 3 pages — duplication réglée pour de bon.
+     11 autres fonctions de `Lots.jsx` exportées en place (`export`
+     ajouté, rien déplacé) et testées dans `Lots.test.js`. 29 nouveaux
+     tests (4 + 25), 123/123 côté client. **Vrai bug de grammaire trouvé
+     en écrivant les tests** : `ligneAnnexesType`/`ligneSurfaces`
+     accordaient le pluriel en ajoutant "s" à la fin de la phrase entière
+     au lieu de chaque mot ("Parking extérieurs" au lieu de "Parkings
+     extérieurs" pour un libellé à 2 mots) — Nicolas a demandé une vraie
+     correction plutôt qu'un ajustement du test ; corrigé avec un nouveau
+     helper `pluraliser()`, testé indépendamment. Non-régression
+     vérifiée : suite complète verte, `oxlint` 0 erreur, serveur de dev
+     Vite recompile sans erreur. Fonctions internes au composant
+     `Lots()`, et les fonctions propres à `Tma.jsx`/`AppelsDeFonds.jsx`
+     (`tmaObsolete`, `texteRechercheTma`, `texteRechercheAppel`) restent
+     hors périmètre, pour un chantier ultérieur dédié à ces pages.
+
 ---
 
 ## Notes

@@ -11,6 +11,7 @@ import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
+import { nomAcquereur } from '../utils/acquereur.js'
 import FenetreExport from '../components/FenetreExport.jsx'
 import FormulaireEditionLot from '../components/FormulaireEditionLot.jsx'
 import FormulaireVenteAnnexe from '../components/FormulaireVenteAnnexe.jsx'
@@ -28,11 +29,6 @@ const STATUTS_FILTRE = [
   ...Object.entries(STATUTS_LOT).map(([valeur, libelle]) => ({ valeur, libelle })),
 ]
 
-function nomAcquereur(acquereur) {
-  if (!acquereur) return '—'
-  return [acquereur.civilite, acquereur.prenom, acquereur.nom].filter(Boolean).join(' ')
-}
-
 // Texte de recherche d'un lot (20/07/2026, point 187) : TOUT ce qui
 // s'affiche dans la ligne du tableau doit pouvoir être retrouvé (demande
 // explicite de Nicolas, ex: chercher "5444" doit retrouver un lot dont le
@@ -40,7 +36,7 @@ function nomAcquereur(acquereur) {
 // le rendu du tableau (afficheSurface, formatMontant...), pas les valeurs
 // brutes, pour que la recherche corresponde exactement à ce qui est lu à
 // l'écran.
-function texteRechercheLot(lot) {
+export function texteRechercheLot(lot) {
   return [
     lot.reference,
     lot.etage,
@@ -58,7 +54,7 @@ function texteRechercheLot(lot) {
   ].filter(Boolean).join(' ')
 }
 
-function prixParM2(lot) {
+export function prixParM2(lot) {
   if (!lot.surfaceHabitable) return null
   return lot.prixTTC / lot.surfaceHabitable
 }
@@ -66,11 +62,11 @@ function prixParM2(lot) {
 // Remarque du 13/07/2026 : contrairement aux montants (plus de décimales),
 // les surfaces gardent toujours 2 décimales, même quand la valeur est un
 // nombre rond (45 m² s'affiche "45,00 m²").
-function formatteDecimales(valeur) {
+export function formatteDecimales(valeur) {
   return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valeur)
 }
 
-function afficheSurface(valeur) {
+export function afficheSurface(valeur) {
   return valeur == null ? '—' : `${formatteDecimales(valeur)} m²`
 }
 
@@ -78,21 +74,30 @@ function afficheSurface(valeur) {
 // Balcon(s)/Loggia(s)/Jardin/Parkings/Caves/Celliers dans une seule
 // cellule, une ligne par catégorie présente (les catégories vides sont
 // omises plutôt que d'afficher des "—" qui alourdiraient la cellule).
-function ligneSurfaces(mot, valeurs) {
+// `pluraliser` (01/09/2026, trouvé en écrivant les tests, chantier 13) :
+// accorde CHAQUE mot du libellé, pas seulement la fin de la phrase — sans
+// ça, "Parking extérieur" + "s" donnait "Parking extérieurs" (faute
+// d'accord), pas "Parkings extérieurs".
+export function pluraliser(mot, pluriel) {
+  if (!pluriel) return mot
+  return mot.split(' ').map((mot) => `${mot}s`).join(' ')
+}
+
+export function ligneSurfaces(mot, valeurs) {
   if (!valeurs?.length) return null
-  return `${mot}${valeurs.length > 1 ? 's' : ''} : ${valeurs.map((v) => `${formatteDecimales(v)} m²`).join(', ')}`
+  return `${pluraliser(mot, valeurs.length > 1)} : ${valeurs.map((v) => `${formatteDecimales(v)} m²`).join(', ')}`
 }
 
 // Annexes du catalogue attribuées à ce lot (17/07/2026, point 165) —
 // `lot.annexes` vient du populate de la relation virtuelle côté serveur
 // (server/models/Lot.js), plus les simples tableaux de numéros d'avant.
-function ligneAnnexesType(mot, annexesDuLot, type) {
+export function ligneAnnexesType(mot, annexesDuLot, type) {
   const numeros = (annexesDuLot ?? []).filter((a) => a.type === type).map((a) => a.numero)
   if (numeros.length === 0) return null
-  return `${mot}${numeros.length > 1 ? 's' : ''} n° ${numeros.join(', ')}`
+  return `${pluraliser(mot, numeros.length > 1)} n° ${numeros.join(', ')}`
 }
 
-function afficheAnnexes(lot) {
+export function afficheAnnexes(lot) {
   return [
     ligneSurfaces('Terrasse', lot.surfacesTerrasses),
     ligneSurfaces('Balcon', lot.surfacesBalcons),
@@ -110,7 +115,7 @@ function afficheAnnexes(lot) {
 // ligne plutôt que trois colonnes creuses la plupart du temps vides.
 // Cohérente par construction avec le statut : le serveur refuse qu'une
 // date d'étape non atteinte soit renseignée (voir server/routes/lots.js).
-function dateActuelle(lot) {
+export function dateActuelle(lot) {
   const date = lot.dateActe || lot.dateReservation || lot.dateOption
   return date ? new Date(date).toLocaleDateString('fr-FR') : '—'
 }
@@ -118,22 +123,22 @@ function dateActuelle(lot) {
 // Remarque du 13/07/2026 : un lot Acté sans offre de prêt reçue mérite un
 // rappel visuel — sauf si l'acquéreur a explicitement déclaré "sans prêt"
 // (page Suivi de prêt), auquel cas la question ne se pose pas.
-function offrePretManquante(lot) {
+export function offrePretManquante(lot) {
   return lot.statut === 'acte' && lot.acquereur && !lot.acquereur.sansPret && !lot.acquereur.dateOffrePretRecue
 }
 
 // Historique fusionné dans la page Lots (17/07/2026, remarque de Nicolas —
 // remplace l'ancienne page "Annulés" à part). `nomClient` distinct de
-// nomAcquereur() ci-dessus : une entrée d'historique stocke une COPIE du
-// nom du client (civiliteClient/nomClient/prenomClient), pas une référence
-// vivante — voir server/models/HistoriqueAnnulation.js.
-function nomClient(entree) {
+// `nomAcquereur()` (utils/acquereur.js) : une entrée d'historique stocke
+// une COPIE du nom du client (civiliteClient/nomClient/prenomClient), pas
+// une référence vivante — voir server/models/HistoriqueAnnulation.js.
+export function nomClient(entree) {
   return [entree.civiliteClient, entree.prenomClient, entree.nomClient].filter(Boolean).join(' ') || '—'
 }
 
 // Dernière date atteinte avant l'annulation (acte > réservation > option) —
 // même logique que dateActuelle() ci-dessus.
-function derniereDateAnnulation(entree) {
+export function derniereDateAnnulation(entree) {
   return formatDate(entree.dateActe || entree.dateReservation || entree.dateOption)
 }
 

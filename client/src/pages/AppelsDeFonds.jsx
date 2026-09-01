@@ -16,6 +16,7 @@ import FormulaireBaremeLot from '../components/FormulaireBaremeLot.jsx'
 import FenetreRecapAttestations from '../components/FenetreRecapAttestations.jsx'
 import FenetreExport from '../components/FenetreExport.jsx'
 import { exporterPDF } from '../utils/export.js'
+import { nomAcquereur } from '../utils/acquereur.js'
 
 const NB_COLONNES = 12
 
@@ -25,11 +26,6 @@ const LIBELLES_STATUT = {
   emis: 'Émis',
   retard: 'En retard',
   regle: 'Réglé',
-}
-
-function nomAcquereur(acquereur) {
-  if (!acquereur) return '—'
-  return [acquereur.civilite, acquereur.prenom, acquereur.nom].filter(Boolean).join(' ')
 }
 
 // Texte de recherche (20/07/2026, point 187) : tout ce qui s'affiche dans

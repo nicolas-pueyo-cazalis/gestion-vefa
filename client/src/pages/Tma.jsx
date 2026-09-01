@@ -21,6 +21,7 @@ import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
 import FenetreExport from '../components/FenetreExport.jsx'
 import { exporterPDF } from '../utils/export.js'
+import { nomAcquereur } from '../utils/acquereur.js'
 
 const NB_COLONNES = 14
 
@@ -41,14 +42,6 @@ const LIBELLES_GROUPES_FILTRE = {
   valide: 'Validé',
   refuse: 'Refusé',
   annule: 'Annulé',
-}
-
-// Garde contre un acquéreur manquant (13/07/2026) : `tma.acquereur` est une
-// référence, pas une copie — si la fiche client venait à disparaître, le
-// populate() renvoie `null` plutôt que de planter la page.
-function nomAcquereur(acquereur) {
-  if (!acquereur) return '—'
-  return [acquereur.civilite, acquereur.prenom, acquereur.nom].filter(Boolean).join(' ')
 }
 
 // TMA obsolète (13/07/2026, point 133) : son client d'origine (figé au

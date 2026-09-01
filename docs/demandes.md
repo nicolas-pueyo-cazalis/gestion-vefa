@@ -1859,6 +1859,12 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      (composant qui consomme ce contexte) testés — 9 nouveaux tests,
      70/70 côté client. Généré du premier coup, aucun blocage cette fois,
      aucun écart de comportement trouvé.
+287. ✅ **Chantier 10 (tests, ProgrammeContext) fait (01/09/2026)** — voir
+     `docs/specs/tests-automatises-composants-3.md`. Fonction plus riche
+     que prévu (dépend d'`AuthContext`, contient le correctif d'un vrai
+     bug historique, point 143) : 7 tests, dont un test explicite du
+     garde-fou anti-régression. 77/77 côté client. Généré du premier
+     coup.
 
 ---
 

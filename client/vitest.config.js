@@ -9,4 +9,8 @@ import viteConfig from './vite.config.js'
 // react()) tel quel, sans le dupliquer.
 export default mergeConfig(viteConfig, defineConfig({
   esbuild: { jsx: 'automatic' },
+  // Nettoie le DOM entre chaque test (01/09/2026, chantier 12) — voir
+  // src/test-setup.js pour la raison précise (bug trouvé en écrivant les
+  // tests de Bandeau/ChoixProgramme, plusieurs rendus qui se chevauchaient).
+  test: { setupFiles: ['./src/test-setup.js'] },
 }))

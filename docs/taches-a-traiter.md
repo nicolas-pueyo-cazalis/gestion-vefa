@@ -22,6 +22,10 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 
 ## A. Suivi qualité / audits du projet
 
+- **Décider comment aborder les tests des pages entières** (`Lots.jsx`,
+  `Tma.jsx`, `AppelsDeFonds.jsx`...) — discussion prévue avec Nicolas
+  avant de s'y lancer, à rattacher à la dette des "god components" (point
+  236) plutôt que de tester le code tel quel. *(point 290)*
 - **Check-up de présentation/qualité d'écriture de l'ensemble du code**
   (indentation, alinéas, cohérence de style, lisibilité — front et back)
   — distinct des audits déjà faits (architecture/sécurité, duplication),

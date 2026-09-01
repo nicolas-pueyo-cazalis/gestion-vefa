@@ -1880,6 +1880,22 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      **5,47%** côté client (était 3,64%) — progression sur les deux.
      Nicolas a choisi de reporter l'explication pédagogique (point 282) à
      la toute fin de la série de chantiers de tests, plutôt que maintenant.
+290. ✅ **Chantier 12 (tests, Bandeau + ChoixProgramme) fait (01/09/2026)**
+     — voir `docs/specs/tests-automatises-composants-4.md`. 12 nouveaux
+     tests, 94/94 côté client. **Vrai blocage d'infrastructure trouvé et
+     corrigé** (pas un bug du code source) : `@testing-library/react` ne
+     nettoie pas le DOM entre deux tests par défaut avec Vitest — 1ᵉʳ
+     chantier avec plusieurs tests sur le même composant dans un fichier,
+     jamais posé problème avant. Corrigé au niveau infrastructure :
+     nouveau `client/src/test-setup.js` (nettoyage DOM + réinitialisation
+     des mocks après chaque test), branché globalement dans
+     `client/vitest.config.js` — profite à tous les tests du projet,
+     présents et futurs, pas seulement ce chantier.
+     `Connexion.jsx`/`AlerteRetards.jsx` restent en réserve pour un
+     chantier ultérieur. Les pages entières (`Lots.jsx`, `Tma.jsx`,
+     `AppelsDeFonds.jsx`) restent un sujet à part, à discuter avec
+     Nicolas avant de s'y lancer (rattaché à la dette des "god
+     components", point 236) — pas encore tranché.
 
 ---
 

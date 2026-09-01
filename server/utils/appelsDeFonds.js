@@ -14,7 +14,11 @@
 // l'appel suit le circuit habituel : émis à l'instant du traitement, en
 // attente d'un règlement saisi plus tard.
 export function calculerEmissionAppel(lot, dateAttestation, delaiJours) {
-  const dejaDu = lot.dateActe && new Date(lot.dateActe) >= new Date(dateAttestation)
+  // `!!` (01/09/2026) : sans lui, `dejaDu` vaut `null` (pas `false`) quand
+  // `lot.dateActe` est vide — le `&&` court-circuite et renvoie
+  // `lot.dateActe` tel quel plutôt qu'un vrai booléen. Trouvé en écrivant
+  // les premiers tests automatisés (docs/specs/tests-automatises-serveur.md).
+  const dejaDu = !!(lot.dateActe && new Date(lot.dateActe) >= new Date(dateAttestation))
   const dateEmission = dejaDu ? new Date(lot.dateActe) : new Date()
   const dateLimiteReglement = new Date(dateEmission)
   dateLimiteReglement.setDate(dateLimiteReglement.getDate() + delaiJours)

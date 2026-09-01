@@ -15,9 +15,12 @@ autres fichiers de `docs/` (renvois ci-dessous).
 React 19/Vite/Sass (`client/`) · Node/Express 5/MongoDB Atlas (`server/`,
 ESM) · JWT (7j) + bcrypt, API entièrement protégée, 3 rôles
 (admin/gestionnaire/lecture) · Exports `exceljs`/`jspdf` générés côté
-navigateur · `morgan` (logs), `oxlint` (lint front seulement) · Pas de
-tests automatisés (checklist manuelle, `docs/checklist-tests-manuels.md`)
-· Pas déployé (plan : Render + Vercel/Netlify, voir `docs/demandes.md` 227-229).
+navigateur · `morgan` (logs), `oxlint` (lint front seulement) · Tests
+automatisés (Vitest) : côté serveur uniquement pour l'instant, fonctions
+de calcul pur (`npm test` dans `server/`) — reste complété par la
+checklist manuelle (`docs/checklist-tests-manuels.md`), côté client et
+routes API pas encore couverts · Pas déployé (plan : Render +
+Vercel/Netlify, voir `docs/demandes.md` 227-229).
 
 ## Règles métiers non négociables
 
@@ -109,4 +112,3 @@ Le projet manipule des données personnelles d'acquéreurs (identité, situation
   Nicolas au fil des sessions.
 - **Toujours vérifier [`docs/taches-a-traiter.md`](docs/taches-a-traiter.md)**
   pour la liste consolidée de tout ce qui reste ouvert dans le projet.
-- **Documentation à tenir à jour en continu**, sans attendre qu'on le redemande.

@@ -39,10 +39,10 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **Écrire une suite de tests automatisés** — au moins des tests unitaires
-  sur les fonctions de calcul financier et des tests d'intégration sur les
-  routes critiques (appels de fonds, TMA) — le manque le plus lourd
-  ressorti des deux revues externes (points 271, 237). *(point 278)*
+- **Tests automatisés — chantier 2 : côté client** (`client/src/utils/statuts.js`,
+  même principe que le 1ᵉʳ chantier serveur déjà fait le 01/09/2026), puis
+  des tests d'intégration sur les routes critiques (appels de fonds, TMA).
+  *(point 278)*
 - **Rédiger la liste récapitulative de tout ce qui a été fait côté
   check-up** (plus large que le point 233, couvre tous les audits de la
   session). *(point 238)*

@@ -1705,14 +1705,23 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        demande attention aujourd'hui" au-delà de la fenêtre d'alertes.
      - Écrans de connexion et de choix de programme très nus (aucun logo,
        carte blanche isolée) — rejoint le point 267 (logo client).
-278. ⏳ **Tests automatisés** — jamais tracké comme tâche jusqu'ici (limite
-     connue et assumée, mais pas une action à faire). Ressort comme le
-     manque le plus lourd des points 271 ("ce qui manque pour vendre") et
-     237 ("ce qui manque avant une vraie mise en production") : au moins
-     des tests unitaires sur les fonctions de calcul financier
-     (`calculerMontantClient`, `calculerEmissionAppel`, `statutAppel`...)
-     et des tests d'intégration sur les routes critiques (appels de
-     fonds, TMA).
+278. ⏳🔶 **Tests automatisés — 1ᵉʳ chantier fait (01/09/2026), serveur
+     uniquement** — voir spec `docs/specs/tests-automatises-serveur.md`
+     (créée puis exécutée en suivant l'Étape 2 du protocole : spec avec
+     "Impact sur l'existant" d'abord, commit avant génération vérifié
+     propre, génération, tests réellement exécutés — pas juste supposés).
+     Vitest installé (`server/package.json`), `Tma.test.js` (16 tests) et
+     `appelsDeFonds.test.js` (4 tests) écrits, `npm test` 20/20 verts.
+     Écart trouvé en écrivant les tests et corrigé avec l'accord explicite
+     de Nicolas : `calculerEmissionAppel()` renvoyait
+     `regleAutomatiquement: null` (pas `false`) avec un lot sans acte —
+     `!!` ajouté dans `server/utils/appelsDeFonds.js`. CI complété (job
+     `test-back`). `CLAUDE.md`/`README.md` corrigés (le statut "pas de
+     tests" était devenu faux).
+     **Reste ⏳ (chantier 2, à enchaîner rapidement)** : même principe
+     côté client (`client/src/utils/statuts.js`), puis des tests
+     d'intégration sur les routes critiques (appels de fonds, TMA) —
+     hors périmètre du 1ᵉʳ chantier, voir la spec.
 279. ⏳ **Cadre juridique minimal** (CGU, politique de confidentialité) —
      ressort du point 271, jamais tracké jusqu'ici. Nécessaire dès lors
      que des données d'acquéreurs tiers transiteraient par l'outil pour le

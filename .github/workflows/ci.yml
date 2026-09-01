@@ -2,10 +2,10 @@ name: CI
 
 # Vérifications minimales à chaque push/pull request (21/07/2026, audit
 # CI/CD) — avant, tout dépendait de la vigilance manuelle (lancer le lint
-# soi-même avant de commiter, ou pas). Volontairement restreint à ce qui
-# existe déjà et fonctionne (lint front, vérification de syntaxe back) :
-# pas de suite de tests automatisés à ce stade (voir README.md), donc pas
-# d'étape "test" qui échouerait à coup sûr.
+# soi-même avant de commiter, ou pas).
+# Étape "tests" ajoutée le 01/09/2026 (docs/specs/tests-automatises-serveur.md) :
+# première suite de tests automatisés (Vitest), fonctions de calcul pur du
+# serveur uniquement pour l'instant.
 on:
   push:
     branches: [main]
@@ -43,3 +43,18 @@ jobs:
       - name: node --check sur chaque fichier .js
         working-directory: server
         run: find . -name "*.js" -not -path "./node_modules/*" -print0 | xargs -0 -n1 node --check
+
+  test-back:
+    name: Tests automatisés back-end (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - run: npm test
+        working-directory: server

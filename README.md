@@ -116,12 +116,18 @@ tout moment depuis le bandeau.
 - **Modèle de données** : conception détaillée, avec le raisonnement
   métier derrière chaque champ, dans
   [`docs/schema-donnees.md`](docs/schema-donnees.md).
-- **Tests** : pas de suite de tests automatisés à ce stade — chaque
-  fonctionnalité a été validée manuellement au fil du développement
-  (scénarios réels rejoués à la main), avec les bugs rencontrés et leur
-  correction tracés dans [`docs/bugs.md`](docs/bugs.md), et une
+- **Tests** : première suite de tests automatisés ajoutée le 01/09/2026
+  (Vitest, `npm test` dans `server/`) — pour l'instant limitée aux
+  fonctions de calcul pur côté serveur (montant client TMA, statut
+  automatique, émission d'un appel de fonds), voir
+  [`docs/specs/tests-automatises-serveur.md`](docs/specs/tests-automatises-serveur.md).
+  Le reste (routes API, front) est toujours validé manuellement au fil du
+  développement (scénarios réels rejoués à la main), avec les bugs
+  rencontrés et leur correction tracés dans
+  [`docs/bugs.md`](docs/bugs.md), et une
   [checklist de tests manuels pré-déploiement](docs/checklist-tests-manuels.md).
-  C'est une limite connue du projet, pas un point laissé dans le flou.
+  Chantier suivant prévu : même principe côté client
+  (`client/src/utils/statuts.js`).
 - **Intégration continue** : [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
   lance le lint front et une vérification de syntaxe du back à chaque push/
   pull request sur `main`.

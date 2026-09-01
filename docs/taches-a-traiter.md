@@ -39,13 +39,20 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **Tests automatisés — reste de l'inventaire** (A, B et C faits le
-  01/09/2026, ordre choisi : D → E → F) :
-  - **D.** Tests de composants React (jsdom + React Testing Library).
+- **Tests automatisés — reste de l'inventaire** (A, B, C et D faits le
+  01/09/2026, ordre choisi : E → F) :
+  - **E.** Couverture de code (`vitest run --coverage`).
+  - **F.** Vérifier si la branche `main` est protégée sur GitHub contre un
+    échec de tests (à vérifier par Nicolas, pas accessible depuis ce
+    terminal).
   - Tests HTTP sur de vraies routes Express (`supertest`, nécessite de
     scinder `server/index.js` en `app.js`/`index.js`) — volontairement
     reporté lors du chantier C (jugé trop invasif pour l'instant), à
     reprendre si le besoin de vraies routes testées se fait sentir.
+  - Composants React avec appel API/contexte (`AuthContext`,
+    `ProgrammeContext`) — hors périmètre du chantier D (composants
+    purement présentationnels seulement), chantier de composants
+    ultérieur.
   - **E.** Couverture de code (`vitest run --coverage`).
   - **F.** Vérifier si la branche `main` est protégée sur GitHub contre un
     échec de tests (à vérifier par Nicolas, pas accessible depuis ce

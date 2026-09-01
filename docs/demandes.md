@@ -1774,8 +1774,15 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        serveur. Tests HTTP sur les vraies routes (`supertest` + split
        `app.js`/`index.js`) restent **hors périmètre**, reportés à plus
        tard si le besoin s'en fait sentir.
-     - **D. Tests de composants React** — nouvel outillage nécessaire
-       (jsdom + React Testing Library), décision et mise en place à part.
+     - **D. ✅ Fait (01/09/2026)** — voir
+       `docs/specs/tests-automatises-composants.md`. `jsdom` +
+       `@testing-library/react`/`jest-dom` installés, `Badge`, `StatCard`,
+       `useFermerAvecEchap` testés (12 tests), 61/61 côté client. Vrai
+       blocage rencontré et corrigé : Vitest n'appliquait pas
+       `@vitejs/plugin-react` sans config dédiée (`React is not defined`)
+       — `client/vitest.config.js` créé (fusion de `vite.config.js` +
+       `esbuild.jsx: 'automatic'` explicite), réutilisable pour tout futur
+       test de composant.
      - **E. Couverture de code (coverage)** — `vitest run --coverage` pas
        configuré, donnerait une vision objective de ce qui reste non
        testé plutôt que de le lister à la main.

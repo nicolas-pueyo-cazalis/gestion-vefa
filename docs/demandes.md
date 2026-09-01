@@ -1218,7 +1218,10 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      venir) en un vrai tableau de suivi — probablement un nouveau fichier
      dédié (`docs/audit-securite.md`), avec au minimum : le point trouvé,
      sa sévérité, son statut (corrigé / en attente / décision à prendre),
-     et la date. Pas encore fait, juste noté.
+     et la date. Pas encore fait, juste noté. **Redemandé par Nicolas le
+     01/09/2026** ("liste des audits à réaliser et réalisés") — même
+     besoin que le point 238, à fusionner en un seul document le moment
+     venu (liste à jour des audits menés entre-temps : 237, 271, 276, 285).
 234. ✅ **`docs/programme-formation-ia.md` créé** : copie intégrale du
      programme personnel de Nicolas (16 jours, 20 août → 14 sept. 2026),
      jusque-là seulement dans son dossier Téléchargements. Explique le
@@ -1347,6 +1350,12 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      rapprocher du point 233 le moment venu (probablement le même document
      `docs/audit-securite.md`, ou un nom plus large type
      `docs/audit-checkup.md` vu que ça dépasse la seule sécurité).
+     **Redemandé par Nicolas le 01/09/2026** ("liste des audits à
+     réaliser et réalisés") — à compléter avec les audits menés
+     depuis : check-up "développeur confirmé" (237, note 66/100), revue
+     "professionnel de l'immobilier" (271, note 62/100), revue visuelle
+     du code React (276), check-up de présentation/qualité d'écriture du
+     code (285, pas encore fait).
 239. ✅ **`docs/protocole-ia-vefa.md` créé** : copie du "Protocole IA —
      Projet VEFA (déjà avancé)" fourni par Nicolas — protocole de travail
      quotidien (distinct du programme de formation général), à prendre en
@@ -1835,6 +1844,21 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      statut d'une TMA validée ne bouge jamais" était imprécise — seul le
      **montant client** est réellement figé une fois "Validé",
      `recalculerTma()` re-dérive toujours le statut depuis les dates.
+285. ⏳ **Check-up de présentation/qualité d'écriture de l'ensemble du
+     code** (demande explicite de Nicolas, 01/09/2026) : est-ce que le
+     code est bien écrit, bien présenté — indentation, alinéas,
+     cohérence de style, lisibilité — sur l'ensemble du projet (front et
+     back). Différent des audits déjà faits : pas l'architecture/la
+     sécurité (point 237, check-up "développeur confirmé"), pas la
+     duplication/les god components (point 236, code smells) — ici,
+     spécifiquement la forme du code (présentation), pas le fond. Pas
+     encore fait.
+286. ✅ **Chantier 9 (tests, composants avec API/contexte) fait
+     (01/09/2026)** — voir `docs/specs/tests-automatises-composants-2.md`.
+     `AuthContext.jsx` (contexte + `fetch`) et `RouteProtegee.jsx`
+     (composant qui consomme ce contexte) testés — 9 nouveaux tests,
+     70/70 côté client. Généré du premier coup, aucun blocage cette fois,
+     aucun écart de comportement trouvé.
 
 ---
 

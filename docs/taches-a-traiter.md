@@ -22,6 +22,10 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 
 ## A. Suivi qualité / audits du projet
 
+- **Check-up de présentation/qualité d'écriture de l'ensemble du code**
+  (indentation, alinéas, cohérence de style, lisibilité — front et back)
+  — distinct des audits déjà faits (architecture/sécurité, duplication),
+  ici uniquement la forme du code. *(point 285)*
 - **Explication complète et pédagogique de tous les tests automatisés**
   (114 tests, chantiers 1 à 6) — Nicolas est novice, veut comprendre
   quels tests existent, pourquoi, et leur utilité concrète, pas un
@@ -29,9 +33,14 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 - **Étendre le test de fidélité code/doc à toutes les fonctions du projet**
   (pas seulement les 6 déjà faites) — chantier à dérouler par lots.
   *(point 232)*
-- **Créer un tableau de suivi de l'audit sécurité** (`docs/audit-securite.md`
-  probablement), consolidant tous les points d'audit sécurité/RGPD/qualité
-  déjà menés. *(point 233)*
+- **Liste consolidée de tous les audits menés (à réaliser et déjà
+  réalisés)** — redemandée le 01/09/2026, fusionne les points 233
+  (tableau de suivi sécurité) et 238 (recap check-up) : un seul document
+  (`docs/audit-securite.md` ou `docs/audit-checkup.md`) couvrant sécurité/
+  RGPD/qualité (211-232), check-up "développeur confirmé" (237, 66/100),
+  revue "professionnel de l'immobilier" (271, 62/100), revue visuelle du
+  code (276), check-up de présentation/écriture du code (285, pas encore
+  fait). *(points 233, 238)*
 - **Corriger les 3 code smells déjà identifiés** (audit sans correction) :
   `nomAcquereur()` dupliquée dans 3 pages, `versDateInput()` dupliquée dans
   8 composants, 3 "god components" (Tma.jsx/Lots.jsx/AppelsDeFonds.jsx) à
@@ -64,9 +73,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
     lors du point A (dépend d'un vrai objet jsPDF) — à reprendre avec un
     outillage dédié.
   *(point 281, complète le point 278)*
-- **Rédiger la liste récapitulative de tout ce qui a été fait côté
-  check-up** (plus large que le point 233, couvre tous les audits de la
-  session). *(point 238)*
 - **Transformer l'audit sécurité 3 points en Skill Claude réutilisable.**
   *(point 239)*
 - **Programmer un audit de dette technique périodique**, ciblé sur les

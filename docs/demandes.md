@@ -1824,11 +1824,13 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      automatisés** (demande explicite de Nicolas, 01/09/2026) : Nicolas
      est novice et veut tout comprendre — quels tests existent, pourquoi
      chacun a été écrit, à quoi il sert concrètement (pas juste "ça
-     teste X"). Couvre l'ensemble des 114 tests des chantiers 1 à 6
-     (points 278, 281 A-E) : fonctions de calcul (serveur et client),
-     middleware d'authentification, scénario d'intégration, composants
-     React, mécanisme de couverture. Pas encore fait — à traiter comme un
-     vrai temps pédagogique, pas un résumé expédié.
+     teste X"). **Report explicite à la toute fin de la série de
+     chantiers de tests** (précision de Nicolas le 01/09/2026, point 289)
+     — pas maintenant. Couvrira à ce moment-là l'ensemble des tests
+     réellement faits (147 après le chantier 11, plus si d'autres
+     chantiers s'ajoutent avant la fin) : fonctions de calcul, middleware
+     d'authentification, scénarios d'intégration, composants React,
+     contextes, mécanisme de couverture.
 283. ✅ **`resynchroniserMontantReservation()` fait (01/09/2026)** — exportée
      (`server/routes/lots.js`), 3 tests ajoutés à
      `lots.integration.test.js` : montant de la phase Réservation qui suit
@@ -1873,6 +1875,11 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      colonne peut quand même dépasser ce plafond après redistribution du
      surplus. **Clôture le point A de l'inventaire "tests au bout du
      bout"** (dernière fonction laissée de côté, maintenant testée).
+289. ✅ **Couverture de code relancée (01/09/2026)** après les chantiers
+     8 à 11 : **32,54%** côté serveur (était 25,23% au point 281.E),
+     **5,47%** côté client (était 3,64%) — progression sur les deux.
+     Nicolas a choisi de reporter l'explication pédagogique (point 282) à
+     la toute fin de la série de chantiers de tests, plutôt que maintenant.
 
 ---
 

@@ -14,7 +14,8 @@ courte de réflexes concrets, complétée au fur et à mesure par Nicolas.
 1. **Toute règle métier nouvelle ou modifiée doit être répercutée dans
    `docs/regles-metiers.md`**, dès qu'elle est décidée — pas seulement
    dans `journal.md`/`decisions.md`. Si elle est parmi les plus critiques,
-   la répercuter aussi dans le résumé court de `docs/contexte-projet.md`.
+   la répercuter aussi dans le résumé court de `CLAUDE.md` (racine du
+   projet, anciennement `docs/contexte-projet.md`).
 2. **Dès qu'une tâche passe en attente (⏳)** quelque part dans le projet —
    nouvelle demande, ou correction/décision laissée en suspens — l'ajouter
    immédiatement dans `docs/taches-a-traiter.md` (dans le bon thème), sans
@@ -28,8 +29,8 @@ courte de réflexes concrets, complétée au fur et à mesure par Nicolas.
    **signaler explicitement à Nicolas** si une échéance de
    `docs/protocole-ia-vefa.md` ("Fréquence de contrôle indépendant")
    tombe — comparaison avec un 2ᵉ outil IA sur un résultat important
-   (~2×/semaine), relecture/mise à jour de `docs/contexte-projet.md`
-   (~1×/semaine), test de fidélité code/doc (périodique). Je n'ai aucune
+   (~2×/semaine), relecture/mise à jour de `CLAUDE.md` (~1×/semaine), test
+   de fidélité code/doc (périodique). Je n'ai aucune
    mémoire du temps réellement écoulé entre deux sessions : je dois donc le
    proposer moi-même plutôt que de compter sur un déclenchement silencieux.
 4. **Nouvelle fonctionnalité touchant du code déjà existant** : exiger une

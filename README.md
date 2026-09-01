@@ -8,8 +8,8 @@ neufs, regroupant deux outils métier :
 - **Gestion des TMA** (Travaux Modificatifs Acquéreurs) : demandes de travaux
   modificatifs par acquéreur, avec workflow de validation.
 
-Projet développé de zéro, en solo, dans le cadre d'une recherche
-d'alternance développeur web — en remplacement d'outils Excel/VBA
+Projet développé de zéro, en solo, dans le cadre d'une formation
+de développeur web — en remplacement d'outils Excel/VBA
 existants, à partir de deux classeurs métier réels (suivi VEFA, suivi
 TMA) fournis comme base de départ et améliorés plutôt que recopiés à
 l'identique (règles métier corrigées, alertes de retard, historique,
@@ -160,14 +160,18 @@ le premier jour du projet :
 - [`CLAUDE.md`](CLAUDE.md) — fiche de reprise rapide (stack, règles métiers, décisions, pièges, points sensibles), à la racine du projet, chargée automatiquement par Claude Code
 - [`template-spec.md`](docs/template-spec.md) — modèle à copier pour rédiger une spec avant toute nouvelle fonctionnalité (workflow spec-first, Jour 7 du programme)
 - [`protocole-ia-vefa.md`](docs/protocole-ia-vefa.md) — protocole de travail quotidien avec Claude sur ce projet précis (à jour en permanence, distinct du programme de formation général)
+- [`a-prendre-en-compte.md`](docs/a-prendre-en-compte.md) — réflexes que Claude doit garder à l'esprit en permanence, complétés par Nicolas au fil des sessions
+- [`regles-metiers.md`](docs/regles-metiers.md) — référence exhaustive et canonique de toutes les règles métier (VEFA, TMA, exports, paramétrage, sécurité)
+- [`regles-a-confirmer-client.md`](docs/regles-a-confirmer-client.md) — règles tranchées provisoirement par Nicolas, jamais confirmées par un vrai client
 - [`journal.md`](docs/journal.md) — journal de bord, une entrée par étape
 - [`decisions.md`](docs/decisions.md) — choix techniques et leur justification
 - [`glossaire.md`](docs/glossaire.md) — vocabulaire métier (VEFA, TMA, appel de fonds...)
-- [`analyse-excel.md`](docs/analyse-excel.md) — analyse des fichiers Excel de référence
+- [`analyse-excel.md`](docs/analyse-excel.md) — analyse des fichiers Excel de référence (historique uniquement, voir `regles-metiers.md` pour l'état actuel)
 - [`schema-donnees.md`](docs/schema-donnees.md) — conception du modèle de données
 - [`concepts-techniques.md`](docs/concepts-techniques.md) — fiche de révision des notions de code vues (vanilla, React, Mongoose...)
 - [`bugs.md`](docs/bugs.md) — bugs rencontrés (symptôme / cause / correction / leçon)
 - [`demandes.md`](docs/demandes.md) — liste chronologique complète des demandes, cochées au fur et à mesure
+- [`taches-a-traiter.md`](docs/taches-a-traiter.md) — liste consolidée de tout ce qui reste ouvert, regroupée par thème
 - [`checklist-tests-manuels.md`](docs/checklist-tests-manuels.md) — parcours critiques à revérifier avant chaque déploiement
 
 ## Avancement

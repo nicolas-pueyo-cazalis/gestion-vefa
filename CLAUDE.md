@@ -57,13 +57,39 @@ modifiée se répercute dans ce fichier, pas dans ce résumé.
 - Erreurs 500 : ne plus jamais renvoyer `erreur.message` brut en
   production (`repondreErreurServeur()`).
 
+## Sécurité et données sensibles
+
+Le projet manipule des données personnelles d'acquéreurs (identité, situation financière). Sur tout code touchant ces données, vérifier systématiquement : absence de logs en clair de données sensibles, absence de secrets/clés en dur dans le code, et qu'aucune route API ne renvoie plus de données que nécessaire au frontend.
+
+## Conventions de code
+
+- **Noms de fonctions/variables métier en français** (`genererAppelsDeFonds`,
+  `calculerStatutAutomatique`, `nomAcquereur`) ; vocabulaire technique
+  générique reste en anglais (props, state, noms de libs).
+- **Modules ES uniquement** (`"type": "module"` partout), jamais `require`.
+- **Statuts stockés sans accent** dans les enums (valeurs techniques, ex:
+  `a_emettre`, `chiffre`) — l'accent réservé à l'affichage front.
+- **Montants toujours en `Number` brut** en base, jamais formatés avant
+  sauvegarde ; `formatMontant()`/`Intl.NumberFormat` seulement à l'affichage.
+- **Logique métier lourde extraite dans `server/utils/*.js`**, partagée
+  entre plusieurs routes quand pertinent (ex: `calculerEmissionAppel()`
+  réutilisée par `routes/lots.js` et `routes/appelsDeFonds.js`) — jamais
+  dupliquée dans chaque route qui en a besoin.
+- **Erreurs serveur toujours via `repondreErreurServeur()`**
+  (`server/utils/erreurs.js`), jamais un `res.status(500).json(...)` direct.
+- **Routes d'écriture toujours protégées** par
+  `autoriserRoles('admin', 'gestionnaire')`.
+- **Commentaires datés et référencés** au point `docs/demandes.md`
+  correspondant (ex: `// 17/07/2026, point 165 : ...`) — pas de commentaire
+  sans traçabilité vers la décision d'origine.
+- **Pas de TypeScript/PropTypes** : JavaScript pur des deux côtés.
+- **Front : composants fonctionnels + hooks uniquement**, jamais de classes.
+- Connu et assumé comme dette technique (pas une convention à suivre) :
+  `nomAcquereur()`/`versDateInput()` dupliquées dans plusieurs fichiers, et
+  3 "god components" trop volumineux — voir `docs/taches-a-traiter.md`.
+
 ## En cours / à ne pas casser
 
-- **Toujours se référer à [`docs/a-prendre-en-compte.md`](docs/a-prendre-en-compte.md)**
-  — liste de réflexes à garder à l'esprit en permanence, complétée par
-  Nicolas au fil des sessions.
-- **Toujours vérifier [`docs/taches-a-traiter.md`](docs/taches-a-traiter.md)**
-  pour la liste consolidée de tout ce qui reste ouvert dans le projet.
 - Statut **"À émettre"** (appels de fonds) : En attente → À émettre → Émis
   → En retard → Réglé, avec l'exception "acte signé après l'attestation"
   qui court-circuite tout.
@@ -72,4 +98,15 @@ modifiée se répercute dans ce fichier, pas dans ce résumé.
 - **Décisions en attente de Nicolas** (`docs/demandes.md` 224-226, 229) :
   stratégie de sauvegarde MongoDB, mise à jour `exceljs`, renommage API en
   pluriel, exécution du plan de déploiement — ne pas trancher à sa place.
+- **Documentation à tenir à jour en continu**, sans attendre qu'on le
+  redemande.
+
+## Comment travailler sur ce projet
+
+- Avant toute nouvelle fonctionnalité : rédiger une spec (objectif, comportement attendu, cas limites, contraintes). Après chaque génération : vérifier git diff --stat  pour repérer toute modification hors périmètre, puis tester le comportement réel dans l'application avant de considérer une tâche terminée.
+- **Toujours se référer à [`docs/a-prendre-en-compte.md`](docs/a-prendre-en-compte.md)**
+  — liste de réflexes à garder à l'esprit en permanence, complétée par
+  Nicolas au fil des sessions.
+- **Toujours vérifier [`docs/taches-a-traiter.md`](docs/taches-a-traiter.md)**
+  pour la liste consolidée de tout ce qui reste ouvert dans le projet.
 - **Documentation à tenir à jour en continu**, sans attendre qu'on le redemande.

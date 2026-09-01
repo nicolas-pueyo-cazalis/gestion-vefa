@@ -7,7 +7,8 @@ par domaine plutôt que par date.
 **À tenir à jour en continu** : toute règle métier nouvelle ou modifiée doit
 être répercutée ici dès qu'elle est décidée — c'est le réflexe listé dans
 `docs/a-prendre-en-compte.md`. Si elle est parmi les plus critiques, la
-répercuter aussi dans le résumé très court de `docs/contexte-projet.md`.
+répercuter aussi dans le résumé très court de `CLAUDE.md` (racine du
+projet, anciennement `docs/contexte-projet.md`).
 
 Différence avec les autres fichiers de `docs/` :
 - `docs/analyse-excel.md` est désormais **historique uniquement** (bandeau

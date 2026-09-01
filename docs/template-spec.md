@@ -37,9 +37,10 @@ dans docs/decisions.md).
 Étape 2) — absent d'une spec "projet neuf". Quels fichiers/fonctions déjà
 en place cette fonctionnalité pourrait toucher, même indirectement (ex:
 une route partagée, un composant réutilisé ailleurs, une règle métier déjà
-codée à un autre endroit). Vérifier notamment `docs/contexte-projet.md`
-("Règles métiers non négociables" et "En cours / à ne pas casser") pour
-tout ce qui ne doit surtout pas changer par effet de bord.*
+codée à un autre endroit). Vérifier notamment `CLAUDE.md` (racine du
+projet — "Règles métiers non négociables" et "En cours / à ne pas casser",
+et son renvoi vers `docs/regles-metiers.md` pour le détail) pour tout ce
+qui ne doit surtout pas changer par effet de bord.*
 
 - Fichiers/fonctions concernés : ...
 - Règle(s) métier existante(s) à ne pas casser : ...

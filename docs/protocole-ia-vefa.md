@@ -2,12 +2,14 @@
 Version 2 (31/08/2026), mise à jour à partir de
 `protocole-vefa-avance.md` (fourni par Nicolas, dossier Téléchargements) —
 remplace la version copiée depuis le PDF "Protocole à suivre projet
-VEFA.pdf" du 21/07/2026. Changement principal : migration prévue de
+VEFA.pdf" du 21/07/2026. Changement principal : migration de
 `docs/contexte-projet.md` vers un vrai `CLAUDE.md` à la racine du projet
 (chargé automatiquement par Claude Code en début de session, plus besoin de
-le coller à la main) — migration pas encore faite, trackée dans
-`docs/taches-a-traiter.md` (point 245). En attendant cette migration,
-`docs/contexte-projet.md` continue de jouer ce rôle.
+le coller à la main) — **migration faite le 31/08/2026** (Étape 0, voir
+`docs/demandes.md` point 251). `docs/contexte-projet.md` n'est plus qu'une
+redirection vers `CLAUDE.md`. Le contenu de `CLAUDE.md` reste cependant à
+retravailler plus en profondeur (`docs/taches-a-traiter.md`, points
+245/249) — la migration mécanique ne veut pas dire que le contenu est figé.
 
 Protocole spécifique à VEFA (projet DÉJÀ avancé), distinct du programme de
 formation général de Nicolas (apprentissage sur 16 jours, retiré du dépôt
@@ -19,7 +21,7 @@ générale acquise.
 21/07/2026, reconfirmée le 31/08/2026) — pas un document à lire une fois
 puis oublier. Les déclencheurs concrets qui en sont tirés vivent aussi,
 sous forme condensée, dans `docs/a-prendre-en-compte.md`. Voir aussi
-`docs/contexte-projet.md`, qui y renvoie en premier.
+`CLAUDE.md` (racine du projet), qui y renvoie en premier.
 -->
 
 # Protocole IA — Projet VEFA (déjà avancé)
@@ -58,9 +60,8 @@ s'ajoute au flux de travail courant.
 
 ## Étape 1 — Avant chaque nouvelle session de travail
 
-- [ ] Rien à charger manuellement une fois la migration faite : `CLAUDE.md`
-      se lit automatiquement dès l'ouverture de la session dans le dossier
-      du projet. En attendant, charger `docs/contexte-projet.md`
+- [ ] Rien à charger manuellement : `CLAUDE.md` se lit automatiquement dès
+      l'ouverture de la session dans le dossier du projet
 - [ ] Précise la tâche du jour en une phrase claire avant de commencer
 - [ ] Si la session s'annonce longue (plusieurs fonctionnalités, beaucoup
       d'allers-retours) : anticipe le risque de dilution du contexte —
@@ -86,9 +87,9 @@ s'ajoute au flux de travail courant.
       est plus élevé que sur un petit projet neuf
 - [ ] Test réel : cas normal, cas limite, ET un test de non-régression sur
       une fonctionnalité proche déjà existante
-- [ ] Mise à jour spec + `CLAUDE.md` (ou `docs/contexte-projet.md` en
-      attendant la migration) si une nouvelle règle/décision **durable** a
-      émergé — pas les détails ponctuels d'une seule fonctionnalité, garder
+- [ ] Mise à jour spec + `CLAUDE.md` si une nouvelle règle/décision
+      **durable** a émergé — pas les détails ponctuels d'une seule
+      fonctionnalité, garder
       ce fichier concis. Une règle métier se répercute plutôt dans
       `docs/regles-metiers.md`
 
@@ -156,7 +157,6 @@ s'ajoute au flux de travail courant.
 - [ ] 2 fois par semaine minimum : comparaison avec un deuxième outil IA
       sur un résultat important
 - [ ] 1 fois par semaine minimum : relecture et mise à jour de `CLAUDE.md`
-      (ou `docs/contexte-projet.md` en attendant la migration)
 - [ ] Périodiquement : test de fidélité entre les fichiers de contexte et
       le code réel (comme à l'Étape 0), pour détecter une dérive
       documentaire progressive

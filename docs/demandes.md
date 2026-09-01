@@ -8,7 +8,7 @@ a été demandé, pour pouvoir la reparcourir ou la raconter (ex: entretien
 d'alternance).
 
 **Légende** : ✅ fait — ⏳ reporté / en attente — ❓ question sans suite
-donnée pour l'instant.
+donnée pour l'instant — ❌ annulé, ne sera pas fait.
 
 ---
 
@@ -1250,22 +1250,93 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
        `Lots.jsx` (895 lignes, 13 fonctions), `AppelsDeFonds.jsx` (641
        lignes, 10 fonctions) — trop de responsabilités par fichier, à
        découper (pas encore décidé comment).
-237. ⏳ **Check-up "développeur confirmé"** — grille de questions à dérouler
-     plus tard, pas encore exécutée (Nicolas a demandé de le noter pour la
-     suite) :
-     - Cohérence d'une même règle métier appliquée à plusieurs endroits
-       (codée une seule fois vs réimplémentée différemment ailleurs ;
-       vérifiée aussi côté serveur, pas seulement côté front).
-     - Cas limites et données aux extrêmes (montant à 0/négatif, tableau
-       vide, donnée créée avant l'ajout d'un champ récent).
-     - Concurrence et actions rejouées (double-clic, deux utilisateurs sur
-       la même fiche en même temps).
-     - Validation des entrées à la frontière de chaque route (pas
-       seulement une confiance implicite dans ce que le front envoie).
-     - Cohérence des unités/formats (pourcentages 0-1 partout, montants
-       toujours en `Number` brut).
-     - Dette technique visible (`TODO`, contournements temporaires non
-       traités).
+237. ✅ **Check-up "développeur confirmé"** — fait le 01/09/2026, en miroir
+     du point 271 (revue "professionnel de l'immobilier"). Claude dans la
+     peau d'un développeur senior auditant le dépôt, sur la grille de
+     questions ci-dessus. Vérifications faites dans le code réel avant
+     d'écrire (pas de supposition) : recherche de `TODO`/`FIXME`/`HACK`
+     sur tout le projet, présence d'une librairie de validation dans
+     `package.json`, mécanisme du `Compteur` (`findOneAndUpdate`+`$inc`),
+     recherche de rate-limiting sur la connexion, lecture de
+     `server/middleware/auth.js` en entier.
+
+     **Points forts** :
+     - Erreurs serveur centralisées et disciplinées
+       (`repondreErreurServeur()`, 46 points d'appel dans 12 fichiers,
+       jamais de détail brut renvoyé au client en production).
+     - RBAC réellement côté serveur (`autoriserRoles`), pas seulement
+       caché côté UI ; `verifierToken` propre (401 non connecté / 403
+       mauvais rôle bien distingués, jeton ne contient que `{id, role}`).
+     - `Compteur` correctement atomique (`findOneAndUpdate`+`$inc`), évite
+       le piège classique lire-puis-écrire sur une numérotation partagée.
+     - Logique financière partagée plutôt que dupliquée
+       (`calculerEmissionAppel()` réutilisée par 2 routes) — exactement
+       l'endroit où la duplication est la plus dangereuse.
+     - Pattern de "snapshot" (donnée figée vs donnée vivante) appliqué
+       avec discernement à plusieurs endroits (phase figée à la
+       génération, `corpsDeTravaux` figé, historiques en copies).
+     - Traçabilité du "pourquoi" exceptionnelle (commentaires datés,
+       renvoyés à un point `demandes.md`) ; **zéro** `TODO`/`FIXME`/`HACK`
+       dans tout le projet (vérifié) — les points ouverts vivent dans la
+       doc, pas en commentaire oublié.
+     - CI minimale mais honnête (lint + syntaxe), sans prétendre avoir des
+       tests qu'il n'y a pas.
+
+     **Points faibles** :
+     - **Zéro test automatisé** — le point le plus lourd d'un point de vue
+       ingénierie sur du code qui calcule des pourcentages encadrés par la
+       loi et de vrais montants.
+     - **Aucune couche de validation explicite aux frontières des
+       routes** — vérifié : pas de Joi/Zod/express-validator dans
+       `package.json`, seulement 2 vérifications manuelles de type
+       (`typeof`/`isNaN`) sur tout `server/routes/`. Repose presque
+       entièrement sur les contraintes de schéma Mongoose.
+     - **Aucun rate-limiting sur `POST /api/auth/connexion`** — bcrypt
+       bien utilisé, mais rien ne freine les tentatives répétées.
+     - Dette déjà trackée (point 236) mais réelle : 3 "god components",
+       `nomAcquereur()`/`versDateInput()` dupliquées.
+     - `Object.assign(lot, champs)` (lots.js, PATCH) : champs du corps de
+       requête posés assez directement sur le document Mongoose — pas de
+       liste blanche explicite de ce qu'une route/un rôle a le droit de
+       modifier. Pas une faille confirmée, un point à surveiller si le
+       projet grandit.
+
+     **Dette technique et risques (concurrence, cas limites)** :
+     - Concurrence non gérée : pas de verrouillage optimiste, deux
+       utilisateurs qui modifient la même fiche en même temps se
+       l'écrasent silencieusement (dernier "Enregistrer" gagne, sans
+       avertissement) — invisible avec un seul testeur, réel dès 2
+       utilisateurs simultanés.
+     - Cas limites pas systématiquement vérifiés (tableau vide, montant à
+       0, donnée créée avant l'ajout d'un champ récent) — non vérifié,
+       pas confirmé cassé.
+
+     **Note : 66/100** — logique métier et traçabilité au-dessus de la
+     moyenne (80+ à elles seules), mais rigueur défensive classique
+     (tests, validation, rate-limiting, concurrence) pas encore acquise.
+
+     **Avis général** : code écrit par quelqu'un qui comprend le métier en
+     profondeur et documente ses décisions avec une rigueur rare sur un
+     projet solo — la traçabilité est le point le plus fort. Ce qui manque
+     n'est pas de la compréhension supplémentaire, c'est le réflexe
+     d'ingénierie défensive qui s'acquiert avec l'exposition à des
+     incidents réels — profil attendu d'un développeur en formation, pas
+     un jugement négatif.
+
+     **Ce qui manque avant une vraie mise en production** : suite de
+     tests (au moins sur les calculs financiers et les routes critiques),
+     validation explicite des entrées (Zod/Joi), rate-limiting sur la
+     connexion, réflexion sur la concurrence (verrouillage optimiste ou
+     avertissement "modifié entre-temps"), réduire la dette des god
+     components avant qu'elle ne coûte plus cher à traiter.
+
+237bis. ⏳ **3 trouvailles concrètes du check-up "développeur confirmé"**
+     (point 237), jamais trackées jusqu'ici, distinctes du point 236 :
+     - Aucun rate-limiting sur `POST /api/auth/connexion`.
+     - Aucune couche de validation explicite des entrées à la frontière
+       des routes (pas de Joi/Zod/express-validator).
+     - Concurrence non gérée : pas de verrouillage optimiste sur les
+       documents modifiables par plusieurs utilisateurs.
 238. ⏳ **Liste récapitulative de tout ce qui a été réalisé côté "check up"**
      — pas encore faite, demandée par Nicolas pour plus tard. Plus large
      que le point 233 (tableau de suivi de l'audit **sécurité** seul) :
@@ -1352,7 +1423,10 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      185 (✅), 234 (fichier supprimé entre-temps, note devenue sans objet),
      235 (fait aujourd'hui même). Doublon 96/241 fusionné.
 245. ⏳ **Réaliser le document `CLAUDE.md`** (demande directe de Nicolas,
-     31/08/2026) — pas encore fait.
+     31/08/2026) — fichier créé le même jour (point 251, migration brute de
+     `docs/contexte-projet.md`), mais **reste ⏳** : Nicolas veut qu'on
+     retravaille vraiment son contenu, la simple migration ne suffit pas
+     (fusionné avec l'ancien point 249, voir `docs/taches-a-traiter.md`).
 246. ⏳ **Test : sujet à approfondir** (demande directe de Nicolas,
      31/08/2026, formulée telle quelle) — à préciser avec lui avant de
      s'y mettre.
@@ -1375,6 +1449,10 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
 249. ⏳ **Retravailler le fichier `docs/contexte-projet.md`** (demande
      directe de Nicolas, 31/08/2026) — déjà resserré une première fois le
      jour même (point 235), Nicolas souhaite qu'on y retravaille encore.
+     **`docs/contexte-projet.md` devenu une simple redirection depuis
+     l'Étape 0 du protocole (point 251)** : la cible réelle de ce point est
+     désormais `CLAUDE.md`, à la racine du projet — fusionné avec le point
+     245 (même besoin), voir `docs/taches-a-traiter.md`.
 250. ✅ **`docs/protocole-ia-vefa.md` mis à jour** (31/08/2026) à partir de
      `protocole-vefa-avance.md` (nouveau document fourni par Nicolas,
      dossier Téléchargements) — changement principal : migration prévue de
@@ -1392,7 +1470,8 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
      la racine du projet (migration du contenu de
      `docs/contexte-projet.md`, chemins adaptés + un renvoi ajouté vers
      `docs/taches-a-traiter.md`) — chargé automatiquement par Claude Code
-     en début de session. Point 245 fait. `docs/contexte-projet.md`
+     en début de session. Point 245 : fichier créé mais **laissé ⏳**, un vrai
+     retravail du contenu reste attendu (voir point 245). `docs/contexte-projet.md`
      transformé en simple redirection vers `CLAUDE.md` (contenu non
      dupliqué, pour éviter toute dérive entre les deux). `README.md` mis à
      jour pour pointer vers `CLAUDE.md`. `git status`/`git log` vérifiés :
@@ -1417,6 +1496,236 @@ TMA (`PATCH /api/tma/:id/dates`), pas juste une doc mal rédigée.
 252. ⏳ **`~/.claude/CLAUDE.md` (niveau utilisateur, tous projets)** —
      Nicolas a explicitement dit de laisser ça de côté pour l'instant
      (31/08/2026), mais de le noter pour plus tard.
+
+## Liste de tâches à réaliser (PDF, 01/09/2026)
+
+Liste transmise d'un coup par Nicolas, prise en compte et éclatée en
+points individuels comme le reste de ce document — aucun n'est encore
+réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
+
+253. ⏳ **Documentation** : faire un point sur l'ensemble des docs, les liens
+     qu'il pourrait y avoir entre eux, et s'assurer qu'une mise à jour de
+     chacun se fasse automatiquement (sauf indication précise contraire de
+     Nicolas) — rejoint le réflexe déjà en place (`docs/a-prendre-en-compte.md`
+     point 2), mais Nicolas demande une vraie passe de revue, pas juste le
+     réflexe au fil de l'eau.
+254. ⏳ **Appels de fonds — numéro d'appel** : créer un numéro d'appel de
+     fonds suivant la phase (ex: "Appel de fonds n°1 : Réservation",
+     "Appel de fonds n°3 : Mise hors d'eau"), affiché dans le tableau
+     (après la colonne "Lot") et répercuté dans tous les exports concernés
+     — généralité de la page Appels de fonds, pas un export isolé.
+255. ⏳ **Idée à cadrer** : étudier la faisabilité d'un agent IA jouant le
+     rôle d'un client professionnel de la promotion immobilière, maîtrisant
+     l'ensemble des données manipulées par l'application — à cadrer avant
+     toute implémentation (spec + coût réel, voir `docs/protocole-ia-vefa.md`
+     Étape 6).
+256. ⏳ **Nouvelle page "TS" (Travaux Supplémentaires)** — clarifié par
+     Nicolas (01/09/2026) : travaux demandés en cours de chantier, **hors
+     marchés déjà signés** (donc distinct de la TMA, qui couvre les
+     modificatifs acquéreur avant/pendant la vente). **À traiter avec le
+     même principe que la page TMA** — même logique de workflow/machine à
+     états, mêmes types d'écrans, à adapter au cas TS plutôt qu'à
+     recopier. Nécessitera une vraie spec avant implémentation (Étape 2 du
+     protocole, section "Impact sur l'existant" — bien distinguer TS de
+     TMA partout, ne pas les confondre dans le code ni la doc).
+257. ⏳ **TMA, export "Devis client"** : remettre les décimales sur les
+     montants, et vérifier la cohérence sur les autres exports (certains
+     avaient volontairement les décimales retirées, point 152 — à
+     re-vérifier au cas par cas, pas une règle à annuler partout sans
+     réflexion).
+258. ⏳ **Mettre à jour `docs/concepts-techniques.md`.**
+259. ⏳ **Page Lots — alignement visuel** : aligner le signe "€" de la
+     colonne "Prix TTC" quel que soit le nombre de chiffres du montant
+     (ex: 10 000 € et 100 000 € doivent avoir leur "€" aligné).
+260. ⏳ **Retirer du dossier les fichiers Word/PDF de remarques** envoyés
+     pour traitement — déjà ignorés par Git (`.gitignore`, commit
+     `2ce5f08`), mais Nicolas veut maintenant les faire disparaître
+     physiquement du dossier, pas juste de Git.
+261. ⏳ **Export "Tableau de suivi de prêt"** : ajouter les colonnes
+     coordonnées (adresse, commune, code postal, téléphone, email) de la
+     banque et/ou du courtier.
+262. ⏳ **Export Signature acte (équivalent)** : ajouter les coordonnées du
+     notaire.
+263. ⏳ **Export "Statistiques" (Suivi de prêt)** : ajouter une colonne "%"
+     — le pourcentage de chaque étape par rapport au nombre total de
+     dossiers concernés.
+264. ⏳ **Export "Statistiques" (Signature acte)** : même demande que le
+     point 263.
+265. ⏳ **Retravailler l'ensemble des exports de statistiques**, toutes
+     pages confondues.
+266. ⏳ **Appels de fonds, export "Récapitulatif détaillé par phase"** :
+     afficher "En retard" en rouge dans la case de la date de règlement
+     quand le délai est dépassé sans règlement effectué.
+267. ⏳ **Réfléchir à l'intégration d'un logo client** dans l'entête des
+     exports (entête à retravailler par la même occasion) et dans le
+     bandeau d'entête de l'application.
+268. ⏳ **Appels de fonds : revoir les cartes de statistiques** de la page.
+269. ⏳ **Grosse amélioration de tous les exports, sans exception** — au-delà
+     des points ponctuels déjà listés ci-dessus (261-266).
+270. ⏳ **Règle métier — Appels de fonds** : s'assurer que le dernier appel
+     de fonds d'un lot soit exactement égal au solde restant dû, pour
+     éviter tout écart d'arrondi cumulé sur les phases précédentes — à
+     ajouter dans `docs/regles-metiers.md` une fois implémenté.
+271. ✅ **Exercice de revue externe** : fait le 01/09/2026 — Claude dans la
+     peau d'un professionnel de l'immobilier neuf regardant l'application.
+     Avis basé sur la doc/les règles métier (`regles-metiers.md`,
+     `README.md`, `taches-a-traiter.md`), **pas** sur une navigation
+     visuelle réelle dans l'appli — complété ensuite par le point 276.
+
+     **Points forts** :
+     - Le cœur métier est vraiment compris, pas juste "codé" : la cascade
+       "réglé à l'acte", le barème figé à la génération et verrouillé dès
+       le premier appel émis, le dépôt de réservation réglé automatiquement
+       dès la réservation — des subtilités qu'un développeur n'ayant
+       jamais suivi un dossier VEFA n'aurait pas anticipées.
+     - Statuts déduits des dates, jamais cliqués à la main — élimine une
+       classe entière d'erreurs humaines (le piège classique d'un suivi
+       Excel).
+     - Historique et traçabilité pris au sérieux : annulations et
+       modifications de prix conservées avec motif, jamais un simple
+       écrasement silencieux.
+     - Multi-programme et 3 rôles avec un vrai rôle lecture seule —
+       correspond à une vraie organisation, pas à un outil pensé pour un
+       utilisateur unique.
+     - Alertes de retard proactives (prêt, notaire, appels de fonds, TMA).
+
+     **Points faibles** :
+     - Aucun test automatisé, alors que l'outil calcule des pourcentages
+       d'appels de fonds encadrés par la loi — pas de garantie de
+       non-régression sur ces calculs précis pour un usage avec de
+       l'argent réel.
+     - Toujours en local, jamais déployé — un back-office de promotion,
+       c'est plusieurs personnes qui doivent y accéder en même temps.
+     - Pas de stratégie de sauvegarde tranchée (tier MongoDB gratuit, pas
+       de sauvegarde continue) — vrai point de vigilance pour des données
+       contractuelles et financières.
+     - Aucune pièce jointe possible (actes, attestations MOE, devis
+       entreprises signés) — seules les dates existent, pas les documents
+       eux-mêmes ; l'outil reste un tableau de bord, pas un dossier
+       complet.
+     - Dette de code réelle (composants trop volumineux, fonctions
+       dupliquées) — invisible pour l'utilisateur, mais pèse sur la
+       capacité à faire évoluer l'outil vite si un jour il faut le
+       maintenir à plusieurs.
+
+     **Fonctionnalités non réalisées / manquantes** : import/gestion
+     documentaire (pièces jointes) ; portail acquéreur en lecture seule ;
+     page "Travaux Supplémentaires" (TS) ; envoi de demandes de devis TMA
+     aux entreprises ; personnalisation visuelle (logo du client) ;
+     version mobile/responsive.
+
+     **À améliorer** : les exports (chantier à reprendre en profondeur,
+     souvent ce qui part directement chez le notaire/la banque/la
+     direction) ; numérotation lisible des appels de fonds ; alignement
+     visuel des montants et boutons.
+
+     **Note : 62/100** — pas une note de produit fini, une note d'un socle
+     métier très solide (le cœur vaudrait 80+ tout seul) qui n'est pas
+     encore un produit utilisable en conditions réelles (fiabilité, accès
+     multi-utilisateur, documents, sauvegarde).
+
+     **Avis général** : rare de voir un projet de formation avec une
+     aussi bonne compréhension du métier plutôt qu'un CRUD générique
+     repeint aux couleurs de l'immobilier. Ce qui manque n'est pas de la
+     compréhension métier supplémentaire, c'est tout ce qui rend un outil
+     interne réellement adoptable par une équipe : fiabilité prouvée,
+     accessibilité à plusieurs, gestion documentaire.
+
+     **Ce qui manque pour le vendre** : un vrai hébergement pérenne ; une
+     garantie de fiabilité (tests automatisés au moins sur les calculs
+     financiers) ; une politique de sauvegarde/reprise assumée et
+     documentée ; la gestion documentaire (pièces jointes) ; un cadre
+     juridique minimal (CGU, politique de confidentialité) dès lors que
+     des données d'acquéreurs tiers y transitent ; une identité
+     personnalisable (logo, image).
+272. ⏳ **Point sur l'infrastructure** : où en est-on, avec explications
+     pédagogiques — rejoint les points 223-229 déjà ouverts (sauvegarde
+     MongoDB, plan de déploiement).
+273. ⏳ **TMA : améliorer visuellement le bouton de réattribution des TMA.**
+274. ⏳ **Généralité : aligner les boutons "Exporter"** avec le reste des
+     boutons de chaque page.
+276. ✅ **Complément à la revue externe (point 271)** : fait le 01/09/2026.
+     Nicolas a demandé une vraie navigation visuelle dans l'appli
+     (captures d'écran, interaction réelle) — impossible dans cet
+     environnement (aucun outil navigateur/capture d'écran disponible,
+     seul `WebFetch` existe et ne gère ni le login JWT ni l'interaction
+     avec une page). Solution de repli validée par Nicolas : 3 sous-agents
+     ont lu intégralement les 9 pages React (JSX + composants importés +
+     SCSS) et produit un inventaire strictement factuel (sans jugement)
+     de ce qui s'affiche réellement à l'écran, page par page — palette de
+     couleurs de statut, structure de chaque écran, colonnes de tableau,
+     éléments interactifs, composants transverses réutilisés. Synthèse
+     professionnelle faite ensuite par Claude à partir de cet inventaire :
+
+     **Confirmé par la lecture du code, invisible depuis la doc seule** :
+     une vraie cohérence visuelle (même palette de statuts, même
+     composant de badge, même bouton crayon qui déplie une ligne d'édition
+     en place plutôt qu'une modale, même style de fenêtre d'export sur
+     toutes les pages) — se ressent comme un seul produit, pas cinq
+     écrans assemblés au fil de l'eau. Des détails qui montrent un vrai
+     souci de l'utilisateur final : fusion de cellules quand un dossier
+     est "sans prêt" (pas de tirets répétés sur 5 colonnes vides) ; pied
+     de tableau qui recalcule toujours sur ce qui est filtré à l'écran,
+     jamais sur l'intégralité des données invisibles ; recherche qui
+     retrouve "5 444" en tapant dans un montant affiché "5 444 €" ;
+     aperçu de montant recalculé en direct sur le barème d'un lot, avec
+     un total qui vire au rouge tant que ça ne fait pas 100%.
+
+     **Points d'inquiétude supplémentaires, vus seulement en lisant le
+     code réel** :
+     - La page Paramètres est un mur : 9 sections empilées sur un seul
+       long scroll (infos programme, délais/taux, alertes, barème,
+       étages, annexes, lots, entreprises, utilisateurs), sans onglets.
+     - Des `window.confirm()`/`alert()` natifs du navigateur pour des
+       actions importantes (annuler une vente, barème qui ne fait pas
+       100%) — popups non stylées qui détonent dans une interface par
+       ailleurs soignée.
+     - Aucune page d'accueil/tableau de bord transversal : après le choix
+       du programme, atterrissage direct sur le tableau des lots, pas de
+       vue "ce qui demande attention aujourd'hui" au-delà de la fenêtre
+       d'alertes au lancement.
+     - Écrans de connexion et de choix de programme très nus (aucun logo,
+       carte blanche centrée sur fond neutre) — rien à voir avec l'image
+       d'un outil qui porterait la marque d'un client.
+
+     **Impact sur la note** : n'a pas fait bouger la note de 62/100 (point
+     271) — nuance l'avis plutôt qu'il ne le change : très abouti sur les
+     écrans cœur de métier (Lots, TMA, Appels de fonds), nettement plus
+     brut sur les écrans périphériques (connexion, paramètres,
+     confirmations).
+277. ⏳ **4 points UX découverts lors de la revue visuelle (point 276)**,
+     jamais trackés jusqu'ici :
+     - Page Paramètres : 9 sections empilées sans onglets, un seul long
+       scroll — pénible pour y retourner régulièrement.
+     - Confirmations natives du navigateur (`window.confirm()`/`alert()`)
+       sur des actions importantes (annuler une vente, barème ≠ 100%) — à
+       remplacer par une vraie modale stylée, cohérente avec le reste.
+     - Aucune page d'accueil/tableau de bord transversal après le choix du
+       programme (on atterrit direct sur Lots) — pas de vue "ce qui
+       demande attention aujourd'hui" au-delà de la fenêtre d'alertes.
+     - Écrans de connexion et de choix de programme très nus (aucun logo,
+       carte blanche isolée) — rejoint le point 267 (logo client).
+278. ⏳ **Tests automatisés** — jamais tracké comme tâche jusqu'ici (limite
+     connue et assumée, mais pas une action à faire). Ressort comme le
+     manque le plus lourd des points 271 ("ce qui manque pour vendre") et
+     237 ("ce qui manque avant une vraie mise en production") : au moins
+     des tests unitaires sur les fonctions de calcul financier
+     (`calculerMontantClient`, `calculerEmissionAppel`, `statutAppel`...)
+     et des tests d'intégration sur les routes critiques (appels de
+     fonds, TMA).
+279. ⏳ **Cadre juridique minimal** (CGU, politique de confidentialité) —
+     ressort du point 271, jamais tracké jusqu'ici. Nécessaire dès lors
+     que des données d'acquéreurs tiers transiteraient par l'outil pour le
+     compte d'un client réel — question juridique, pas technique, mais
+     bloquante pour une commercialisation.
+280. ⏳ **2 points supplémentaires du check-up développeur (point 237)**,
+     jamais trackés jusqu'ici, en plus du point 237bis :
+     - `Object.assign(lot, champs)` (lots.js, PATCH) : pas de liste
+       blanche explicite des champs modifiables par route/rôle — pas une
+       faille confirmée, un point à vérifier si le projet grandit.
+     - Dérouler une vraie passe de vérification des cas limites (tableau
+       vide, montant à 0, donnée créée avant l'ajout d'un champ récent) —
+       aujourd'hui non vérifié systématiquement, pas confirmé cassé.
 
 ---
 

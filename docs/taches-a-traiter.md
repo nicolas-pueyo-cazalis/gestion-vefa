@@ -32,10 +32,17 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   `nomAcquereur()` dupliquée dans 3 pages, `versDateInput()` dupliquée dans
   8 composants, 3 "god components" (Tma.jsx/Lots.jsx/AppelsDeFonds.jsx) à
   découper. *(point 236)*
-- **Dérouler le check-up "développeur confirmé"** — grille de questions déjà
-  préparée (cohérence des règles métier, cas limites, concurrence,
-  validation aux frontières des routes, cohérence des unités, dette
-  technique visible). *(point 237)*
+- **5 trouvailles concrètes du check-up "développeur confirmé"** (fait le
+  01/09/2026, note 66/100) : aucun rate-limiting sur la connexion, aucune
+  couche de validation explicite des entrées aux frontières des routes,
+  concurrence non gérée (pas de verrouillage optimiste), pas de liste
+  blanche explicite des champs modifiables (`Object.assign` dans
+  `lots.js`), aucune passe systématique de vérification des cas limites.
+  *(points 237, 237bis, 280)*
+- **Écrire une suite de tests automatisés** — au moins des tests unitaires
+  sur les fonctions de calcul financier et des tests d'intégration sur les
+  routes critiques (appels de fonds, TMA) — le manque le plus lourd
+  ressorti des deux revues externes (points 271, 237). *(point 278)*
 - **Rédiger la liste récapitulative de tout ce qui a été fait côté
   check-up** (plus large que le point 233, couvre tous les audits de la
   session). *(point 238)*
@@ -50,6 +57,14 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   ponctuelle, un contrôle récurrent. *(point 239)*
 - **Bilan final de l'application** — maintenu explicitement ouvert par
   Nicolas tant que le projet n'est pas vraiment déployé/terminé. *(point 178)*
+- **Passe de revue sur l'ensemble des docs** : liens entre eux, cohérence,
+  s'assurer que la mise à jour de chacun est bien automatique (sauf
+  indication contraire explicite de Nicolas). *(point 253)*
+- **4 points UX découverts lors de la revue visuelle du code** : page
+  Paramètres sans onglets (long scroll), confirmations natives du
+  navigateur à remplacer par une vraie modale, absence de page d'accueil/
+  tableau de bord transversal, écrans de connexion/choix de programme trop
+  nus (rejoint le logo client, point 267). *(point 277)*
 
 ## B. Fonctionnalités et UX à faire
 
@@ -72,6 +87,42 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 - **Champ "Adresse" du maître d'ouvrage manquant** — vide sur le devis TMA
   et le courrier d'appel de fonds, à ajouter dans Paramètres > Informations
   du programme. *(point 210)*
+- **Appels de fonds — numéro d'appel affiché** : "Appel de fonds n°X :
+  <Phase>" (ex: "n°1 : Réservation"), dans le tableau (après colonne Lot)
+  et dans tous les exports concernés. *(point 254)*
+- **Idée à cadrer** : agent IA jouant un client professionnel de
+  l'immobilier neuf, maîtrisant les données de l'appli — spec + coût avant
+  toute implémentation. *(point 255)*
+- **Nouvelle page "TS" (Travaux Supplémentaires)** — travaux demandés en
+  cours de chantier, hors marchés déjà signés (distinct de la TMA). À
+  traiter avec le même principe que la page TMA (workflow/écrans), sans
+  les confondre. Nécessite une vraie spec avant implémentation. *(point 256)*
+- **TMA, export "Devis client"** : remettre les décimales sur les montants,
+  vérifier la cohérence sur les autres exports. *(point 257)*
+- **Page Lots** : aligner visuellement le signe "€" de la colonne "Prix
+  TTC" quel que soit le nombre de chiffres du montant. *(point 259)*
+- **Export "Tableau de suivi de prêt"** : ajouter les coordonnées (adresse,
+  commune, code postal, téléphone, email) de la banque et/ou du courtier.
+  *(point 261)*
+- **Export Signature acte (équivalent)** : ajouter les coordonnées du
+  notaire. *(point 262)*
+- **Export "Statistiques"** (Suivi de prêt ET Signature acte) : ajouter une
+  colonne "%" (pourcentage de chaque étape sur le nombre total de
+  dossiers). *(points 263, 264)*
+- **Retravailler l'ensemble des exports de statistiques**, toutes pages.
+  *(point 265)*
+- **Export "Récapitulatif détaillé par phase"** (Appels de fonds) :
+  afficher "En retard" en rouge dans la case de la date de règlement
+  dépassée sans règlement. *(point 266)*
+- **Réfléchir à l'intégration d'un logo client** dans l'entête des exports
+  (à retravailler) et le bandeau d'entête de l'application. *(point 267)*
+- **Appels de fonds : revoir les cartes de statistiques** de la page.
+  *(point 268)*
+- **Grosse amélioration de tous les exports, sans exception.** *(point 269)*
+- **TMA : améliorer visuellement le bouton de réattribution des TMA.**
+  *(point 273)*
+- **Aligner les boutons "Exporter"** avec le reste des boutons de chaque
+  page. *(point 274)*
 
 ## C. Règles métier / paramétrage non tranchés
 
@@ -84,6 +135,9 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 - **Boutons d'action masqués/désactivés pour le rôle "lecture"** — le
   blocage serveur est déjà effectif, seule l'UI ne l'empêche pas
   visuellement pour l'instant. *(point 243)*
+- **Dernier appel de fonds = solde restant dû exact** — s'assurer qu'aucun
+  écart d'arrondi cumulé ne subsiste sur la dernière phase d'un lot ; règle
+  à ajouter dans `docs/regles-metiers.md` une fois implémentée. *(point 270)*
 
 ## D. Sécurité / infrastructure — décisions en attente de Nicolas
 
@@ -98,6 +152,12 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   entretien. *(point 226)*
 - **Exécution du plan de déploiement** (Render + Vercel/Netlify) — proposé,
   pas encore lancé. *(point 229)*
+- **Point sur l'infrastructure** : où en est-on, avec explications
+  pédagogiques — rejoint les points ci-dessus. *(point 272)*
+- **Cadre juridique minimal** (CGU, politique de confidentialité) —
+  nécessaire dès que des données d'acquéreurs tiers transiteraient par
+  l'outil pour un client réel ; question juridique, pas technique, mais
+  bloquante pour une commercialisation. *(point 279)*
 
 ## E. Documents à réaliser / compléter
 
@@ -110,11 +170,14 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   mettre. *(point 246)*
 - **Compléter `docs/regles-a-confirmer-client.md`** (une seule entrée pour
   l'instant, à alimenter au fil de l'eau). *(point 247)*
-- **Compléter `docs/a-prendre-en-compte.md`** (2 entrées pour l'instant, à
+- **Compléter `docs/a-prendre-en-compte.md`** (8 entrées pour l'instant, à
   alimenter au fil de l'eau). *(point 248)*
 - **Créer `~/.claude/CLAUDE.md`** (niveau utilisateur, préférences
   personnelles valables sur tous les projets, pas seulement VEFA) — laissé
   de côté pour l'instant, à reprendre plus tard. *(point 252)*
+- **Mettre à jour `docs/concepts-techniques.md`.** *(point 258)*
+- **Retirer physiquement du dossier** les fichiers Word/PDF de remarques
+  déjà ignorés par Git. *(point 260)*
 
 ## F. Présentation / valorisation (entretien, vente éventuelle)
 

@@ -1865,6 +1865,14 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      bug historique, point 143) : 7 tests, dont un test explicite du
      garde-fou anti-régression. 77/77 côté client. Généré du premier
      coup.
+288. ✅ **Chantier 11 (tests, `calculerLargeursColonnesFigees`) fait
+     (01/09/2026)** — voir `docs/specs/tests-automatises-jspdf.md`.
+     Fonction exportée, testée avec un objet jsPDF simulé (pas de vraie
+     instance). 5 nouveaux tests, 82/82 côté client. Précision découverte
+     (pas un bug) : `largeursMax` ne plafonne que la largeur de base, la
+     colonne peut quand même dépasser ce plafond après redistribution du
+     surplus. **Clôture le point A de l'inventaire "tests au bout du
+     bout"** (dernière fonction laissée de côté, maintenant testée).
 
 ---
 

@@ -177,7 +177,7 @@ export async function exporterExcel(donnees) {
 // `{ 1: 40 }` pour "Client") plafonne certaines colonnes à une largeur
 // raisonnable ; le texte plus long que ce plafond revient alors à la
 // ligne (seul cas où c'est encore permis, comme les en-têtes).
-function calculerLargeursColonnesFigees(doc, { entetes, lignes, lignesTotal }, { fontSize, cellPadding, largeursMax, margeHorizontale }) {
+export function calculerLargeursColonnesFigees(doc, { entetes, lignes, lignesTotal }, { fontSize, cellPadding, largeursMax, margeHorizontale }) {
   doc.setFontSize(fontSize)
   const largeurs = entetes.map((_, i) => {
     const cellules = [...lignes, ...(lignesTotal ?? [])].map((ligne) => String(ligne[i] ?? ''))

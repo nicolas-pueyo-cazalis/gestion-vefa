@@ -69,9 +69,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   - **F.** Vérifier si la branche `main` est protégée sur GitHub contre un
     échec de tests (à vérifier par Nicolas, pas accessible depuis ce
     terminal).
-  - **`calculerLargeursColonnesFigees()`** (`export.js`) laissée de côté
-    lors du point A (dépend d'un vrai objet jsPDF) — à reprendre avec un
-    outillage dédié.
   *(point 281, complète le point 278)*
 - **Transformer l'audit sécurité 3 points en Skill Claude réutilisable.**
   *(point 239)*

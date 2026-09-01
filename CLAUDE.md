@@ -16,10 +16,10 @@ React 19/Vite/Sass (`client/`) · Node/Express 5/MongoDB Atlas (`server/`,
 ESM) · JWT (7j) + bcrypt, API entièrement protégée, 3 rôles
 (admin/gestionnaire/lecture) · Exports `exceljs`/`jspdf` générés côté
 navigateur · `morgan` (logs), `oxlint` (lint front seulement) · Tests
-automatisés (Vitest) : côté serveur uniquement pour l'instant, fonctions
-de calcul pur (`npm test` dans `server/`) — reste complété par la
-checklist manuelle (`docs/checklist-tests-manuels.md`), côté client et
-routes API pas encore couverts · Pas déployé (plan : Render +
+automatisés (Vitest) : fonctions de calcul pur, serveur ET client
+(`npm test` dans `server/` et dans `client/`) — reste complété par la
+checklist manuelle (`docs/checklist-tests-manuels.md`), composants React
+et routes API pas encore couverts · Pas déployé (plan : Render +
 Vercel/Netlify, voir `docs/demandes.md` 227-229).
 
 ## Règles métiers non négociables

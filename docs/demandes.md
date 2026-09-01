@@ -1705,23 +1705,31 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        demande attention aujourd'hui" au-delà de la fenêtre d'alertes.
      - Écrans de connexion et de choix de programme très nus (aucun logo,
        carte blanche isolée) — rejoint le point 267 (logo client).
-278. ⏳🔶 **Tests automatisés — 1ᵉʳ chantier fait (01/09/2026), serveur
-     uniquement** — voir spec `docs/specs/tests-automatises-serveur.md`
-     (créée puis exécutée en suivant l'Étape 2 du protocole : spec avec
-     "Impact sur l'existant" d'abord, commit avant génération vérifié
-     propre, génération, tests réellement exécutés — pas juste supposés).
-     Vitest installé (`server/package.json`), `Tma.test.js` (16 tests) et
-     `appelsDeFonds.test.js` (4 tests) écrits, `npm test` 20/20 verts.
-     Écart trouvé en écrivant les tests et corrigé avec l'accord explicite
-     de Nicolas : `calculerEmissionAppel()` renvoyait
-     `regleAutomatiquement: null` (pas `false`) avec un lot sans acte —
-     `!!` ajouté dans `server/utils/appelsDeFonds.js`. CI complété (job
-     `test-back`). `CLAUDE.md`/`README.md` corrigés (le statut "pas de
-     tests" était devenu faux).
-     **Reste ⏳ (chantier 2, à enchaîner rapidement)** : même principe
-     côté client (`client/src/utils/statuts.js`), puis des tests
-     d'intégration sur les routes critiques (appels de fonds, TMA) —
-     hors périmètre du 1ᵉʳ chantier, voir la spec.
+278. ⏳🔶 **Tests automatisés — chantiers 1 et 2 faits (01/09/2026),
+     serveur ET client** :
+     - **Chantier 1 (serveur)** : `docs/specs/tests-automatises-serveur.md`.
+       Vitest installé (`server/package.json`), `Tma.test.js` (16 tests)
+       et `appelsDeFonds.test.js` (4 tests), `npm test` 20/20 verts. Écart
+       trouvé et corrigé avec l'accord explicite de Nicolas :
+       `calculerEmissionAppel()` renvoyait `regleAutomatiquement: null`
+       (pas `false`) avec un lot sans acte — `!!` ajouté dans
+       `server/utils/appelsDeFonds.js`.
+     - **Chantier 2 (client)** : `docs/specs/tests-automatises-client.md`.
+       Vitest installé (`client/package.json`),
+       `client/src/utils/statuts.test.js` (25 tests, les 8 fonctions),
+       `npm test` 25/25 verts. Écart trouvé dans **le test lui-même** (pas
+       le code source) : comparaison UTC vs heure locale sur
+       `calculerDateLimiteMois` au passage du changement d'heure d'été —
+       corrigé en construisant les dates de test en heure locale.
+     - CI (`.github/workflows/ci.yml`) complété avec 2 jobs (`test-back`,
+       `test-front`). `CLAUDE.md`/`README.md` corrigés (le statut "pas de
+       tests" était devenu faux). Les deux chantiers suivis de bout en
+       bout selon l'Étape 2 du protocole (spec avec "Impact sur
+       l'existant" d'abord, commit avant génération vérifié propre à
+       chaque fois, tests réellement exécutés — pas juste supposés).
+     **Reste ⏳** : tests d'intégration sur les routes API critiques
+     (appels de fonds, TMA) et tests de composants React — hors périmètre
+     des deux premiers chantiers, voir les specs.
 279. ⏳ **Cadre juridique minimal** (CGU, politique de confidentialité) —
      ressort du point 271, jamais tracké jusqu'ici. Nécessaire dès lors
      que des données d'acquéreurs tiers transiteraient par l'outil pour le

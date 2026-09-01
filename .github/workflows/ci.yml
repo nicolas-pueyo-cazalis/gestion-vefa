@@ -3,9 +3,9 @@ name: CI
 # Vérifications minimales à chaque push/pull request (21/07/2026, audit
 # CI/CD) — avant, tout dépendait de la vigilance manuelle (lancer le lint
 # soi-même avant de commiter, ou pas).
-# Étape "tests" ajoutée le 01/09/2026 (docs/specs/tests-automatises-serveur.md) :
-# première suite de tests automatisés (Vitest), fonctions de calcul pur du
-# serveur uniquement pour l'instant.
+# Étapes "tests" ajoutées le 01/09/2026 (docs/specs/tests-automatises-serveur.md,
+# docs/specs/tests-automatises-client.md) : suite de tests automatisés
+# (Vitest) sur les fonctions de calcul pur, serveur puis client.
 on:
   push:
     branches: [main]
@@ -58,3 +58,18 @@ jobs:
         working-directory: server
       - run: npm test
         working-directory: server
+
+  test-front:
+    name: Tests automatisés front-end (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+        working-directory: client
+      - run: npm test
+        working-directory: client

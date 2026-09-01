@@ -39,10 +39,10 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **Tests automatisés — chantier 2 : côté client** (`client/src/utils/statuts.js`,
-  même principe que le 1ᵉʳ chantier serveur déjà fait le 01/09/2026), puis
-  des tests d'intégration sur les routes critiques (appels de fonds, TMA).
-  *(point 278)*
+- **Tests automatisés — reste à faire** : tests d'intégration sur les
+  routes API critiques (appels de fonds, TMA) et tests de composants
+  React — serveur (calculs purs) et client (statuts dérivés) déjà faits
+  le 01/09/2026. *(point 278)*
 - **Rédiger la liste récapitulative de tout ce qui a été fait côté
   check-up** (plus large que le point 233, couvre tous les audits de la
   session). *(point 238)*

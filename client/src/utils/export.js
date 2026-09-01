@@ -41,7 +41,7 @@ const COULEUR_ENTETE = 'FF1F2933'
 // intégrée à jsPDF — il s'affichait comme un "/" au lieu d'un espace.
 // Remplacé par un espace normal, uniquement pour le PDF (Excel et l'écran
 // n'ont pas ce problème, `formatMontant` reste inchangé partout ailleurs).
-function nettoyerPourPdf(valeur) {
+export function nettoyerPourPdf(valeur) {
   if (typeof valeur !== 'string') return valeur
   return valeur.replace(/[  ]/g, ' ')
 }

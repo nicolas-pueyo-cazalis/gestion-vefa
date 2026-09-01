@@ -39,10 +39,21 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **Tests automatisés — reste à faire** : tests d'intégration sur les
-  routes API critiques (appels de fonds, TMA) et tests de composants
-  React — serveur (calculs purs) et client (statuts dérivés) déjà faits
-  le 01/09/2026. *(point 278)*
+- **Tests automatisés — reste de l'inventaire** (A fait le 01/09/2026,
+  ordre choisi : B → C → D → E → F) :
+  - **B.** `server/middleware/auth.js` — 0% de couverture alors qu'il
+    protège toute l'API, priorité haute.
+  - **C.** Tests d'intégration sur les routes (appels de fonds, TMA) —
+    décision d'architecture de base de test à prendre d'abord.
+  - **D.** Tests de composants React (jsdom + React Testing Library).
+  - **E.** Couverture de code (`vitest run --coverage`).
+  - **F.** Vérifier si la branche `main` est protégée sur GitHub contre un
+    échec de tests (à vérifier par Nicolas, pas accessible depuis ce
+    terminal).
+  - **`calculerLargeursColonnesFigees()`** (`export.js`) laissée de côté
+    lors du point A (dépend d'un vrai objet jsPDF) — à reprendre avec un
+    outillage dédié.
+  *(point 281, complète le point 278)*
 - **Rédiger la liste récapitulative de tout ce qui a été fait côté
   check-up** (plus large que le point 233, couvre tous les audits de la
   session). *(point 238)*

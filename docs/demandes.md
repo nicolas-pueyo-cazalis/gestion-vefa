@@ -1743,6 +1743,38 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      - Dérouler une vraie passe de vérification des cas limites (tableau
        vide, montant à 0, donnée créée avant l'ajout d'un champ récent) —
        aujourd'hui non vérifié systématiquement, pas confirmé cassé.
+281. ⏳ **Inventaire "pousser les tests automatisés au bout du bout"**
+     (01/09/2026, demande explicite de Nicolas de ne rien oublier sur ce
+     sujet), en complément des chantiers 1/2 déjà faits (point 278) :
+     - **A. ✅ Fait (01/09/2026)**, voir
+       `docs/specs/tests-automatises-utilitaires.md` : `validerDatesCoherentesAvecStatut()`
+       et `nettoyerPourPdf()` exportées (un seul mot-clé chacune, rien
+       d'autre changé), puis testées avec `correspondRecherche`, `apiFetch`
+       et `chercherCodePostal` — 32 nouveaux tests (49/49 client, 28/28
+       serveur). Aucun écart de comportement trouvé cette fois.
+       **`calculerLargeursColonnesFigees()` volontairement laissée de
+       côté** (dépend d'un vrai objet jsPDF, plus proche d'un test
+       d'intégration) — reste ⏳, à reprendre avec un outillage dédié
+       (mock jsPDF), confirmé avec Nicolas.
+     - **B. Angle mort de sécurité** : `server/middleware/auth.js`
+       (`verifierToken`, `autoriserRoles`) — protège **toute** l'API,
+       **0% de couverture** aujourd'hui malgré son rôle central. Priorité
+       haute, avant même le reste du point A.
+     - **C. Tests d'intégration sur les routes** — nécessite une vraie
+       décision d'architecture avant de pouvoir spec ce chantier : base
+       MongoDB en mémoire (`mongodb-memory-server`), base de test dédiée,
+       ou mock complet de Mongoose.
+     - **D. Tests de composants React** — nouvel outillage nécessaire
+       (jsdom + React Testing Library), décision et mise en place à part.
+     - **E. Couverture de code (coverage)** — `vitest run --coverage` pas
+       configuré, donnerait une vision objective de ce qui reste non
+       testé plutôt que de le lister à la main.
+     - **F. Protection de la branche `main`** — vérifier si GitHub bloque
+       un merge en cas d'échec des tests (réglage GitHub, pas un fichier
+       du dépôt) ; pas vérifiable depuis le terminal actuel (`gh` non
+       disponible dans ce shell) — à vérifier par Nicolas ou depuis un
+       autre terminal.
+     **Ordre de traitement choisi par Nicolas : A → B → C → D → E → F.**
 
 ---
 

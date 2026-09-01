@@ -19,7 +19,7 @@ const router = Router()
 // 10/07/2026, "il faut que la date affichée corresponde au statut".
 const ORDRE_STATUTS = ['libre', 'option', 'reserve', 'acte']
 
-function validerDatesCoherentesAvecStatut(lot) {
+export function validerDatesCoherentesAvecStatut(lot) {
   const index = ORDRE_STATUTS.indexOf(lot.statut)
   if (index < 1 && lot.dateOption) {
     return 'La date d\'option ne peut être renseignée que si le statut est au moins "Option".'

@@ -1793,11 +1793,23 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        route : les deux `npm install` lancés en parallèle ont bloqué la VM
        WSL (11 processus accumulés) — corrigé par `wsl --shutdown` (accord
        explicite de Nicolas) puis réinstallation en séquentiel.
-     - **F. Protection de la branche `main`** — vérifier si GitHub bloque
-       un merge en cas d'échec des tests (réglage GitHub, pas un fichier
-       du dépôt) ; pas vérifiable depuis le terminal actuel (`gh` non
-       disponible dans ce shell) — à vérifier par Nicolas ou depuis un
-       autre terminal.
+     - **F. ⏳ Fait en partie (01/09/2026)** — Nicolas a créé le dépôt
+       GitHub (`nicolas-pueyo-cazalis/gestion-vefa`, **privé**) et poussé
+       le code, guidé pas à pas (aucun remote n'existait avant ce jour).
+       **Le CI a tourné pour la 1ʳᵉ fois réellement sur GitHub** (jamais
+       arrivé avant, malgré les points 221/222 qui le décrivaient comme
+       "en place") : les 4 jobs (`lint-front`, `verifie-back`, `test-back`,
+       `test-front`) sont passés au vert, 18-24s chacun. **Protection de
+       branche bloquée** : ni les "Rulesets" (nouvelle interface) ni les
+       "Branch protection rules" (interface classique) ne s'appliquent sur
+       un dépôt **privé** avec un compte GitHub gratuit (message
+       GitHub explicite : nécessite un compte Team/Enterprise). Deux
+       options identifiées : passer le dépôt en public (protection
+       gratuite et sans limite), ou rester privé et laisser ce point de
+       côté. **Nicolas choisit l'option 2 pour l'instant** (rester privé,
+       pas de protection de branche active) — décision explicite, pas un
+       oubli, à reconsidérer plus tard s'il change d'avis sur la
+       visibilité du dépôt.
      **Ordre de traitement choisi par Nicolas : A → B → C → D → E → F.**
 
 ---

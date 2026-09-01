@@ -39,11 +39,11 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **Tests automatisés — reste de l'inventaire** (A à E faits le
-  01/09/2026, reste : F) :
-  - **F.** Vérifier si la branche `main` est protégée sur GitHub contre un
-    échec de tests (à vérifier par Nicolas, pas accessible depuis ce
-    terminal).
+- **Protection de la branche `main`** — bloquée tant que le dépôt GitHub
+  reste privé (limite du compte gratuit, ni les Rulesets ni les Branch
+  protection rules classiques ne s'appliquent). Nicolas a choisi de
+  rester privé pour l'instant (01/09/2026) — à reconsidérer si un jour il
+  passe le dépôt en public. *(point 281, F)*
   - Tests HTTP sur de vraies routes Express (`supertest`, nécessite de
     scinder `server/index.js` en `app.js`/`index.js`) — volontairement
     reporté lors du chantier C (jugé trop invasif pour l'instant), à

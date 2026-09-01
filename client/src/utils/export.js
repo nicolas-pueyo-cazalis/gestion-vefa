@@ -481,7 +481,7 @@ function exporterDevisTma({
   autoTable(doc, {
     head: [['N°TMA', 'Date de la demande', 'Désignation', 'Montant TTC (€)']],
     body: lignesDemandes.map((l) => [
-      String(l.numeroDemande), formatDate(l.dateDemande), nettoyerPourPdf(l.designation) || '—', nettoyerPourPdf(formatMontant(l.montantTTC, 0)),
+      String(l.numeroDemande), formatDate(l.dateDemande), nettoyerPourPdf(l.designation) || '—', nettoyerPourPdf(formatMontant(l.montantTTC)),
     ]),
     startY: y,
     margin: { left: marge, right: marge },
@@ -493,9 +493,9 @@ function exporterDevisTma({
 
   doc.setFontSize(10)
   for (const [libelle, valeur] of [
-    ['Total HT', formatMontant(montantHT, 0)],
-    [`TVA (${Math.round(tauxTva * 100)}%)`, formatMontant(montantTVA, 0)],
-    ['Total TTC', formatMontant(montantTotalTTC, 0)],
+    ['Total HT', formatMontant(montantHT)],
+    [`TVA (${Math.round(tauxTva * 100)}%)`, formatMontant(montantTVA)],
+    ['Total TTC', formatMontant(montantTotalTTC)],
   ]) {
     doc.setFont('helvetica', 'bold')
     doc.text(nettoyerPourPdf(`${libelle} : ${valeur}`), largeurPage - marge, y, { align: 'right' })

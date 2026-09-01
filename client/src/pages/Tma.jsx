@@ -612,8 +612,8 @@ function Tma() {
             <th>Localisation</th>
             <th>Description</th>
             <th><span className="th-etroit">Date envoi entreprise</span></th>
-            <th><span className="th-etroit">Montant TTC entreprises</span></th>
-            <th><span className="th-etroit">Montant TTC client</span></th>
+            <th className="colonne-montant"><span className="th-etroit">Montant TTC entreprises</span></th>
+            <th className="colonne-montant"><span className="th-etroit">Montant TTC client</span></th>
             <th><span className="th-etroit">Facture envoyée le</span></th>
             <th><span className="th-etroit">Facture validée le</span></th>
             <th>Statut</th>
@@ -663,8 +663,8 @@ function Tma() {
                     `undefined` — un montant absent du document (jamais
                     renseigné) n'est pas forcément `null` à la lettre, et
                     formatMontant(undefined) affiche "NaN €". */}
-                <td>{tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises)}</td>
-                <td>{formatMontant(tma.montantClient ?? 0)}</td>
+                <td className="colonne-montant">{tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises)}</td>
+                <td className="colonne-montant">{formatMontant(tma.montantClient ?? 0)}</td>
                 <td>{formatDate(tma.dateEnvoiFactureClient)}</td>
                 <td>{formatDate(tma.dateRetourClient)}</td>
                 <td>
@@ -755,7 +755,7 @@ function Tma() {
           <tfoot>
             {[ligneTotalTTC, ligneTotalTVA, ligneTotalHT].map((ligne) => (
               <tr key={ligne[0]}>
-                {ligne.map((valeur, i) => <td key={i}>{valeur}</td>)}
+                {ligne.map((valeur, i) => <td key={i} className={i === 7 || i === 8 ? 'colonne-montant' : undefined}>{valeur}</td>)}
                 <td />
               </tr>
             ))}

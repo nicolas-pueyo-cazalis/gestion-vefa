@@ -1136,6 +1136,18 @@ table.tableau-lots {
     gap: 0.15rem;
   }
 
+  // "Prix TTC" (01/09/2026, point 259) : alignée à droite plutôt que
+  // centrée (contrairement au reste du tableau) — sans ça, le signe "€"
+  // se déplaçait horizontalement d'une ligne à l'autre selon le nombre de
+  // chiffres du montant (ex: "10 000 €" vs "100 000 €"), le centrage ne
+  // gardant que le MILIEU du texte fixe, pas sa fin. `tabular-nums`
+  // évite en plus que les chiffres eux-mêmes changent légèrement de
+  // largeur d'une ligne à l'autre.
+  .colonne-montant {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
 }
 
 // Page TMA (17/07/2026) : beaucoup de colonnes (dates, montants...) tenues

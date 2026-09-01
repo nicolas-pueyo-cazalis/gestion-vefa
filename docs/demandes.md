@@ -1537,15 +1537,34 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      recopier. Nécessitera une vraie spec avant implémentation (Étape 2 du
      protocole, section "Impact sur l'existant" — bien distinguer TS de
      TMA partout, ne pas les confondre dans le code ni la doc).
-257. ⏳ **TMA, export "Devis client"** : remettre les décimales sur les
-     montants, et vérifier la cohérence sur les autres exports (certains
-     avaient volontairement les décimales retirées, point 152 — à
-     re-vérifier au cas par cas, pas une règle à annuler partout sans
-     réflexion).
+257. ✅ **TMA, export "Devis client" fait (01/09/2026)** — les 4 montants du
+     PDF (`exporterDevisTma()`, `client/src/utils/export.js`) passaient
+     explicitement `decimales: 0` ; repassés à la valeur par défaut de
+     `formatMontant()` (2 décimales) : le montant TTC de chaque demande
+     ET les 3 totaux HT/TVA/TTC en pied de devis. Vérification de
+     cohérence faite (pas de suppression générale) : les autres exports
+     gardent leurs décimales là où le point 152 les avait explicitement
+     retirées (cartes de stats, colonnes non-totaux) — seul ce devis
+     précis avait perdu les siennes par erreur.
 258. ⏳ **Mettre à jour `docs/concepts-techniques.md`.**
-259. ⏳ **Page Lots — alignement visuel** : aligner le signe "€" de la
-     colonne "Prix TTC" quel que soit le nombre de chiffres du montant
-     (ex: 10 000 € et 100 000 € doivent avoir leur "€" aligné).
+259. ✅ **Page Lots — alignement visuel fait (01/09/2026), étendu à toute
+     l'application** — Nicolas a signalé le même défaut ailleurs pendant
+     le traitement. Cause : les tableaux de l'appli centrent toutes leurs
+     cellules (`table.tableau-lots th, td { text-align: center }`), donc
+     le signe "€" (à la fin du texte) se décale horizontalement d'une
+     ligne à l'autre selon le nombre de chiffres du montant. Nouvelle
+     classe `.colonne-montant` (`text-align: right` +
+     `font-variant-numeric: tabular-nums`, dans `main.scss`), appliquée à
+     **toutes** les colonnes de montant identifiées dans l'appli (en-tête,
+     corps, pied de tableau) : Lots (Prix TTC, Prix TTC/m² SHAB,
+     historique des modifications de prix) ; TMA (Montant TTC entreprises,
+     Montant TTC client, y compris la ligne de totaux) ; Appels de fonds
+     (Montant TTC du tableau principal, et les 4 colonnes montant du
+     récapitulatif par lot, y compris ses totaux). Les montants affichés
+     hors tableau (cartes de stats, listes déroulantes, libellés en ligne
+     dans les panneaux d'édition) ne sont pas concernés — pas de colonne à
+     largeur fixe, donc pas le même défaut. Suite verte (130/130), lint
+     propre, recompilation Vite vérifiée.
 260. ✅ **Retirer du dossier les fichiers Word/PDF de remarques fait
      (01/09/2026)** — les 4 fichiers ignorés par Git (`.gitignore`, commit
      `2ce5f08` : "Remarques sur rapport des règles métier"

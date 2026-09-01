@@ -116,10 +116,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   cours de chantier, hors marchés déjà signés (distinct de la TMA). À
   traiter avec le même principe que la page TMA (workflow/écrans), sans
   les confondre. Nécessite une vraie spec avant implémentation. *(point 256)*
-- **TMA, export "Devis client"** : remettre les décimales sur les montants,
-  vérifier la cohérence sur les autres exports. *(point 257)*
-- **Page Lots** : aligner visuellement le signe "€" de la colonne "Prix
-  TTC" quel que soit le nombre de chiffres du montant. *(point 259)*
 - **Export "Tableau de suivi de prêt"** : ajouter les coordonnées (adresse,
   commune, code postal, téléphone, email) de la banque et/ou du courtier.
   *(point 261)*

@@ -503,10 +503,10 @@ function AppelsDeFonds() {
             <thead>
               <tr>
                 <th>Lot</th>
-                <th>Prix TTC</th>
-                <th>Total émis</th>
-                <th>Total payé</th>
-                <th>Reste à payer</th>
+                <th className="colonne-montant">Prix TTC</th>
+                <th className="colonne-montant">Total émis</th>
+                <th className="colonne-montant">Total payé</th>
+                <th className="colonne-montant">Reste à payer</th>
               </tr>
             </thead>
             <tbody>
@@ -518,10 +518,10 @@ function AppelsDeFonds() {
               {recapParLot.map(({ lot, totalEmis: emisLot, totalPaye: payeLot }) => (
                 <tr key={lot._id}>
                   <td>{lot.reference}</td>
-                  <td>{formatMontant(lot.prixTTC)}</td>
-                  <td>{formatMontant(emisLot)}</td>
-                  <td>{formatMontant(payeLot)}</td>
-                  <td>{formatMontant(lot.prixTTC - payeLot)}</td>
+                  <td className="colonne-montant">{formatMontant(lot.prixTTC)}</td>
+                  <td className="colonne-montant">{formatMontant(emisLot)}</td>
+                  <td className="colonne-montant">{formatMontant(payeLot)}</td>
+                  <td className="colonne-montant">{formatMontant(lot.prixTTC - payeLot)}</td>
                 </tr>
               ))}
             </tbody>
@@ -529,10 +529,10 @@ function AppelsDeFonds() {
               <tfoot>
                 <tr>
                   <td>Total</td>
-                  <td>{formatMontant(totalPrixTTCRecap)}</td>
-                  <td>{formatMontant(totalEmis)}</td>
-                  <td>{formatMontant(totalPaye)}</td>
-                  <td>{formatMontant(soldeRestant)}</td>
+                  <td className="colonne-montant">{formatMontant(totalPrixTTCRecap)}</td>
+                  <td className="colonne-montant">{formatMontant(totalEmis)}</td>
+                  <td className="colonne-montant">{formatMontant(totalPaye)}</td>
+                  <td className="colonne-montant">{formatMontant(soldeRestant)}</td>
                 </tr>
               </tfoot>
             )}
@@ -548,7 +548,7 @@ function AppelsDeFonds() {
             <th>Phase</th>
             <th>Avancement cumulé %</th>
             <th>Avancement %</th>
-            <th>Montant TTC</th>
+            <th className="colonne-montant">Montant TTC</th>
             <th>Date attestation</th>
             <th>Émis le</th>
             <th>Limite règlement</th>
@@ -581,7 +581,7 @@ function AppelsDeFonds() {
                   <td>{appel.phase.nom}</td>
                   <td>{Math.round(cumulsParAppel[index] * 100)}%</td>
                   <td>{Math.round(appel.phase.pourcentage * 100)}%</td>
-                  <td>{formatMontant(appel.montant)}</td>
+                  <td className="colonne-montant">{formatMontant(appel.montant)}</td>
                   <td>{formatDate(appel.dateAttestationMOE)}</td>
                   <td>{formatDate(appel.dateEmission)}</td>
                   <td>{formatDate(appel.dateLimiteReglement)}</td>

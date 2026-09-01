@@ -608,8 +608,8 @@ function Lots() {
               <th ref={refTheadShab}>Surface SHAB</th>
               {afficherColonneSousPlafondBas && <th>Surface &lt; 1,80m</th>}
               <th>Annexes</th>
-              <th ref={refTheadPrixTTC}>Prix TTC</th>
-              <th>Prix TTC/m² SHAB</th>
+              <th ref={refTheadPrixTTC} className="colonne-montant">Prix TTC</th>
+              <th className="colonne-montant">Prix TTC/m² SHAB</th>
               <th>Statut</th>
               <th>Date</th>
               <th>Client</th>
@@ -639,8 +639,8 @@ function Lots() {
                         </div>
                       ) : '—'}
                     </td>
-                    <td>{formatMontant(lot.prixTTC, 0)}</td>
-                    <td>{prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}</td>
+                    <td className="colonne-montant">{formatMontant(lot.prixTTC, 0)}</td>
+                    <td className="colonne-montant">{prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}</td>
                     <td>
                       <Badge statut={lot.statut} texte={STATUTS_LOT[lot.statut]} />
                       {offrePretManquante(lot) && (
@@ -855,8 +855,8 @@ function Lots() {
               <thead>
                 <tr>
                   <th>Logement</th>
-                  <th>Ancien prix</th>
-                  <th>Nouveau prix</th>
+                  <th className="colonne-montant">Ancien prix</th>
+                  <th className="colonne-montant">Nouveau prix</th>
                   <th>Motif</th>
                   <th>Date</th>
                 </tr>
@@ -870,8 +870,8 @@ function Lots() {
                 {historiqueModificationsPrix.map((entree) => (
                   <tr key={entree._id}>
                     <td>{entree.referenceLot}</td>
-                    <td>{formatMontant(entree.ancienPrix)}</td>
-                    <td>{formatMontant(entree.nouveauPrix)}</td>
+                    <td className="colonne-montant">{formatMontant(entree.ancienPrix)}</td>
+                    <td className="colonne-montant">{formatMontant(entree.nouveauPrix)}</td>
                     <td><span className="commentaire-cellule">{entree.motif}</span></td>
                     <td>{formatDate(entree.createdAt)}</td>
                   </tr>

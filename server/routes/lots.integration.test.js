@@ -4,7 +4,7 @@ import Programme from '../models/Programme.js'
 import Lot from '../models/Lot.js'
 import Annexe from '../models/Annexe.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
-import { genererAppelsDeFonds, synchroniserAnnexesEtPrix, genererAppelsAnnexeSeule } from './lots.js'
+import { genererAppelsDeFonds, synchroniserAnnexesEtPrix, genererAppelsAnnexeSeule, resynchroniserMontantReservation } from './lots.js'
 
 beforeAll(async () => {
   await demarrerBaseTest()
@@ -165,5 +165,36 @@ describe('genererAppelsAnnexeSeule (intégration, vraie base en mémoire)', () =
 
     const appels = await AppelDeFonds.find({ lot: lot._id })
     expect(appels).toHaveLength(1)
+  })
+})
+
+describe('resynchroniserMontantReservation (intégration, vraie base en mémoire)', () => {
+  it('met à jour le montant de la phase Réservation quand le prix du lot est renégocié avant l\'Acté', async () => {
+    const { lot } = await creerProgrammeEtLot() // statut 'reserve', prixTTC 200 000
+    await genererAppelsDeFonds(lot, { seulementReservation: true })
+
+    lot.prixTTC = 220000
+    await resynchroniserMontantReservation(lot)
+
+    const appel = await AppelDeFonds.findOne({ lot: lot._id })
+    expect(appel.montant).toBe(11000) // 220 000 × 5%
+  })
+
+  it('ne touche plus rien une fois le lot Acté (prix figé)', async () => {
+    const { lot } = await creerProgrammeEtLot()
+    await genererAppelsDeFonds(lot, { seulementReservation: true })
+    lot.statut = 'acte'
+
+    lot.prixTTC = 999999
+    await resynchroniserMontantReservation(lot)
+
+    const appel = await AppelDeFonds.findOne({ lot: lot._id })
+    expect(appel.montant).toBe(10000) // toujours l'ancien montant (200 000 × 5%), inchangé
+  })
+
+  it('ne plante pas si aucun appel de fonds n\'existe encore pour ce lot', async () => {
+    const { lot } = await creerProgrammeEtLot()
+
+    await expect(resynchroniserMontantReservation(lot)).resolves.not.toThrow()
   })
 })

@@ -1820,13 +1820,11 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      middleware d'authentification, scénario d'intégration, composants
      React, mécanisme de couverture. Pas encore fait — à traiter comme un
      vrai temps pédagogique, pas un résumé expédié.
-283. ⏳ **`resynchroniserMontantReservation()` (`server/routes/lots.js`)** —
-     4ᵉ fonction candidate à un test d'intégration base de données,
-     repérée en préparant le chantier 8 (recalcul du montant de la phase
-     Réservation tant que le lot n'est pas Acté, suit une renégociation de
-     prix). Volontairement laissée hors périmètre du chantier 8 (resté
-     ciblé sur les 3 fonctions déjà annoncées) — à ne pas oublier pour un
-     chantier ultérieur.
+283. ✅ **`resynchroniserMontantReservation()` fait (01/09/2026)** — exportée
+     (`server/routes/lots.js`), 3 tests ajoutés à
+     `lots.integration.test.js` : montant de la phase Réservation qui suit
+     une renégociation de prix avant l'Acté, figé une fois Acté, pas de
+     plantage si aucun appel n'existe encore. 55/55 côté serveur.
 284. ✅ **Chantier 8 (tests d'intégration, suite) fait (01/09/2026)** —
      voir `docs/specs/tests-automatises-integration-2.md`.
      `synchroniserAnnexesEtPrix()` et `genererAppelsAnnexeSeule()`

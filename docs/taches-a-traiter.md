@@ -43,10 +43,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   blanche explicite des champs modifiables (`Object.assign` dans
   `lots.js`), aucune passe systématique de vérification des cas limites.
   *(points 237, 237bis, 280)*
-- **`resynchroniserMontantReservation()`** (`server/routes/lots.js`) — 4ᵉ
-  fonction candidate à un test d'intégration, repérée en préparant le
-  chantier 8, volontairement laissée pour un chantier ultérieur.
-  *(point 283)*
 - **Protection de la branche `main`** — bloquée tant que le dépôt GitHub
   reste privé (limite du compte gratuit, ni les Rulesets ni les Branch
   protection rules classiques ne s'appliquent). Nicolas a choisi de

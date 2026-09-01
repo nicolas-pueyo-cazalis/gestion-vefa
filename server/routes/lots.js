@@ -208,7 +208,7 @@ export async function genererAppelsAnnexeSeule(lot, { seulementReservation = fal
 // généré (voir ci-dessus) doit alors suivre ce nouveau prix. Une fois
 // Acté, plus aucune négociation n'est possible : l'appel reste figé,
 // comme les autres (même logique que le barème, point 123).
-async function resynchroniserMontantReservation(lot) {
+export async function resynchroniserMontantReservation(lot) {
   if (lot.statut === 'acte') return
   const appelReservation = await AppelDeFonds.findOne({ lot: lot._id }).sort({ 'phase.ordre': 1 })
   if (!appelReservation) return

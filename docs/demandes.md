@@ -2076,6 +2076,21 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+298. ✅ **Chantier de tests exhaustifs état/affichage/API — `AppelsDeFonds.jsx`
+     fait (02/09/2026)**, page pilote (voir
+     `docs/specs/tests-automatises-composants-pages-completes.md`). 17
+     nouveaux tests (`AppelsDeFonds.render.test.jsx`), 147/147 côté
+     client. `@testing-library/user-event` finalement pas nécessaire,
+     `fireEvent` a suffi. 2 bugs trouvés et corrigés **dans les tests
+     eux-mêmes** (mocks non réinitialisés entre tests, sélecteurs
+     ambigus) — aucun bug dans le code source. 1 comportement réel
+     découvert et caractérisé tel quel (fenêtre d'export "Générer un
+     appel de fonds" : aucun lot coché tant que la phase n'a pas été
+     choisie). Aucun fichier source modifié. Reste : `Tma.jsx` puis
+     `Lots.jsx`, même méthode.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

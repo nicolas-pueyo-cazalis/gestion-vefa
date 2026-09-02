@@ -1,6 +1,6 @@
 # Spec — Tests exhaustifs état/affichage/API des 3 pages "god components" — chantier 15+
 
-**Projet :** Gestion VEFA · **Date :** 02/09/2026 · **Statut :** brouillon
+**Projet :** Gestion VEFA · **Date :** 02/09/2026 · **Statut :** en cours (1/3 pages faite)
 
 ## Objectif
 
@@ -111,3 +111,33 @@ Pour **chaque page**, couvrir chaque chemin de code distinct identifié
 ## Historique des itérations
 
 - **v1 :** version initiale, avant premier test de génération.
+- **v2 :** `AppelsDeFonds.jsx` (page pilote) faite. Nouveau
+  `AppelsDeFonds.render.test.jsx` (17 tests), distinct de
+  `AppelsDeFonds.test.js` (fonctions pures, chantier 14). Couvre :
+  chargement/erreur, rendu principal, les 3 filtres + recherche,
+  récapitulatif par lot (masqué/affiché, totaux), panneau "Modifier"
+  (ouverture/fermeture exclusive, succès, échec), attestation en masse,
+  et les 4 options d'export (données construites vérifiées via
+  `utils/export.js` mocké, pas le rendu PDF/Excel lui-même).
+  **`@testing-library/user-event` finalement pas nécessaire** — confirmé
+  en pratique : `fireEvent` (déjà utilisé dans `ChoixProgramme.test.jsx`)
+  a suffi pour toutes les interactions (clic, saisie, soumission).
+  **2 bugs trouvés, tous les deux dans le test lui-même, pas dans le
+  code source** : mocks `apiFetch` non réinitialisés entre tests
+  (`vi.clearAllMocks()` du `test-setup.js` global ne vide pas la file
+  `mockResolvedValueOnce`, seulement l'historique des appels — corrigé
+  avec un `mockApiFetch.mockReset()` explicite en `beforeEach`) ;
+  `getByText('A01')` ambigu (le nom du lot apparaît jusqu'à 4 fois à
+  l'écran : case à cocher du filtre + une fois par ligne du tableau) —
+  corrigé en scopant les assertions avec `within(tableau)`.
+  **1 comportement réel du composant découvert en écrivant le test** :
+  ouvrir la fenêtre d'export sur "Générer un appel de fonds" présélectionne
+  déjà une phase, mais ne coche aucun lot tant que la phase n'est pas
+  (re)choisie (`lotsChoisis` démarre à un `Set` vide indépendamment de
+  `phaseChoisie`) — comportement caractérisé tel quel, pas corrigé (hors
+  périmètre de ce chantier de tests).
+  **Vérifications** : 147/147 côté client (suite complète), `oxlint` 0
+  erreur/0 avertissement sur le nouveau fichier, aucun fichier source
+  modifié (`git diff --stat client/src/pages/AppelsDeFonds.jsx` vide).
+  **Reste à faire** : `Tma.jsx` puis `Lots.jsx`, même méthode, sessions
+  séparées.

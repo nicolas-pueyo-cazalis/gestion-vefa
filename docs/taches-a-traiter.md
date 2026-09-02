@@ -85,6 +85,13 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 
 - **Export : génération d'un envoi de demandes de devis TMA aux
   entreprises** (distinct de "Générer devis client", déjà fait). *(point 132)*
+- **Fenêtre d'export "Générer un appel de fonds"** : à l'ouverture, une
+  phase est déjà présélectionnée mais aucun logement n'est coché tant
+  qu'on n'a pas (re)choisi la phase dans la liste déroulante — repéré en
+  écrivant les tests d'`AppelsDeFonds.jsx` (point 298), pas corrigé (hors
+  périmètre du chantier de tests). À regarder : soit cocher les logements
+  disponibles dès l'ouverture pour la phase par défaut, soit juger que ce
+  n'est pas gênant. *(point 298)*
 - **Repenser l'esthétique générale de l'application** (thème sombre actuel
   validé, améliorations à proposer). *(point 139)*
 - **Rendre l'application responsive** (toutes tailles d'écran). *(point 144)*

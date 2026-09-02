@@ -74,6 +74,32 @@ s'ajoute au flux de travail courant.
       mémoire persistante déjà utilisé ce projet (fichiers `feedback_*.md`,
       voir mémoire de Claude)
 
+## Étape 1bis — Mode planification pour les demandes longues et risquées (ajouté le 02/09/2026)
+
+Pour toute demande **large ou risquée** (nouvelle fonctionnalité touchant
+plusieurs fichiers, refactor, choix d'architecture — ex: le découpage
+des "god components", point 236) : passer en **mode planification**
+avant de toucher à quoi que ce soit.
+
+- [ ] En mode planification : explorer, lire des fichiers, poser des
+      questions — mais **ne modifier aucun fichier et ne lancer aucune
+      commande qui change quelque chose**.
+- [ ] Une fois l'approche claire, présenter un **plan écrit** (étapes,
+      fichiers concernés, choix faits) à Nicolas.
+- [ ] **Rien ne s'exécute tant que le plan n'est pas validé
+      explicitement.** Si le plan ne convient pas, l'ajuster avant de
+      toucher à quoi que ce soit.
+
+**Pourquoi** : voir l'intention avant l'exécution est plus facile à
+corriger qu'un diff déjà fait — cohérent avec le principe "vérifier avant
+de faire confiance" déjà appliqué sur ce projet (`git diff --stat`
+systématique, spec avant génération).
+
+**Quand s'en servir** : demandes larges/risquées seulement — pas pour de
+petites corrections ponctuelles où le contexte est déjà clair (la
+majorité des chantiers de tests, un correctif CSS ciblé, une décimale à
+remettre...).
+
 ## Étape 2 — Pour une nouvelle fonctionnalité sur l'existant
 
 - [ ] Spec écrite (comme pour un projet neuf), MAIS avec une section
@@ -137,6 +163,50 @@ s'ajoute au flux de travail courant.
 - [ ] Pour du RAG (interroger les données réelles) : définir précisément
       quelles données et pour quelles questions, avant l'implémentation —
       c'est un choix produit avant d'être technique
+
+## Étape 7 — Hooks Claude Code : automatiser ce qui doit se produire systématiquement (ajouté le 02/09/2026)
+
+**Principe de base** : si une action doit se produire à tous les coups
+(sans exception), ne pas compter sur une instruction dans `CLAUDE.md` ou
+un prompt (Claude peut l'oublier) — la mettre dans un **hook**, configuré
+dans `.claude/settings.json`. Les hooks sont déterministes, ils
+s'exécutent toujours, contrairement à une consigne suivie "la plupart du
+temps".
+
+- [ ] **`PostToolUse`** (matcher `Write|Edit`) : pour du formatage
+      automatique après modification de fichier, de la journalisation,
+      ou toute action qui doit suivre systématiquement une écriture.
+      Exemple déjà en place sur ce projet : `.claude/settings.json`
+      lance Prettier automatiquement (`.claude/hooks/format-on-write.js`)
+      après chaque `Write`/`Edit` sur un fichier `.js`/`.jsx`/`.json` de
+      `client/` ou `server/` — adopté le 02/09/2026, suite au check-up de
+      présentation du code (point 285/293).
+- [ ] **`PreToolUse`** : pour **bloquer** une action avant son exécution
+      (pas juste la déconseiller). Le hook reçoit le nom de l'outil et
+      ses données en JSON sur l'entrée standard ; le code de sortie
+      décide : `0` = laisser passer, `2` = bloquer (le message d'erreur
+      est renvoyé à Claude, qui peut s'adapter), tout autre code = erreur
+      non bloquante juste affichée. Utile pour imposer des règles dures
+      plutôt que de les suggérer (ex : bloquer l'écriture dans un
+      répertoire de config production, bloquer un commit sur `main`,
+      bloquer une commande bash dangereuse) — **pas encore mis en place
+      sur ce projet**, à faire si un besoin concret se présente.
+- [ ] **Hooks versionnés** : `.claude/settings.json` (au niveau du
+      projet, pas `.claude/settings.local.json`) est commité dans le
+      dépôt — toute l'équipe (ou toute future session) en bénéficie
+      automatiquement, pas seulement la session qui l'a configuré.
+- [ ] **`$CLAUDE_PROJECT_DIR`** : variable d'environnement disponible dans
+      les commandes de hook pour référencer des scripts du projet
+      indépendamment du répertoire de travail courant de Claude — non
+      utilisée dans le hook Prettier actuel (chemin absolu codé en dur à
+      la place, faute d'avoir pu tester son format exact dans cet
+      environnement Windows/WSL à double couche) ; à reconsidérer si
+      utilisée ailleurs.
+- [ ] **Particularité de ce projet** : Node.js n'existe que dans WSL sur
+      cette machine (pas dans Git Bash ni PowerShell natif — voir
+      `CLAUDE.md`) — tout hook qui a besoin d'exécuter du JS/npm doit
+      router sa commande via `wsl -e bash -lic "..."`, pas l'invoquer
+      directement.
 
 ## Rappel permanent — Checklist des pièges (identique, mais vigilance accrue sur un projet avancé)
 

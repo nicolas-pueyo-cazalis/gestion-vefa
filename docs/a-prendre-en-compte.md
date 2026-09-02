@@ -48,7 +48,22 @@ courte de réflexes concrets, complétée au fur et à mesure par Nicolas.
 7. **Fichier touchant des données d'acquéreur** (identité, coordonnées,
    situation financière) : audit sécurité systématique des 3 points — logs
    en clair, secrets en dur, sur-exposition d'une route API.
-8. **Checklist des pièges à garder en tête en permanence**
+8. **Demande large ou risquée** (nouvelle fonctionnalité multi-fichiers,
+   refactor, choix d'architecture) : passer en **mode planification**
+   avant de toucher à quoi que ce soit — explorer/lire/questionner
+   uniquement, présenter un plan écrit, rien n'exécute avant validation
+   explicite (`docs/protocole-ia-vefa.md`, Étape 1bis). Pas pour les
+   petites corrections ponctuelles au contexte déjà clair.
+9. **Une action qui doit se produire systématiquement, sans exception**
+   (pas "la plupart du temps") : ne pas se fier à une consigne dans
+   `CLAUDE.md`/un prompt — la mettre dans un **hook**
+   (`.claude/settings.json`, `docs/protocole-ia-vefa.md` Étape 7).
+   `PostToolUse` pour automatiser après une écriture (ex : Prettier
+   automatique déjà en place) ; `PreToolUse` pour bloquer une action
+   avant qu'elle ne s'exécute. Sur ce projet, tout hook lançant du
+   JS/npm doit passer par `wsl -e bash -lic "..."` (pas de Node.js hors
+   WSL sur cette machine).
+10. **Checklist des pièges à garder en tête en permanence**
    (`docs/protocole-ia-vefa.md`) : ne jamais modifier un fichier non
    demandé sans le signaler ; ne jamais affirmer un succès sans un test
    réel de ma part ; ne jamais faire "passer" un test en trichant plutôt

@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "wsl -e bash -lic \"node '/mnt/c/01 - PERSO/Formations développeur/Gestion VEFA/.claude/hooks/bloquer-env.js'\"",
+            "shell": "bash",
+            "timeout": 15,
+            "statusMessage": "Vérification .env..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "wsl -e bash -lic \"node '/mnt/c/01 - PERSO/Formations développeur/Gestion VEFA/.claude/hooks/format-on-write.js'\"",
+            "shell": "bash",
+            "timeout": 30,
+            "statusMessage": "Formatage Prettier..."
+          },
+          {
+            "type": "command",
+            "command": "wsl -e bash -lic \"node '/mnt/c/01 - PERSO/Formations développeur/Gestion VEFA/.claude/hooks/lint-on-write.js'\"",
+            "shell": "bash",
+            "timeout": 30,
+            "statusMessage": "Lint oxlint..."
+          },
+          {
+            "type": "command",
+            "command": "wsl -e bash -lic \"node '/mnt/c/01 - PERSO/Formations développeur/Gestion VEFA/.claude/hooks/erreur500-on-write.js'\"",
+            "shell": "bash",
+            "timeout": 15,
+            "statusMessage": "Vérification erreurs 500..."
+          },
+          {
+            "type": "command",
+            "command": "wsl -e bash -lic \"node '/mnt/c/01 - PERSO/Formations développeur/Gestion VEFA/.claude/hooks/test-on-write.js'\"",
+            "shell": "bash",
+            "timeout": 90,
+            "async": true,
+            "asyncRewake": true,
+            "statusMessage": "Tests en tâche de fond..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/c/01 - PERSO/Formations développeur/Gestion VEFA/.claude/hooks/status-on-stop.sh\"",
+            "shell": "bash",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

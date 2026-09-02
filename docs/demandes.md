@@ -2003,6 +2003,79 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+294. ✅ **Mode planification pour les gros chantiers, fait (02/09/2026)**
+     — Nicolas a demandé d'utiliser le mode planification (explorer/lire/
+     questionner seulement, plan écrit, validation explicite avant toute
+     exécution) pour toute demande large ou risquée, à consigner dans le
+     protocole. Ajouté `docs/protocole-ia-vefa.md` (Étape 1bis) et
+     `docs/a-prendre-en-compte.md` (point 8), sauvegardé en mémoire
+     persistante. Appliqué dans la foulée pour cadrer le chantier de
+     tests exhaustifs des god components (voir point suivant).
+295. ✅ **Chantier de tests exhaustifs état/affichage/API des god
+     components, cadré (02/09/2026)** — suite à la décision de sécuriser
+     complètement (pas seulement les points les plus risqués) avant le
+     découpage (point 236). Spec écrite
+     (`docs/specs/tests-automatises-composants-pages-completes.md`) et
+     plan détaillé validé en mode planification pour `AppelsDeFonds.jsx`
+     (page pilote, la plus petite des 3) : `fireEvent` déjà installé
+     suffit (pas besoin de `@testing-library/user-event`, vérifié via le
+     précédent existant `ChoixProgramme.test.jsx`), nouveau mock à
+     ajouter sur `utils/export.js`. Implémentation pas encore commencée.
+296. ✅ **Hooks Claude Code mis en place (02/09/2026)** — Nicolas a
+     transmis un extrait de cours sur les hooks (PostToolUse, PreToolUse,
+     déterminisme vs simple consigne) et demandé de documenter la
+     pratique ET de configurer un vrai hook maintenant. **Hook Prettier
+     automatique** créé : `.claude/settings.json` (versionné, pas
+     `.local.json`) déclenche `.claude/hooks/format-on-write.js` après
+     chaque `Write`/`Edit` sur un fichier `.js`/`.jsx`/`.json` de
+     `client/`ou `server/`. **Vrai piège technique rencontré et
+     contourné** : Node.js n'existe que dans WSL sur cette machine (ni
+     Git Bash ni PowerShell natif) — la commande du hook route donc par
+     `wsl -e bash -lic "..."`. Testé de bout en bout avant écriture dans
+     `settings.json` (introduction volontaire d'une violation de style
+     dans `client/src/utils/acquereur.js`, vérifié que le hook la
+     corrige, reverti) — conforme au protocole "pipe-tester avant
+     d'écrire". `PreToolUse` (blocage d'actions dangereuses) documenté
+     mais pas mis en place, pas de besoin concret identifié pour
+     l'instant. Documenté dans `docs/protocole-ia-vefa.md` (Étape 7),
+     `docs/a-prendre-en-compte.md` (point 9) et mémoire persistante.
+
+---
+
+297. ✅ **4 hooks supplémentaires mis en place (02/09/2026)**, suite à la
+     réflexion demandée sur ce qui mérite un hook sur ce projet. En plus
+     du hook Prettier (point 296) :
+     - `PostToolUse` **oxlint** (`lint-on-write.js`) sur les fichiers
+       `.js`/`.jsx` de `client/` — ne signale que les vraies erreurs
+       (exit non nul), pas les avertissements déjà connus et acceptés
+       (vérifié : `oxlint` sort en 0 même avec 13 avertissements sur
+       `Lots.jsx`).
+     - `PostToolUse` **alerte erreur 500 en dur** (`erreur500-on-write.js`)
+       sur les fichiers `server/` : signale un `res.status(500)` écrit à
+       la main au lieu de passer par `repondreErreurServeur()`.
+     - `PreToolUse` **blocage `.env`** (`bloquer-env.js`) : empêche toute
+       écriture directe dans un vrai `.env`/`.env.local` (secrets),
+       `.env.example` reste modifiable normalement.
+     - `PostToolUse` **tests en tâche de fond** (`test-on-write.js`,
+       `async`/`asyncRewake`) : relance uniquement le fichier
+       `*.test.js`/`*.test.jsx` modifié, ne réveille Claude qu'en cas
+       d'échec — succès silencieux.
+     - `Stop` **rappel git status** (`status-on-stop.sh`) : affiche les
+       fichiers non commités à la fin de chaque réponse, sans passer par
+       WSL (Git fonctionne nativement en Git Bash, contrairement à
+       Node.js).
+     Logique de conversion de chemin partagée extraite dans
+     `.claude/hooks/lib.mjs` (évite la duplication entre les hooks Node).
+     **Chaque hook testé individuellement en succès ET en échec** avant
+     d'être écrit dans `settings.json` (ex : fichier `.jsx` avec un vrai
+     hook conditionnel pour prouver la détection oxlint, test délibérément
+     cassé pour prouver la détection d'échec) — aucun fichier de test
+     laissé derrière. `settings.json` final validé par un parse JSON réel
+     (pas de `jq` disponible ni dans Git Bash ni dans WSL sur cette
+     machine).
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

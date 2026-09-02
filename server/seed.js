@@ -24,14 +24,85 @@ const PROGRAMME_DATA = {
 // parkings/caves : numéros identifiants (pas un compte), uniques sur tout
 // le programme — voir la remarque du 10/07/2026.
 const LOTS_DATA = [
-  { reference: 'A01', etage: 'RDC', type: 'T2', orientation: 'Sud', surfaceHabitable: 45, prixTTC: 210000, statut: 'acte', parkings: [1], caves: [1] },
-  { reference: 'A02', etage: 'RDC', type: 'T1', orientation: 'Nord', surfaceHabitable: 32, prixTTC: 150000, statut: 'libre' },
-  { reference: 'B01', etage: 'R+1', type: 'T3', orientation: 'Sud-Est', surfaceHabitable: 68, prixTTC: 265000, statut: 'reserve', parkings: [2, 3], caves: [2] },
-  { reference: 'B02', etage: 'R+1', type: 'T2', orientation: 'Est', surfaceHabitable: 48, prixTTC: 198000, statut: 'option' },
-  { reference: 'C01', etage: 'R+2', type: 'T4', orientation: 'Sud-Ouest', surfaceHabitable: 92, prixTTC: 320000, statut: 'acte', parkings: [4], caves: [3] },
-  { reference: 'C02', etage: 'R+2', type: 'T1bis', orientation: 'Ouest', surfaceHabitable: 34, prixTTC: 158000, statut: 'libre' },
-  { reference: 'D01', etage: 'R+3', type: 'T3bis', orientation: 'Sud', surfaceHabitable: 72, prixTTC: 275000, statut: 'reserve', parkings: [5] },
-  { reference: 'D02', etage: 'R+3', type: 'T2bis', orientation: 'Nord-Est', surfaceHabitable: 50, prixTTC: 205000, statut: 'option' },
+  {
+    reference: 'A01',
+    etage: 'RDC',
+    type: 'T2',
+    orientation: 'Sud',
+    surfaceHabitable: 45,
+    prixTTC: 210000,
+    statut: 'acte',
+    parkings: [1],
+    caves: [1],
+  },
+  {
+    reference: 'A02',
+    etage: 'RDC',
+    type: 'T1',
+    orientation: 'Nord',
+    surfaceHabitable: 32,
+    prixTTC: 150000,
+    statut: 'libre',
+  },
+  {
+    reference: 'B01',
+    etage: 'R+1',
+    type: 'T3',
+    orientation: 'Sud-Est',
+    surfaceHabitable: 68,
+    prixTTC: 265000,
+    statut: 'reserve',
+    parkings: [2, 3],
+    caves: [2],
+  },
+  {
+    reference: 'B02',
+    etage: 'R+1',
+    type: 'T2',
+    orientation: 'Est',
+    surfaceHabitable: 48,
+    prixTTC: 198000,
+    statut: 'option',
+  },
+  {
+    reference: 'C01',
+    etage: 'R+2',
+    type: 'T4',
+    orientation: 'Sud-Ouest',
+    surfaceHabitable: 92,
+    prixTTC: 320000,
+    statut: 'acte',
+    parkings: [4],
+    caves: [3],
+  },
+  {
+    reference: 'C02',
+    etage: 'R+2',
+    type: 'T1bis',
+    orientation: 'Ouest',
+    surfaceHabitable: 34,
+    prixTTC: 158000,
+    statut: 'libre',
+  },
+  {
+    reference: 'D01',
+    etage: 'R+3',
+    type: 'T3bis',
+    orientation: 'Sud',
+    surfaceHabitable: 72,
+    prixTTC: 275000,
+    statut: 'reserve',
+    parkings: [5],
+  },
+  {
+    reference: 'D02',
+    etage: 'R+3',
+    type: 'T2bis',
+    orientation: 'Nord-Est',
+    surfaceHabitable: 50,
+    prixTTC: 205000,
+    statut: 'option',
+  },
 ]
 
 // Chaque acquéreur a une "clé" technique (utilisée pour le lier aux TMA
@@ -41,7 +112,13 @@ const ACQUEREURS_DATA = [
   { cle: 'duprat', civilite: 'M. et Mme', prenom: 'Jean et Marie', nom: 'Duprat', lots: ['A01'] },
   { cle: 'lopez', civilite: 'Mme', prenom: 'Isabelle', nom: 'Lopez', lots: ['B01'] },
   { cle: 'ferreira', civilite: 'M.', prenom: 'Carlos', nom: 'Ferreira', lots: ['C01'] },
-  { cle: 'aldana', civilite: 'M. et Mme', prenom: 'Pierre et Sophie', nom: 'Aldana', lots: ['D01'] },
+  {
+    cle: 'aldana',
+    civilite: 'M. et Mme',
+    prenom: 'Pierre et Sophie',
+    nom: 'Aldana',
+    lots: ['D01'],
+  },
   { cle: 'etchegoin', civilite: 'Mme', prenom: 'Anne', nom: 'Etchegoin', lots: ['B02'] },
 ]
 
@@ -52,40 +129,75 @@ const ACQUEREURS_DATA = [
 // "reculer" une TMA dont le statut avait été fixé en dur sans ses dates.
 const TMA_DATA = [
   {
-    lot: 'A01', acquereur: 'duprat', localisation: 'Cuisine',
-    description: "Ajout d'une prise électrique", montantEntreprises: 85, statut: 'valide',
-    dateEnvoiEntreprises: '2026-06-20', dateEnvoiFactureClient: '2026-06-25', dateRetourClient: '2026-06-28',
+    lot: 'A01',
+    acquereur: 'duprat',
+    localisation: 'Cuisine',
+    description: "Ajout d'une prise électrique",
+    montantEntreprises: 85,
+    statut: 'valide',
+    dateEnvoiEntreprises: '2026-06-20',
+    dateEnvoiFactureClient: '2026-06-25',
+    dateRetourClient: '2026-06-28',
   },
   {
-    lot: 'A01', acquereur: 'duprat', localisation: 'Séjour',
-    description: 'Suppression du parquet (remplacé par du carrelage)', montantEntreprises: -320, statut: 'facture',
-    dateEnvoiEntreprises: '2026-06-22', dateEnvoiFactureClient: '2026-06-27',
+    lot: 'A01',
+    acquereur: 'duprat',
+    localisation: 'Séjour',
+    description: 'Suppression du parquet (remplacé par du carrelage)',
+    montantEntreprises: -320,
+    statut: 'facture',
+    dateEnvoiEntreprises: '2026-06-22',
+    dateEnvoiFactureClient: '2026-06-27',
   },
   {
-    lot: 'B01', acquereur: 'lopez', localisation: 'Salle de bain',
-    description: 'Remplacement de la baignoire par une douche', montantEntreprises: 650, statut: 'chiffre',
+    lot: 'B01',
+    acquereur: 'lopez',
+    localisation: 'Salle de bain',
+    description: 'Remplacement de la baignoire par une douche',
+    montantEntreprises: 650,
+    statut: 'chiffre',
     dateEnvoiEntreprises: '2026-06-24',
   },
   {
-    lot: 'C01', acquereur: 'ferreira', localisation: 'Chambre 1',
-    description: 'Ouverture entre chambre et dressing', montantEntreprises: null, statut: 'etude',
+    lot: 'C01',
+    acquereur: 'ferreira',
+    localisation: 'Chambre 1',
+    description: 'Ouverture entre chambre et dressing',
+    montantEntreprises: null,
+    statut: 'etude',
     dateEnvoiEntreprises: '2026-07-01',
   },
   {
-    lot: 'D01', acquereur: 'aldana', localisation: 'Garage',
-    description: "Ajout d'une motorisation de portail", montantEntreprises: null, statut: 'demande',
+    lot: 'D01',
+    acquereur: 'aldana',
+    localisation: 'Garage',
+    description: "Ajout d'une motorisation de portail",
+    montantEntreprises: null,
+    statut: 'demande',
   },
   {
-    lot: 'B02', acquereur: 'etchegoin', localisation: 'Séjour',
-    description: 'Suppression de la cheminée', montantEntreprises: 400, statut: 'refuse',
+    lot: 'B02',
+    acquereur: 'etchegoin',
+    localisation: 'Séjour',
+    description: 'Suppression de la cheminée',
+    montantEntreprises: 400,
+    statut: 'refuse',
   },
   {
-    lot: 'A01', acquereur: 'duprat', localisation: 'Terrasse',
-    description: 'Pose de stores extérieurs', montantEntreprises: 900, statut: 'valide',
+    lot: 'A01',
+    acquereur: 'duprat',
+    localisation: 'Terrasse',
+    description: 'Pose de stores extérieurs',
+    montantEntreprises: 900,
+    statut: 'valide',
   },
   {
-    lot: 'C01', acquereur: 'ferreira', localisation: 'Cuisine',
-    description: "Ajout d'un îlot central", montantEntreprises: 2100, statut: 'termine',
+    lot: 'C01',
+    acquereur: 'ferreira',
+    localisation: 'Cuisine',
+    description: "Ajout d'un îlot central",
+    montantEntreprises: 2100,
+    statut: 'termine',
   },
 ]
 
@@ -115,9 +227,7 @@ async function seed() {
   const programme = await Programme.create(PROGRAMME_DATA)
   console.log(`Programme créé : ${programme.nom}`)
 
-  const lots = await Lot.insertMany(
-    LOTS_DATA.map((lot) => ({ ...lot, programme: programme._id })),
-  )
+  const lots = await Lot.insertMany(LOTS_DATA.map((lot) => ({ ...lot, programme: programme._id })))
   console.log(`${lots.length} lots créés`)
   const lotParReference = Object.fromEntries(lots.map((lot) => [lot.reference, lot]))
 

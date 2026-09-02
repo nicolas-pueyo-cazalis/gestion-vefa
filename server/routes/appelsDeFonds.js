@@ -56,7 +56,8 @@ function emettreAttestation(appel, dateAttestationMOE) {
   appel.dateAttestationMOE = dateAttestationMOE
   if (dateAttestationMOE && !appel.dateEmission) {
     const delai = appel.lot.programme.parametres.delaiReglementAppelJours
-    const { dateEmission, dateLimiteReglement, dateReglement, regleAutomatiquement } = calculerEmissionAppel(appel.lot, dateAttestationMOE, delai)
+    const { dateEmission, dateLimiteReglement, dateReglement, regleAutomatiquement } =
+      calculerEmissionAppel(appel.lot, dateAttestationMOE, delai)
     if (regleAutomatiquement) {
       appel.dateEmission = dateEmission
       appel.dateLimiteReglement = dateLimiteReglement
@@ -78,7 +79,9 @@ router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res)
   try {
     const { phase, dateAttestationMOE, programme: programmeId } = req.body
     if (!phase || !dateAttestationMOE || !programmeId) {
-      return res.status(400).json({ message: 'Les champs "phase", "dateAttestationMOE" et "programme" sont requis' })
+      return res
+        .status(400)
+        .json({ message: 'Les champs "phase", "dateAttestationMOE" et "programme" sont requis' })
     }
 
     // 17/07/2026, point 138 : une attestation par phase ne concerne que les
@@ -114,8 +117,7 @@ router.patch('/phase', autoriserRoles('admin', 'gestionnaire'), async (req, res)
       lot: { $in: idsLotsDuProgramme },
       'phase.nom': phase,
       dateAttestationMOE: null,
-    })
-      .populate({ path: 'lot', populate: { path: 'programme' } })
+    }).populate({ path: 'lot', populate: { path: 'programme' } })
 
     for (const appel of appels) {
       emettreAttestation(appel, dateAttestationMOE)
@@ -155,12 +157,14 @@ router.patch('/lot/:lotId/bareme', autoriserRoles('admin', 'gestionnaire'), asyn
       return res.status(404).json({ message: 'Lot introuvable' })
     }
 
-    await Promise.all(phases.map(({ id, pourcentage }) =>
-      AppelDeFonds.updateOne(
-        { _id: id, lot: lot._id },
-        { 'phase.pourcentage': pourcentage, montant: lot.prixTTC * pourcentage },
+    await Promise.all(
+      phases.map(({ id, pourcentage }) =>
+        AppelDeFonds.updateOne(
+          { _id: id, lot: lot._id },
+          { 'phase.pourcentage': pourcentage, montant: lot.prixTTC * pourcentage },
+        ),
       ),
-    ))
+    )
 
     const appelsMisAJour = await AppelDeFonds.find({ lot: lot._id })
       .populate('lot', 'reference prixTTC')
@@ -182,8 +186,10 @@ router.patch('/lot/:lotId/bareme', autoriserRoles('admin', 'gestionnaire'), asyn
 router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { dateEmission, dateReglement, commentaire } = req.body
-    const appel = await AppelDeFonds.findById(req.params.id)
-      .populate({ path: 'lot', populate: { path: 'programme' } })
+    const appel = await AppelDeFonds.findById(req.params.id).populate({
+      path: 'lot',
+      populate: { path: 'programme' },
+    })
     if (!appel) {
       return res.status(404).json({ message: 'Appel de fonds introuvable' })
     }

@@ -32,7 +32,14 @@ router.post('/', async (req, res) => {
     }
     const motDePasseHash = await bcrypt.hash(motDePasse, 10)
     const utilisateur = await Utilisateur.create({ email, motDePasseHash, nom, role })
-    res.status(201).json({ id: utilisateur._id, email: utilisateur.email, nom: utilisateur.nom, role: utilisateur.role })
+    res
+      .status(201)
+      .json({
+        id: utilisateur._id,
+        email: utilisateur.email,
+        nom: utilisateur.nom,
+        role: utilisateur.role,
+      })
   } catch (erreur) {
     if (erreur.code === 11000) {
       return res.status(400).json({ message: 'Un compte existe déjà avec cet email' })
@@ -62,7 +69,12 @@ router.patch('/:id', async (req, res) => {
     }
 
     await utilisateur.save()
-    res.json({ id: utilisateur._id, email: utilisateur.email, nom: utilisateur.nom, role: utilisateur.role })
+    res.json({
+      id: utilisateur._id,
+      email: utilisateur.email,
+      nom: utilisateur.nom,
+      role: utilisateur.role,
+    })
   } catch (erreur) {
     repondreErreurServeur(res, erreur)
   }

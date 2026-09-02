@@ -70,7 +70,12 @@ function SectionUtilisateurs({ utilisateurs, onChangement }) {
       <ul>
         {utilisateurs.length === 0 && <li>Aucun utilisateur pour l'instant.</li>}
         {utilisateurs.map((u) => (
-          <LigneUtilisateur key={u._id} utilisateur={u} onEnregistrer={enregistrer} onSupprimer={supprimer} />
+          <LigneUtilisateur
+            key={u._id}
+            utilisateur={u}
+            onEnregistrer={enregistrer}
+            onSupprimer={supprimer}
+          />
         ))}
       </ul>
       <form onSubmit={ajouter}>
@@ -95,7 +100,11 @@ function SectionUtilisateurs({ utilisateurs, onChangement }) {
         <label>
           Rôle
           <select value={role} onChange={(e) => setRole(e.target.value)}>
-            {ROLES.map((r) => <option key={r.valeur} value={r.valeur}>{r.libelle}</option>)}
+            {ROLES.map((r) => (
+              <option key={r.valeur} value={r.valeur}>
+                {r.libelle}
+              </option>
+            ))}
           </select>
         </label>
         {erreur && <span className="erreur-champ">{erreur}</span>}

@@ -30,7 +30,7 @@ export async function apiFetch(url, options = {}) {
       },
     })
   } catch (erreur) {
-    alert("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.")
+    alert('Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.')
     throw erreur
   }
 

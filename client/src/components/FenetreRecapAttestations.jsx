@@ -15,7 +15,13 @@ function FenetreRecapAttestations({ phasesTriees, appels, onFermer }) {
 
   return (
     <div className="fenetre-fond" onClick={onFermer}>
-      <div className="fenetre-contenu" role="dialog" aria-modal="true" aria-label="Récapitulatif des attestations MOE" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fenetre-contenu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Récapitulatif des attestations MOE"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3>Récapitulatif des attestations MOE</h3>
         <table className="tableau-recap-attestations">
           <thead>
@@ -33,7 +39,9 @@ function FenetreRecapAttestations({ phasesTriees, appels, onFermer }) {
             ))}
           </tbody>
         </table>
-        <button type="button" onClick={onFermer}>Fermer</button>
+        <button type="button" onClick={onFermer}>
+          Fermer
+        </button>
       </div>
     </div>
   )

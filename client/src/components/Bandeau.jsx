@@ -23,12 +23,21 @@ function Bandeau() {
       <div className="bandeau-top">
         <div>
           <p className="bandeau-nom">{programme?.nom}</p>
-          <p className="bandeau-adresse">{programme?.adresse}, {programme?.commune}</p>
-          <button type="button" className="lien-discret" onClick={ouvrirChoixProgramme}>Changer de programme</button>
+          <p className="bandeau-adresse">
+            {programme?.adresse}, {programme?.commune}
+          </p>
+          <button type="button" className="lien-discret" onClick={ouvrirChoixProgramme}>
+            Changer de programme
+          </button>
         </div>
         <div className="bandeau-utilisateur">
-          <span>{utilisateur?.nom || utilisateur?.email} <span className="bandeau-role">({utilisateur?.role})</span></span>
-          <button type="button" onClick={seDeconnecter}>Déconnexion</button>
+          <span>
+            {utilisateur?.nom || utilisateur?.email}{' '}
+            <span className="bandeau-role">({utilisateur?.role})</span>
+          </span>
+          <button type="button" onClick={seDeconnecter}>
+            Déconnexion
+          </button>
         </div>
       </div>
 
@@ -51,13 +60,17 @@ function Bandeau() {
       </div>
 
       <nav className="nav">
-        <NavLink to="/" end>Lots</NavLink>
+        <NavLink to="/" end>
+          Lots
+        </NavLink>
         <NavLink to="/clients">Clients</NavLink>
         <NavLink to="/suivi-pret">Suivi de prêt</NavLink>
         <NavLink to="/signature-acte">Signature acte</NavLink>
         <NavLink to="/appels-de-fonds">Appels de fonds</NavLink>
         <NavLink to="/tma">TMA</NavLink>
-        <NavLink to="/parametres" className="nav-parametres">Paramètres</NavLink>
+        <NavLink to="/parametres" className="nav-parametres">
+          Paramètres
+        </NavLink>
       </nav>
     </header>
   )

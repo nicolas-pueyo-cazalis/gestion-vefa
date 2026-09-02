@@ -61,7 +61,9 @@ describe('verifierToken', () => {
     verifierToken(req, res, next)
 
     expect(res.status).toHaveBeenCalledWith(401)
-    expect(res.json).toHaveBeenCalledWith({ message: 'Session expirée ou invalide, reconnectez-vous' })
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Session expirée ou invalide, reconnectez-vous',
+    })
     expect(next).not.toHaveBeenCalled()
   })
 
@@ -90,7 +92,7 @@ describe('verifierToken', () => {
 })
 
 describe('autoriserRoles', () => {
-  it('appelle next() si le rôle de l\'utilisateur fait partie des rôles autorisés', () => {
+  it("appelle next() si le rôle de l'utilisateur fait partie des rôles autorisés", () => {
     const req = { utilisateur: { role: 'admin' } }
     const res = creerRes()
     const next = vi.fn()
@@ -101,7 +103,7 @@ describe('autoriserRoles', () => {
     expect(res.status).not.toHaveBeenCalled()
   })
 
-  it('accepte n\'importe lequel des rôles listés, pas seulement le premier', () => {
+  it("accepte n'importe lequel des rôles listés, pas seulement le premier", () => {
     const req = { utilisateur: { role: 'gestionnaire' } }
     const res = creerRes()
     const next = vi.fn()
@@ -111,7 +113,7 @@ describe('autoriserRoles', () => {
     expect(next).toHaveBeenCalledOnce()
   })
 
-  it('renvoie 403 si le rôle de l\'utilisateur n\'est pas autorisé', () => {
+  it("renvoie 403 si le rôle de l'utilisateur n'est pas autorisé", () => {
     const req = { utilisateur: { role: 'lecture' } }
     const res = creerRes()
     const next = vi.fn()

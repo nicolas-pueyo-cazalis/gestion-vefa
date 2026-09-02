@@ -32,12 +32,16 @@ function ListeSurfaces({ label, valeurs, onChange }) {
           placeholder="m²"
         />
       </label>
-      <button type="button" onClick={ajouter}>Ajouter</button>
+      <button type="button" onClick={ajouter}>
+        Ajouter
+      </button>
       <ul className="liste-tags">
         {valeurs.map((v, i) => (
           <li key={i}>
             {v} m²
-            <button type="button" onClick={() => retirer(i)}>×</button>
+            <button type="button" onClick={() => retirer(i)}>
+              ×
+            </button>
           </li>
         ))}
       </ul>

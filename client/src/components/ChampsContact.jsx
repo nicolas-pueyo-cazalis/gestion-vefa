@@ -34,15 +34,18 @@ function ChampsContact({ titre, valeur, onChange, onValiditeChange }) {
     if (trouve) definir('codePostal', trouve)
   }
 
-  const erreurCommune = valeur.commune && !REGEX_COMMUNE.test(valeur.commune)
-    ? 'La commune doit contenir du texte, pas seulement des chiffres.'
-    : null
-  const erreurCodePostal = valeur.codePostal && !REGEX_CODE_POSTAL.test(valeur.codePostal)
-    ? 'Doit contenir exactement 5 chiffres.'
-    : null
-  const erreurEmail = valeur.email && !REGEX_EMAIL.test(valeur.email)
-    ? 'Format attendu : nom@domaine.extension'
-    : null
+  const erreurCommune =
+    valeur.commune && !REGEX_COMMUNE.test(valeur.commune)
+      ? 'La commune doit contenir du texte, pas seulement des chiffres.'
+      : null
+  const erreurCodePostal =
+    valeur.codePostal && !REGEX_CODE_POSTAL.test(valeur.codePostal)
+      ? 'Doit contenir exactement 5 chiffres.'
+      : null
+  const erreurEmail =
+    valeur.email && !REGEX_EMAIL.test(valeur.email)
+      ? 'Format attendu : nom@domaine.extension'
+      : null
   const erreurTelephone = telephoneValide ? null : 'Le numéro de téléphone est incomplet.'
 
   useEffect(() => {

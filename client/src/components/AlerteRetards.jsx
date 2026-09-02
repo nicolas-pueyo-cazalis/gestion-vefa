@@ -4,8 +4,12 @@ import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
 import { useProgramme } from '../context/ProgrammeContext.jsx'
 import {
-  statutPret, statutSignature, statutAppel,
-  estEntrepriseEnRetard, estFactureTmaEnRetard, formatDate,
+  statutPret,
+  statutSignature,
+  statutAppel,
+  estEntrepriseEnRetard,
+  estFactureTmaEnRetard,
+  formatDate,
 } from '../utils/statuts.js'
 import { useFermerAvecEchap } from '../hooks/useFermerAvecEchap.js'
 
@@ -45,28 +49,58 @@ function AlerteRetards() {
   if (!donnees || !visible) return null
 
   const { lots, appels, tmaList, tmaEntreprises } = donnees
-  const { delaiObtentionPretJours, delaiSignatureNotaireMois, delaiRetourEntrepriseTmaJours, delaiReponseFactureTmaJours } = programme.parametres
+  const {
+    delaiObtentionPretJours,
+    delaiSignatureNotaireMois,
+    delaiRetourEntrepriseTmaJours,
+    delaiReponseFactureTmaJours,
+  } = programme.parametres
 
   // Désactivable depuis Paramètres (17/07/2026, point 137) : globalement,
   // ou type de retard par type de retard.
   if (!programme.parametres.alertesActivees) return null
   const actif = programme.parametres.alertesActivesParType ?? {}
 
-  const lotsRetardPret = actif.pret === false ? [] : lots.filter((l) => statutPret(l, delaiObtentionPretJours) === 'retard')
-  const lotsRetardSignature = actif.signature === false ? [] : lots.filter((l) => statutSignature(l, delaiSignatureNotaireMois) === 'retard')
-  const appelsRetard = actif.appelsDeFonds === false ? [] : appels.filter((a) => statutAppel(a) === 'retard')
-  const entreprisesRetard = actif.entreprisesTma === false ? [] : tmaEntreprises.filter((l) => estEntrepriseEnRetard(l, delaiRetourEntrepriseTmaJours))
-  const facturesRetard = actif.facturesTma === false ? [] : tmaList.filter((t) => estFactureTmaEnRetard(t, delaiReponseFactureTmaJours))
+  const lotsRetardPret =
+    actif.pret === false
+      ? []
+      : lots.filter((l) => statutPret(l, delaiObtentionPretJours) === 'retard')
+  const lotsRetardSignature =
+    actif.signature === false
+      ? []
+      : lots.filter((l) => statutSignature(l, delaiSignatureNotaireMois) === 'retard')
+  const appelsRetard =
+    actif.appelsDeFonds === false ? [] : appels.filter((a) => statutAppel(a) === 'retard')
+  const entreprisesRetard =
+    actif.entreprisesTma === false
+      ? []
+      : tmaEntreprises.filter((l) => estEntrepriseEnRetard(l, delaiRetourEntrepriseTmaJours))
+  const facturesRetard =
+    actif.facturesTma === false
+      ? []
+      : tmaList.filter((t) => estFactureTmaEnRetard(t, delaiReponseFactureTmaJours))
 
-  const total = lotsRetardPret.length + lotsRetardSignature.length + appelsRetard.length
-    + entreprisesRetard.length + facturesRetard.length
+  const total =
+    lotsRetardPret.length +
+    lotsRetardSignature.length +
+    appelsRetard.length +
+    entreprisesRetard.length +
+    facturesRetard.length
 
   if (total === 0) return null
 
   return (
     <div className="fenetre-fond" onClick={() => setVisible(false)}>
-      <div className="fenetre-contenu fenetre-alertes" role="dialog" aria-modal="true" aria-label={`${total} retard${total > 1 ? 's' : ''} à traiter`} onClick={(e) => e.stopPropagation()}>
-        <h3>{total} retard{total > 1 ? 's' : ''} à traiter</h3>
+      <div
+        className="fenetre-contenu fenetre-alertes"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${total} retard${total > 1 ? 's' : ''} à traiter`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3>
+          {total} retard{total > 1 ? 's' : ''} à traiter
+        </h3>
 
         {lotsRetardPret.length > 0 && (
           <section>
@@ -74,7 +108,9 @@ function AlerteRetards() {
             <ul>
               {lotsRetardPret.map((lot) => (
                 <li key={lot._id}>
-                  <Link to="/suivi-pret">{lot.reference} — {nomComplet(lot.acquereur)}</Link>
+                  <Link to="/suivi-pret">
+                    {lot.reference} — {nomComplet(lot.acquereur)}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -87,7 +123,9 @@ function AlerteRetards() {
             <ul>
               {lotsRetardSignature.map((lot) => (
                 <li key={lot._id}>
-                  <Link to="/signature-acte">{lot.reference} — {nomComplet(lot.acquereur)}</Link>
+                  <Link to="/signature-acte">
+                    {lot.reference} — {nomComplet(lot.acquereur)}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -101,7 +139,8 @@ function AlerteRetards() {
               {appelsRetard.map((appel) => (
                 <li key={appel._id}>
                   <Link to="/appels-de-fonds">
-                    {appel.lot?.reference} — {appel.phase.nom} (limite {formatDate(appel.dateLimiteReglement)})
+                    {appel.lot?.reference} — {appel.phase.nom} (limite{' '}
+                    {formatDate(appel.dateLimiteReglement)})
                   </Link>
                 </li>
               ))}
@@ -139,7 +178,9 @@ function AlerteRetards() {
           </section>
         )}
 
-        <button type="button" onClick={() => setVisible(false)}>Fermer</button>
+        <button type="button" onClick={() => setVisible(false)}>
+          Fermer
+        </button>
       </div>
     </div>
   )

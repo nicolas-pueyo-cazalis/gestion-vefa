@@ -6,7 +6,7 @@ afterEach(() => {
 })
 
 describe('calculerEmissionAppel', () => {
-  it('émet ET règle à la date de l\'acte si l\'acte est signé après l\'attestation (règle "réglé à l\'acte")', () => {
+  it("émet ET règle à la date de l'acte si l'acte est signé après l'attestation (règle \"réglé à l'acte\")", () => {
     const lot = { dateActe: new Date('2026-06-15') }
     const resultat = calculerEmissionAppel(lot, new Date('2026-05-01'), 30)
 
@@ -24,7 +24,7 @@ describe('calculerEmissionAppel', () => {
     expect(resultat.dateReglement).toEqual(new Date('2026-05-01'))
   })
 
-  it('suit le circuit normal (émis maintenant, en attente de règlement) si l\'acte est antérieur à l\'attestation', () => {
+  it("suit le circuit normal (émis maintenant, en attente de règlement) si l'acte est antérieur à l'attestation", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-07-01'))
 
@@ -37,7 +37,7 @@ describe('calculerEmissionAppel', () => {
     expect(resultat.dateLimiteReglement).toEqual(new Date('2026-07-31'))
   })
 
-  it('suit le circuit normal si le lot n\'a pas encore de date d\'acte (lot Réservé, pas encore Acté)', () => {
+  it("suit le circuit normal si le lot n'a pas encore de date d'acte (lot Réservé, pas encore Acté)", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-07-01'))
 

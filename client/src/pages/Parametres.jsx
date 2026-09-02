@@ -56,7 +56,12 @@ function Parametres() {
 
   useEffect(() => {
     async function chargerTout() {
-      await Promise.all([chargerEntreprises(), chargerLots(), chargerAnnexes(), chargerUtilisateurs()])
+      await Promise.all([
+        chargerEntreprises(),
+        chargerLots(),
+        chargerAnnexes(),
+        chargerUtilisateurs(),
+      ])
       setChargement(false)
     }
     chargerTout()

@@ -32,10 +32,12 @@ function SectionLots({ programme, lots, annexes, onChangement }) {
   // dates/client), pas depuis Paramètres.
   const lotsAffiches = lots.filter((lot) => !lot.estAnnexeSeule)
   const nombreLogements = lotsAffiches.length
-  const maximumAtteint = programme.nombreLogements != null && nombreLogements >= programme.nombreLogements
-  const logementsManquants = programme.nombreLogements != null && nombreLogements < programme.nombreLogements
-    ? programme.nombreLogements - nombreLogements
-    : 0
+  const maximumAtteint =
+    programme.nombreLogements != null && nombreLogements >= programme.nombreLogements
+  const logementsManquants =
+    programme.nombreLogements != null && nombreLogements < programme.nombreLogements
+      ? programme.nombreLogements - nombreLogements
+      : 0
 
   // Remarque du 10/07/2026 : le message de plafond atteint (issu d'une
   // tentative d'ajout refusée) ne doit pas rester affiché si on relève
@@ -174,7 +176,11 @@ function SectionLots({ programme, lots, annexes, onChangement }) {
           Étage
           <select value={etage} onChange={(e) => setEtage(e.target.value)}>
             <option value="">—</option>
-            {etagesDisponibles.map((e) => <option key={e} value={e}>{e}</option>)}
+            {etagesDisponibles.map((e) => (
+              <option key={e} value={e}>
+                {e}
+              </option>
+            ))}
           </select>
         </label>
         <label>
@@ -185,12 +191,21 @@ function SectionLots({ programme, lots, annexes, onChangement }) {
           Orientation
           <select value={orientation} onChange={(e) => setOrientation(e.target.value)}>
             <option value="">—</option>
-            {ORIENTATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            {ORIENTATIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
           </select>
         </label>
         <label>
           Surface habitable (m²)
-          <input type="number" step="0.01" value={surfaceHabitable} onChange={(e) => setSurfaceHabitable(e.target.value)} />
+          <input
+            type="number"
+            step="0.01"
+            value={surfaceHabitable}
+            onChange={(e) => setSurfaceHabitable(e.target.value)}
+          />
         </label>
         <label>
           Surface &lt; 1,80m (m²)
@@ -201,12 +216,29 @@ function SectionLots({ programme, lots, annexes, onChangement }) {
             onChange={(e) => setSurfaceSousPlafondBas(e.target.value)}
           />
         </label>
-        <ListeSurfaces label="Terrasses (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
-        <ListeSurfaces label="Balcons (m²)" valeurs={surfacesBalcons} onChange={setSurfacesBalcons} />
-        <ListeSurfaces label="Loggias (m²)" valeurs={surfacesLoggias} onChange={setSurfacesLoggias} />
+        <ListeSurfaces
+          label="Terrasses (m²)"
+          valeurs={surfacesTerrasses}
+          onChange={setSurfacesTerrasses}
+        />
+        <ListeSurfaces
+          label="Balcons (m²)"
+          valeurs={surfacesBalcons}
+          onChange={setSurfacesBalcons}
+        />
+        <ListeSurfaces
+          label="Loggias (m²)"
+          valeurs={surfacesLoggias}
+          onChange={setSurfacesLoggias}
+        />
         <label>
           Jardin (m²)
-          <input type="number" step="0.01" value={surfaceJardin} onChange={(e) => setSurfaceJardin(e.target.value)} />
+          <input
+            type="number"
+            step="0.01"
+            value={surfaceJardin}
+            onChange={(e) => setSurfaceJardin(e.target.value)}
+          />
         </label>
         <div className="groupe-annexes">
           {TYPES_ANNEXES.map(({ valeur, libelle }) => (
@@ -229,8 +261,12 @@ function SectionLots({ programme, lots, annexes, onChangement }) {
             onChange={(e) => setPrixLogementSeul(e.target.value)}
           />
         </label>
-        <p className="apercu-montant">Prix total (avec annexes) : {formatMontant(apercuPrixTotal, 0)}</p>
-        <button type="submit" disabled={maximumAtteint}>Ajouter</button>
+        <p className="apercu-montant">
+          Prix total (avec annexes) : {formatMontant(apercuPrixTotal, 0)}
+        </p>
+        <button type="submit" disabled={maximumAtteint}>
+          Ajouter
+        </button>
       </form>
     </section>
   )

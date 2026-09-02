@@ -48,10 +48,10 @@ export async function recalculerTma(tmaId) {
   // ce garde-fou, corriger un devis entreprise après validation pouvait
   // encore recalculer silencieusement le montant client déjà acquis.
   if (
-    !tma.montantClientManuel
-    && !tma.lot?.programme?.parametres?.montantClientSaisiManuellement
-    && !STATUTS_NON_RECALCULABLES.includes(tma.statut)
-    && tma.statut !== 'valide'
+    !tma.montantClientManuel &&
+    !tma.lot?.programme?.parametres?.montantClientSaisiManuellement &&
+    !STATUTS_NON_RECALCULABLES.includes(tma.statut) &&
+    tma.statut !== 'valide'
   ) {
     tma.montantClient = calculerMontantClient(montantEntreprises, tma.lot?.programme?.parametres)
   }
@@ -84,7 +84,11 @@ router.get('/', async (req, res) => {
     }
     const lignes = await TmaEntreprise.find(filtre)
       .populate('entreprise', 'nom corpsDeTravaux numeroLot')
-      .populate({ path: 'tma', select: 'lot statut', populate: { path: 'lot', select: 'reference' } })
+      .populate({
+        path: 'tma',
+        select: 'lot statut',
+        populate: { path: 'lot', select: 'reference' },
+      })
       .sort({ createdAt: 1 })
     res.json(lignes)
   } catch (erreur) {

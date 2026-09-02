@@ -13,7 +13,7 @@ describe('nettoyerPourPdf', () => {
     expect(nettoyerPourPdf(avec)).toBe('245 000 €')
   })
 
-  it('remplace un espace fine insécable (U+202F, séparateur de milliers d\'Intl.NumberFormat) par un espace normal', () => {
+  it("remplace un espace fine insécable (U+202F, séparateur de milliers d'Intl.NumberFormat) par un espace normal", () => {
     const avec = `245${ESPACE_FINE_INSECABLE}000${ESPACE_FINE_INSECABLE}€`
     expect(nettoyerPourPdf(avec)).toBe('245 000 €')
   })
@@ -45,7 +45,7 @@ function creerDocSimule(largeurPage = 297) {
 const OPTIONS_BASE = { fontSize: 8, cellPadding: 2, margeHorizontale: 14 }
 
 describe('calculerLargeursColonnesFigees', () => {
-  it('applique un plancher de 10mm quand toutes les cellules d\'une colonne sont vides', () => {
+  it("applique un plancher de 10mm quand toutes les cellules d'une colonne sont vides", () => {
     const doc = creerDocSimule()
     const styles = calculerLargeursColonnesFigees(
       doc,
@@ -92,7 +92,11 @@ describe('calculerLargeursColonnesFigees', () => {
     const doc = creerDocSimule(297)
     const styles = calculerLargeursColonnesFigees(
       doc,
-      { entetes: ['Col1', 'Client'], lignes: [['A', 'Un nom de client très très long']], lignesTotal: null },
+      {
+        entetes: ['Col1', 'Client'],
+        lignes: [['A', 'Un nom de client très très long']],
+        lignesTotal: null,
+      },
       { ...OPTIONS_BASE, largeursMax: { 1: 12 } },
     )
     // Sans plafond, "Client" (colonne 1) aurait une largeur de base bien

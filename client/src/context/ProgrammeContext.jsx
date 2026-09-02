@@ -64,7 +64,15 @@ export function ProgrammeProvider({ children }) {
   }
 
   return (
-    <ProgrammeContext.Provider value={{ programmeActif, chargement, choisirProgramme, changerDeProgramme, setProgrammeActif }}>
+    <ProgrammeContext.Provider
+      value={{
+        programmeActif,
+        chargement,
+        choisirProgramme,
+        changerDeProgramme,
+        setProgrammeActif,
+      }}
+    >
       {children}
     </ProgrammeContext.Provider>
   )

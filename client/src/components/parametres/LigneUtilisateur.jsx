@@ -31,7 +31,11 @@ function LigneUtilisateur({ utilisateur, onEnregistrer, onSupprimer }) {
           <label>
             Rôle
             <select value={role} onChange={(e) => setRole(e.target.value)}>
-              {ROLES.map((r) => <option key={r.valeur} value={r.valeur}>{r.libelle}</option>)}
+              {ROLES.map((r) => (
+                <option key={r.valeur} value={r.valeur}>
+                  {r.libelle}
+                </option>
+              ))}
             </select>
           </label>
           <label>
@@ -44,7 +48,9 @@ function LigneUtilisateur({ utilisateur, onEnregistrer, onSupprimer }) {
             />
           </label>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={() => setEnEdition(false)}>Annuler</button>
+          <button type="button" onClick={() => setEnEdition(false)}>
+            Annuler
+          </button>
         </form>
       </li>
     )
@@ -57,11 +63,16 @@ function LigneUtilisateur({ utilisateur, onEnregistrer, onSupprimer }) {
 
   return (
     <li>
-      {utilisateur.nom || '—'} — {utilisateur.email} — {ROLES.find((r) => r.valeur === utilisateur.role)?.libelle}
+      {utilisateur.nom || '—'} — {utilisateur.email} —{' '}
+      {ROLES.find((r) => r.valeur === utilisateur.role)?.libelle}
       {estSoiMeme && ' (vous)'}
-      <button type="button" onClick={() => setEnEdition(true)}>Modifier</button>
+      <button type="button" onClick={() => setEnEdition(true)}>
+        Modifier
+      </button>
       {!estSoiMeme && (
-        <button type="button" onClick={() => onSupprimer(utilisateur._id)}>Retirer</button>
+        <button type="button" onClick={() => onSupprimer(utilisateur._id)}>
+          Retirer
+        </button>
       )}
     </li>
   )

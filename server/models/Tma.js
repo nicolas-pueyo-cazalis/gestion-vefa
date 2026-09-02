@@ -68,53 +68,56 @@ export function calculerMontantClient(montantEntreprises, parametres) {
   return montantEntreprises * tauxMarge + frais
 }
 
-const tmaSchema = new mongoose.Schema({
-  // `index: true` (21/07/2026, audit performance) : filtré à chaque
-  // requête `{ lot: { $in: idsLots } }` (une par programme).
-  lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true, index: true },
-  acquereur: { type: mongoose.Schema.Types.ObjectId, ref: 'Acquereur', required: true },
-  localisation: String,
-  description: String,
-  // 13/07/2026 : libre, modifiable depuis le même panneau que localisation/
-  // description/montant client.
-  commentaire: String,
-  dateDemande: Date,
-  dateEnvoiEntreprises: Date,
-  // Renseigné avant l'ajout des entreprises (17/07/2026, point 136) : sert
-  // de référence objective pour savoir quand "toutes ont répondu" (voir
-  // recalculerTma, routes/tmaEntreprises.js) — sans ce champ, ajouter 2
-  // entreprises sur les 3 prévues et obtenir leurs 2 devis faisait
-  // basculer la TMA en "chiffré" à tort, alors qu'une troisième entreprise
-  // restait à consulter.
-  nombreEntreprisesConcernees: Number,
-  priorite: { type: String, enum: ['basse', 'moyenne', 'haute'] },
-  montantEntreprises: Number,
-  montantClient: Number,
-  // Saisi à la main (13/07/2026) : par défaut, montantClient est recalculé
-  // automatiquement à chaque changement des devis entreprises (voir
-  // recalculerTma, routes/tmaEntreprises.js) — mais une négociation directe
-  // avec le client peut aboutir à un montant différent. Une fois modifié à
-  // la main, ce montant n'est plus jamais recalculé automatiquement.
-  montantClientManuel: { type: Boolean, default: false },
-  dateEnvoiFactureClient: Date,
-  dateRetourClient: Date,
-  statut: {
-    type: String,
-    enum: ['demande', 'etude', 'chiffre', 'facture', 'valide', 'refuse', 'termine', 'annule'],
-    default: 'demande',
+const tmaSchema = new mongoose.Schema(
+  {
+    // `index: true` (21/07/2026, audit performance) : filtré à chaque
+    // requête `{ lot: { $in: idsLots } }` (une par programme).
+    lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', required: true, index: true },
+    acquereur: { type: mongoose.Schema.Types.ObjectId, ref: 'Acquereur', required: true },
+    localisation: String,
+    description: String,
+    // 13/07/2026 : libre, modifiable depuis le même panneau que localisation/
+    // description/montant client.
+    commentaire: String,
+    dateDemande: Date,
+    dateEnvoiEntreprises: Date,
+    // Renseigné avant l'ajout des entreprises (17/07/2026, point 136) : sert
+    // de référence objective pour savoir quand "toutes ont répondu" (voir
+    // recalculerTma, routes/tmaEntreprises.js) — sans ce champ, ajouter 2
+    // entreprises sur les 3 prévues et obtenir leurs 2 devis faisait
+    // basculer la TMA en "chiffré" à tort, alors qu'une troisième entreprise
+    // restait à consulter.
+    nombreEntreprisesConcernees: Number,
+    priorite: { type: String, enum: ['basse', 'moyenne', 'haute'] },
+    montantEntreprises: Number,
+    montantClient: Number,
+    // Saisi à la main (13/07/2026) : par défaut, montantClient est recalculé
+    // automatiquement à chaque changement des devis entreprises (voir
+    // recalculerTma, routes/tmaEntreprises.js) — mais une négociation directe
+    // avec le client peut aboutir à un montant différent. Une fois modifié à
+    // la main, ce montant n'est plus jamais recalculé automatiquement.
+    montantClientManuel: { type: Boolean, default: false },
+    dateEnvoiFactureClient: Date,
+    dateRetourClient: Date,
+    statut: {
+      type: String,
+      enum: ['demande', 'etude', 'chiffre', 'facture', 'valide', 'refuse', 'termine', 'annule'],
+      default: 'demande',
+    },
+    // Mémorise le statut juste avant un refus, pour pouvoir y revenir
+    // exactement (ex: annuler un refus par erreur au stade "facture" doit
+    // ramener à "facture", pas repartir de zéro).
+    statutAvantRefus: {
+      type: String,
+      enum: ['demande', 'etude', 'chiffre', 'facture'],
+    },
+    // Même principe pour une annulation (13/07/2026, point 129).
+    statutAvantAnnulation: {
+      type: String,
+      enum: ['demande', 'etude', 'chiffre', 'facture'],
+    },
   },
-  // Mémorise le statut juste avant un refus, pour pouvoir y revenir
-  // exactement (ex: annuler un refus par erreur au stade "facture" doit
-  // ramener à "facture", pas repartir de zéro).
-  statutAvantRefus: {
-    type: String,
-    enum: ['demande', 'etude', 'chiffre', 'facture'],
-  },
-  // Même principe pour une annulation (13/07/2026, point 129).
-  statutAvantAnnulation: {
-    type: String,
-    enum: ['demande', 'etude', 'chiffre', 'facture'],
-  },
-}, { timestamps: true })
+  { timestamps: true },
+)
 
 export default mongoose.model('Tma', tmaSchema)

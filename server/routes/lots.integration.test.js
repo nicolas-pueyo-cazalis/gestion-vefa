@@ -4,7 +4,12 @@ import Programme from '../models/Programme.js'
 import Lot from '../models/Lot.js'
 import Annexe from '../models/Annexe.js'
 import AppelDeFonds from '../models/AppelDeFonds.js'
-import { genererAppelsDeFonds, synchroniserAnnexesEtPrix, genererAppelsAnnexeSeule, resynchroniserMontantReservation } from './lots.js'
+import {
+  genererAppelsDeFonds,
+  synchroniserAnnexesEtPrix,
+  genererAppelsAnnexeSeule,
+  resynchroniserMontantReservation,
+} from './lots.js'
 
 beforeAll(async () => {
   await demarrerBaseTest()
@@ -24,7 +29,7 @@ async function creerProgrammeEtLot(champsLot = {}) {
     parametres: {
       baremePhases: [
         { nom: 'Réservation', pourcentage: 0.05, ordre: 1 },
-        { nom: 'Fondations', pourcentage: 0.30, ordre: 2 },
+        { nom: 'Fondations', pourcentage: 0.3, ordre: 2 },
         { nom: 'Livraison', pourcentage: 0.65, ordre: 3 },
       ],
       delaiReglementAppelJours: 30,
@@ -42,7 +47,7 @@ async function creerProgrammeEtLot(champsLot = {}) {
 }
 
 describe('genererAppelsDeFonds (intégration, vraie base en mémoire)', () => {
-  it('ne génère que la 1ʳᵉ phase du barème quand le lot vient d\'être réservé, réglée automatiquement à la date de réservation', async () => {
+  it("ne génère que la 1ʳᵉ phase du barème quand le lot vient d'être réservé, réglée automatiquement à la date de réservation", async () => {
     const { lot } = await creerProgrammeEtLot()
 
     await genererAppelsDeFonds(lot, { seulementReservation: true })
@@ -85,9 +90,22 @@ describe('genererAppelsDeFonds (intégration, vraie base en mémoire)', () => {
 
 describe('synchroniserAnnexesEtPrix (intégration, vraie base en mémoire)', () => {
   it('attribue les annexes choisies et recalcule prixTTC = prixLogementSeul + somme des annexes', async () => {
-    const { programme, lot } = await creerProgrammeEtLot({ prixLogementSeul: 180000, prixTTC: 180000 })
-    const parking = await Annexe.create({ programme: programme._id, type: 'parking_ext', numero: 1, prix: 15000 })
-    const cave = await Annexe.create({ programme: programme._id, type: 'cave', numero: 1, prix: 5000 })
+    const { programme, lot } = await creerProgrammeEtLot({
+      prixLogementSeul: 180000,
+      prixTTC: 180000,
+    })
+    const parking = await Annexe.create({
+      programme: programme._id,
+      type: 'parking_ext',
+      numero: 1,
+      prix: 15000,
+    })
+    const cave = await Annexe.create({
+      programme: programme._id,
+      type: 'cave',
+      numero: 1,
+      prix: 5000,
+    })
 
     await synchroniserAnnexesEtPrix(lot, [parking._id, cave._id])
     await lot.save()
@@ -99,7 +117,13 @@ describe('synchroniserAnnexesEtPrix (intégration, vraie base en mémoire)', () 
 
   it('détache une annexe retirée de la sélection', async () => {
     const { programme, lot } = await creerProgrammeEtLot({ prixLogementSeul: 180000 })
-    const parking = await Annexe.create({ programme: programme._id, type: 'parking_ext', numero: 2, prix: 15000, lot: lot._id })
+    const parking = await Annexe.create({
+      programme: programme._id,
+      type: 'parking_ext',
+      numero: 2,
+      prix: 15000,
+      lot: lot._id,
+    })
 
     await synchroniserAnnexesEtPrix(lot, [])
     await lot.save()
@@ -109,9 +133,15 @@ describe('synchroniserAnnexesEtPrix (intégration, vraie base en mémoire)', () 
     expect(lot.prixTTC).toBe(180000)
   })
 
-  it('ne touche à aucune attribution d\'annexe si annexeIds est undefined, mais recalcule quand même prixTTC', async () => {
+  it("ne touche à aucune attribution d'annexe si annexeIds est undefined, mais recalcule quand même prixTTC", async () => {
     const { programme, lot } = await creerProgrammeEtLot({ prixLogementSeul: 180000 })
-    await Annexe.create({ programme: programme._id, type: 'cave', numero: 2, prix: 5000, lot: lot._id })
+    await Annexe.create({
+      programme: programme._id,
+      type: 'cave',
+      numero: 2,
+      prix: 5000,
+      lot: lot._id,
+    })
 
     await synchroniserAnnexesEtPrix(lot, undefined)
     await lot.save()
@@ -119,7 +149,7 @@ describe('synchroniserAnnexesEtPrix (intégration, vraie base en mémoire)', () 
     expect(lot.prixTTC).toBe(185000) // l'annexe déjà attribuée reste comptée
   })
 
-  it('ne modifie jamais prixTTC si prixLogementSeul n\'est pas renseigné (lot créé avant ce champ)', async () => {
+  it("ne modifie jamais prixTTC si prixLogementSeul n'est pas renseigné (lot créé avant ce champ)", async () => {
     const { lot } = await creerProgrammeEtLot({ prixLogementSeul: undefined, prixTTC: 150000 })
 
     await synchroniserAnnexesEtPrix(lot, undefined)
@@ -169,7 +199,7 @@ describe('genererAppelsAnnexeSeule (intégration, vraie base en mémoire)', () =
 })
 
 describe('resynchroniserMontantReservation (intégration, vraie base en mémoire)', () => {
-  it('met à jour le montant de la phase Réservation quand le prix du lot est renégocié avant l\'Acté', async () => {
+  it("met à jour le montant de la phase Réservation quand le prix du lot est renégocié avant l'Acté", async () => {
     const { lot } = await creerProgrammeEtLot() // statut 'reserve', prixTTC 200 000
     await genererAppelsDeFonds(lot, { seulementReservation: true })
 
@@ -192,7 +222,7 @@ describe('resynchroniserMontantReservation (intégration, vraie base en mémoire
     expect(appel.montant).toBe(10000) // toujours l'ancien montant (200 000 × 5%), inchangé
   })
 
-  it('ne plante pas si aucun appel de fonds n\'existe encore pour ce lot', async () => {
+  it("ne plante pas si aucun appel de fonds n'existe encore pour ce lot", async () => {
     const { lot } = await creerProgrammeEtLot()
 
     await expect(resynchroniserMontantReservation(lot)).resolves.not.toThrow()

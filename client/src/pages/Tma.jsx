@@ -69,7 +69,9 @@ export function texteRechercheTma(tma) {
     formatDate(tma.dateRetourClient),
     STATUTS_TMA[tma.statut],
     tma.commentaire,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 function Tma() {
@@ -157,7 +159,9 @@ function Tma() {
 
     const tmaMiseAJour = await reponse.json()
     setTmaList((liste) =>
-      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+      liste.map((tma) =>
+        tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma,
+      ),
     )
   }
 
@@ -208,12 +212,16 @@ function Tma() {
 
     const tmaMiseAJour = await reponse.json()
     setTmaList((liste) =>
-      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+      liste.map((tma) =>
+        tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma,
+      ),
     )
   }
 
   async function annulerAnnulation(id) {
-    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/annuler-annulation`, { method: 'PATCH' })
+    const reponse = await apiFetch(`${API_URL}/api/tma/${id}/annuler-annulation`, {
+      method: 'PATCH',
+    })
 
     if (!reponse.ok) {
       const { message } = await reponse.json()
@@ -223,7 +231,9 @@ function Tma() {
 
     const tmaMiseAJour = await reponse.json()
     setTmaList((liste) =>
-      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+      liste.map((tma) =>
+        tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma,
+      ),
     )
   }
 
@@ -238,7 +248,9 @@ function Tma() {
 
     const tmaMiseAJour = await reponse.json()
     setTmaList((liste) =>
-      liste.map((tma) => (tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma)),
+      liste.map((tma) =>
+        tma._id === tmaMiseAJour._id ? { ...tma, statut: tmaMiseAJour.statut } : tma,
+      ),
     )
   }
 
@@ -279,7 +291,9 @@ function Tma() {
   // d'alertes au démarrage (AlerteRetards.jsx), affiché ici directement.
   function entrepriseEnRetardPourTma(tma) {
     const delai = programme.parametres.delaiRetourEntrepriseTmaJours
-    return tmaEntreprises.some((ligne) => ligne.tma?._id === tma._id && estEntrepriseEnRetard(ligne, delai))
+    return tmaEntreprises.some(
+      (ligne) => ligne.tma?._id === tma._id && estEntrepriseEnRetard(ligne, delai),
+    )
   }
 
   // Numéro de la demande PAR LOGEMENT (21/07/2026, remarque de Nicolas) : un
@@ -291,7 +305,9 @@ function Tma() {
   function numeroDemandePourTma(tma) {
     const tmaDuMemeLot = tmaList
       .filter((t) => t.lot?._id === tma.lot?._id)
-      .sort((a, b) => new Date(a.dateDemande || a.createdAt) - new Date(b.dateDemande || b.createdAt))
+      .sort(
+        (a, b) => new Date(a.dateDemande || a.createdAt) - new Date(b.dateDemande || b.createdAt),
+      )
     return tmaDuMemeLot.findIndex((t) => t._id === tma._id) + 1
   }
 
@@ -327,9 +343,19 @@ function Tma() {
   // "N° demande" ajoutée (21/07/2026, remarque de Nicolas) : juste après
   // "Lot", partagée avec le tableau à l'écran.
   const ENTETES_TABLEAU = [
-    'Lot', 'N° demande', 'Client', 'Date de la demande', 'Localisation', 'Description',
-    'Date envoi entreprise', 'Montant TTC entreprises', 'Montant TTC client',
-    'Facture envoyée le', 'Facture validée le', 'Statut', 'Commentaire',
+    'Lot',
+    'N° demande',
+    'Client',
+    'Date de la demande',
+    'Localisation',
+    'Description',
+    'Date envoi entreprise',
+    'Montant TTC entreprises',
+    'Montant TTC client',
+    'Facture envoyée le',
+    'Facture validée le',
+    'Statut',
+    'Commentaire',
   ]
 
   // Mêmes valeurs que les cellules affichées à l'écran (colonne Action
@@ -357,10 +383,28 @@ function Tma() {
   // tableau) ET dans l'export "Demandes clients" — même principe que le
   // récapitulatif détaillé par phase des appels de fonds.
   function ligneTotalTableau(libelle, entreprisesTTC, clientTTC) {
-    return [libelle, '', '', '', '', '', '', formatMontant(entreprisesTTC), formatMontant(clientTTC), '', '', '', '']
+    return [
+      libelle,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      formatMontant(entreprisesTTC),
+      formatMontant(clientTTC),
+      '',
+      '',
+      '',
+      '',
+    ]
   }
   const ligneTotalTTC = ligneTotalTableau('Montant total TTC', totalEntreprisesTTC, totalClientTTC)
-  const ligneTotalHT = ligneTotalTableau('Montant total HT', totalEntreprisesTTC / (1 + tauxTva), totalClientTTC / (1 + tauxTva))
+  const ligneTotalHT = ligneTotalTableau(
+    'Montant total HT',
+    totalEntreprisesTTC / (1 + tauxTva),
+    totalClientTTC / (1 + tauxTva),
+  )
   const ligneTotalTVA = ligneTotalTableau(
     `TVA (${Math.round(tauxTva * 100)}%)`,
     totalEntreprisesTTC - totalEntreprisesTTC / (1 + tauxTva),
@@ -413,9 +457,19 @@ function Tma() {
   // (colonne "N° demande" laissée vide sur ces lignes, elle ne concerne que
   // la ligne "demande").
   const LIGNE_TITRES_ENTREPRISES = [
-    'Lot de travaux', '', "Corps d'état", "Nom de l'entreprise", '',
-    'Description', 'Date envoi entreprise', 'Montant TTC devis', 'Reçu le',
-    '', '', '', '',
+    'Lot de travaux',
+    '',
+    "Corps d'état",
+    "Nom de l'entreprise",
+    '',
+    'Description',
+    'Date envoi entreprise',
+    'Montant TTC devis',
+    'Reçu le',
+    '',
+    '',
+    '',
+    '',
   ]
 
   function ligneValeursEntreprise(ligne) {
@@ -426,7 +480,9 @@ function Tma() {
     // (estEntrepriseEnRetard, utils/statuts.js).
     const montantOuRetard = estEntrepriseEnRetard(ligne, delai)
       ? 'En retard'
-      : (ligne.montantDevis == null ? '—' : formatMontant(ligne.montantDevis))
+      : ligne.montantDevis == null
+        ? '—'
+        : formatMontant(ligne.montantDevis)
     return [
       ligne.entreprise?.numeroLot ?? '—',
       '',
@@ -437,7 +493,10 @@ function Tma() {
       formatDate(ligne.dateEnvoi),
       montantOuRetard,
       formatDate(ligne.dateRetour),
-      '', '', '', '',
+      '',
+      '',
+      '',
+      '',
     ]
   }
 
@@ -481,7 +540,9 @@ function Tma() {
   // FenetreExport.jsx, `type: 'generation'` : `phases`/`lotsPourPhase`
   // réutilisés ici pour porter logements/demandes, pas de nouveau mode à
   // ajouter au composant).
-  const referencesLotsAvecTma = [...new Set(tmaList.map((t) => t.lot?.reference).filter(Boolean))].sort()
+  const referencesLotsAvecTma = [
+    ...new Set(tmaList.map((t) => t.lot?.reference).filter(Boolean)),
+  ].sort()
 
   function demandesPourLot(referenceLot) {
     return tmaList
@@ -506,7 +567,9 @@ function Tma() {
     if (tmaChoisies.length === 0) return
     const premiere = tmaChoisies[0]
 
-    const reponse = await apiFetch(`${API_URL}/api/tma/${premiere._id}/devis-numero`, { method: 'POST' })
+    const reponse = await apiFetch(`${API_URL}/api/tma/${premiere._id}/devis-numero`, {
+      method: 'POST',
+    })
     if (!reponse.ok) {
       const { message } = await reponse.json()
       alert(message)
@@ -545,8 +608,14 @@ function Tma() {
       </section>
 
       <section className="stats">
-        <StatCard valeur={formatMontant(montantValideEntreprises)} libelle="Montant TTC validé (entreprises)" />
-        <StatCard valeur={formatMontant(montantValideClient)} libelle="Montant TTC validé (clients)" />
+        <StatCard
+          valeur={formatMontant(montantValideEntreprises)}
+          libelle="Montant TTC validé (entreprises)"
+        />
+        <StatCard
+          valeur={formatMontant(montantValideClient)}
+          libelle="Montant TTC validé (clients)"
+        />
         <StatCard valeur={formatMontant(marge)} libelle="Marge" />
       </section>
 
@@ -555,19 +624,27 @@ function Tma() {
           Statut
           <select value={statutActif} onChange={(e) => setStatutActif(e.target.value)}>
             {Object.entries(LIBELLES_GROUPES_FILTRE).map(([valeur, libelle]) => (
-              <option key={valeur} value={valeur}>{libelle}</option>
+              <option key={valeur} value={valeur}>
+                {libelle}
+              </option>
             ))}
           </select>
         </label>
 
-        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher une TMA..." />
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher une TMA..."
+        />
 
         <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
           Exporter
         </button>
 
         {!creationOuverte && (
-          <button type="button" onClick={() => setCreationOuverte(true)}>Ajouter une TMA</button>
+          <button type="button" onClick={() => setCreationOuverte(true)}>
+            Ajouter une TMA
+          </button>
         )}
       </div>
 
@@ -582,9 +659,21 @@ function Tma() {
       {exportOuvert && (
         <FenetreExport
           options={[
-            { valeur: 'statistiques', libelle: 'Statistiques (cartes)', donnees: donneesExportStatistiques },
-            { valeur: 'demandes-clients', libelle: 'Demandes clients', donnees: donneesExportDemandesClients },
-            { valeur: 'detail-entreprises', libelle: 'Détail entreprises', donnees: donneesExportDetailEntreprises },
+            {
+              valeur: 'statistiques',
+              libelle: 'Statistiques (cartes)',
+              donnees: donneesExportStatistiques,
+            },
+            {
+              valeur: 'demandes-clients',
+              libelle: 'Demandes clients',
+              donnees: donneesExportDemandesClients,
+            },
+            {
+              valeur: 'detail-entreprises',
+              libelle: 'Détail entreprises',
+              donnees: donneesExportDetailEntreprises,
+            },
             {
               valeur: 'devis-client',
               libelle: 'Générer devis client',
@@ -606,29 +695,43 @@ function Tma() {
           <thead>
             <tr>
               <th>Lot</th>
-            <th><span className="th-etroit">N° demande</span></th>
-            <th>Client</th>
-            <th><span className="th-etroit">Date de la demande</span></th>
-            <th>Localisation</th>
-            <th>Description</th>
-            <th><span className="th-etroit">Date envoi entreprise</span></th>
-            <th className="colonne-montant"><span className="th-etroit">Montant TTC entreprises</span></th>
-            <th className="colonne-montant"><span className="th-etroit">Montant TTC client</span></th>
-            <th><span className="th-etroit">Facture envoyée le</span></th>
-            <th><span className="th-etroit">Facture validée le</span></th>
-            <th>Statut</th>
-            <th>Commentaire</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tmaFiltrees.map((tma) => (
-            <Fragment key={tma._id}>
-              <tr>
-                <td>{tma.lot?.reference ?? '—'}</td>
-                <td>{numeroDemandePourTma(tma)}</td>
-                <td>
-                  {/* Client d'origine obsolète (13/07/2026, point 133) : la
+              <th>
+                <span className="th-etroit">N° demande</span>
+              </th>
+              <th>Client</th>
+              <th>
+                <span className="th-etroit">Date de la demande</span>
+              </th>
+              <th>Localisation</th>
+              <th>Description</th>
+              <th>
+                <span className="th-etroit">Date envoi entreprise</span>
+              </th>
+              <th className="colonne-montant">
+                <span className="th-etroit">Montant TTC entreprises</span>
+              </th>
+              <th className="colonne-montant">
+                <span className="th-etroit">Montant TTC client</span>
+              </th>
+              <th>
+                <span className="th-etroit">Facture envoyée le</span>
+              </th>
+              <th>
+                <span className="th-etroit">Facture validée le</span>
+              </th>
+              <th>Statut</th>
+              <th>Commentaire</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tmaFiltrees.map((tma) => (
+              <Fragment key={tma._id}>
+                <tr>
+                  <td>{tma.lot?.reference ?? '—'}</td>
+                  <td>{numeroDemandePourTma(tma)}</td>
+                  <td>
+                    {/* Client d'origine obsolète (13/07/2026, point 133) : la
                       vente qui a donné lieu à cette TMA a été annulée (et
                       éventuellement remplacée par une nouvelle) depuis — le
                       client d'origine n'a plus rien à voir avec le logement,
@@ -636,69 +739,92 @@ function Tma() {
                       (à garder si le nouveau client la reprend — bouton
                       ci-dessous — ou à supprimer soi-même, voir point 128),
                       simplement signalée tant qu'elle n'a pas été réattribuée. */}
-                  <span className="nom-client">{tmaObsolete(tma) ? '—' : nomAcquereur(tma.acquereur)}</span>
-                  {tmaObsolete(tma) && (
-                    <>
-                      <div className="avertissement-cellule">Attention, ce logement a été annulé</div>
-                      {tma.lot?.acquereur && (
-                        <button type="button" onClick={() => reattribuerClient(tma)}>
-                          Réattribuer à {nomAcquereur(tma.lot.acquereur)}
-                        </button>
-                      )}
-                    </>
-                  )}
-                  {/* 13/07/2026, point 127 : une TMA peut être créée dès
+                    <span className="nom-client">
+                      {tmaObsolete(tma) ? '—' : nomAcquereur(tma.acquereur)}
+                    </span>
+                    {tmaObsolete(tma) && (
+                      <>
+                        <div className="avertissement-cellule">
+                          Attention, ce logement a été annulé
+                        </div>
+                        {tma.lot?.acquereur && (
+                          <button type="button" onClick={() => reattribuerClient(tma)}>
+                            Réattribuer à {nomAcquereur(tma.lot.acquereur)}
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {/* 13/07/2026, point 127 : une TMA peut être créée dès
                       Option/Réservé, pas seulement Acté (voir
                       FormulaireCreationTma.jsx) — simple rappel visuel tant
                       que la vente n'est pas encore signée. */}
-                  {!tmaObsolete(tma) && tma.lot?.statut && tma.lot.statut !== 'acte' && (
-                    <div className="avertissement-cellule">Ce logement n'est pas encore acté</div>
-                  )}
-                </td>
-                <td>{formatDate(tma.dateDemande)}</td>
-                <td>{tma.localisation}</td>
-                <td><span className="description-cellule">{tma.description}</span></td>
-                <td>{formatDate(tma.dateEnvoiEntreprises)}</td>
-                {/* "==" (pas "===") : capture aussi bien `null` que
+                    {!tmaObsolete(tma) && tma.lot?.statut && tma.lot.statut !== 'acte' && (
+                      <div className="avertissement-cellule">Ce logement n'est pas encore acté</div>
+                    )}
+                  </td>
+                  <td>{formatDate(tma.dateDemande)}</td>
+                  <td>{tma.localisation}</td>
+                  <td>
+                    <span className="description-cellule">{tma.description}</span>
+                  </td>
+                  <td>{formatDate(tma.dateEnvoiEntreprises)}</td>
+                  {/* "==" (pas "===") : capture aussi bien `null` que
                     `undefined` — un montant absent du document (jamais
                     renseigné) n'est pas forcément `null` à la lettre, et
                     formatMontant(undefined) affiche "NaN €". */}
-                <td className="colonne-montant">{tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises)}</td>
-                <td className="colonne-montant">{formatMontant(tma.montantClient ?? 0)}</td>
-                <td>{formatDate(tma.dateEnvoiFactureClient)}</td>
-                <td>{formatDate(tma.dateRetourClient)}</td>
-                <td>
-                  <Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} />
-                  {tma.statut === 'etude' && entrepriseEnRetardPourTma(tma) && (
-                    <div className="avertissement-cellule">Retard entreprise</div>
-                  )}
-                </td>
-                <td><span className="commentaire-cellule">{tma.commentaire || '—'}</span></td>
-                <td className="actions">
-                  <button
-                    type="button"
-                    className="bouton-icone"
-                    title="Modifier"
-                    aria-label="Modifier"
-                    onClick={() => setIdPanneauOuvert(idPanneauOuvert === tma._id ? null : tma._id)}
-                  >
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 20h9" />
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                    </svg>
-                  </button>
-                </td>
-              </tr>
-              {idPanneauOuvert === tma._id && (
-                <>
-                  <FormulaireInfosTma
-                    tma={tma}
-                    colonnes={NB_COLONNES}
-                    montantClientSaisiManuellement={programme.parametres.montantClientSaisiManuellement}
-                    onEnregistrer={enregistrerInfos}
-                    onFermer={() => setIdPanneauOuvert(null)}
-                  />
-                  {/* "valide" exclu en plus de STATUTS_NON_RECALCULABLES
+                  <td className="colonne-montant">
+                    {tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises)}
+                  </td>
+                  <td className="colonne-montant">{formatMontant(tma.montantClient ?? 0)}</td>
+                  <td>{formatDate(tma.dateEnvoiFactureClient)}</td>
+                  <td>{formatDate(tma.dateRetourClient)}</td>
+                  <td>
+                    <Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} />
+                    {tma.statut === 'etude' && entrepriseEnRetardPourTma(tma) && (
+                      <div className="avertissement-cellule">Retard entreprise</div>
+                    )}
+                  </td>
+                  <td>
+                    <span className="commentaire-cellule">{tma.commentaire || '—'}</span>
+                  </td>
+                  <td className="actions">
+                    <button
+                      type="button"
+                      className="bouton-icone"
+                      title="Modifier"
+                      aria-label="Modifier"
+                      onClick={() =>
+                        setIdPanneauOuvert(idPanneauOuvert === tma._id ? null : tma._id)
+                      }
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+                {idPanneauOuvert === tma._id && (
+                  <>
+                    <FormulaireInfosTma
+                      tma={tma}
+                      colonnes={NB_COLONNES}
+                      montantClientSaisiManuellement={
+                        programme.parametres.montantClientSaisiManuellement
+                      }
+                      onEnregistrer={enregistrerInfos}
+                      onFermer={() => setIdPanneauOuvert(null)}
+                    />
+                    {/* "valide" exclu en plus de STATUTS_NON_RECALCULABLES
                       (21/07/2026, audit "fidélité code/doc") : sans ça, ce
                       panneau restait modifiable même une fois la TMA
                       validée — effacer "Date de retour client" après coup
@@ -707,61 +833,91 @@ function Tma() {
                       fois validé" (déjà respectée pour le bouton
                       "Refuser"). Même principe que le montant client,
                       déjà verrouillé une fois "Validé" (point 182). */}
-                  {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && tma.statut !== 'valide' && (
-                    <FormulaireDatesTma
+                    {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && tma.statut !== 'valide' && (
+                      <FormulaireDatesTma
+                        tma={tma}
+                        colonnes={NB_COLONNES}
+                        onEnregistrer={enregistrerDates}
+                        onFermer={() => setIdPanneauOuvert(null)}
+                      />
+                    )}
+                    <DetailEntreprisesTma
                       tma={tma}
                       colonnes={NB_COLONNES}
-                      onEnregistrer={enregistrerDates}
+                      delaiRetourEntrepriseTmaJours={
+                        programme.parametres.delaiRetourEntrepriseTmaJours
+                      }
+                      onChangement={chargerTmaEtEntreprises}
                       onFermer={() => setIdPanneauOuvert(null)}
                     />
-                  )}
-                  <DetailEntreprisesTma
-                    tma={tma}
-                    colonnes={NB_COLONNES}
-                    delaiRetourEntrepriseTmaJours={programme.parametres.delaiRetourEntrepriseTmaJours}
-                    onChangement={chargerTmaEtEntreprises}
-                    onFermer={() => setIdPanneauOuvert(null)}
-                  />
-                  <tr className="formulaire-dates">
-                    <td colSpan={NB_COLONNES}>
-                      <div className="boutons-panneau-tma">
-                        {TRANSITIONS_AUTORISEES[tma.statut].includes('termine') && (
-                          <button type="button" className="bouton-fonce" onClick={() => changerStatut(tma._id, 'termine')}>Marquer les travaux comme terminés</button>
-                        )}
-                        {tma.statut === 'termine' && (
-                          <button type="button" className="bouton-fonce" onClick={() => annulerTermine(tma._id)}>Annuler la fin des travaux</button>
-                        )}
-                        {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
-                          <button type="button" onClick={() => changerStatut(tma._id, 'refuse')}>Refuser la TMA</button>
-                        )}
-                        {tma.statut === 'refuse' && (
-                          <button type="button" onClick={() => annulerRefus(tma._id)}>Annuler le refus</button>
-                        )}
-                        {TRANSITIONS_AUTORISEES[tma.statut].includes('annule') && (
-                          <button type="button" className="bouton-danger" onClick={() => changerStatut(tma._id, 'annule')}>Annuler la TMA</button>
-                        )}
-                        {tma.statut === 'annule' && (
-                          <button type="button" onClick={() => annulerAnnulation(tma._id)}>Annuler l'annulation</button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                </>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-        {tmaFiltrees.length > 0 && (
-          <tfoot>
-            {[ligneTotalTTC, ligneTotalTVA, ligneTotalHT].map((ligne) => (
-              <tr key={ligne[0]}>
-                {ligne.map((valeur, i) => <td key={i} className={i === 7 || i === 8 ? 'colonne-montant' : undefined}>{valeur}</td>)}
-                <td />
-              </tr>
+                    <tr className="formulaire-dates">
+                      <td colSpan={NB_COLONNES}>
+                        <div className="boutons-panneau-tma">
+                          {TRANSITIONS_AUTORISEES[tma.statut].includes('termine') && (
+                            <button
+                              type="button"
+                              className="bouton-fonce"
+                              onClick={() => changerStatut(tma._id, 'termine')}
+                            >
+                              Marquer les travaux comme terminés
+                            </button>
+                          )}
+                          {tma.statut === 'termine' && (
+                            <button
+                              type="button"
+                              className="bouton-fonce"
+                              onClick={() => annulerTermine(tma._id)}
+                            >
+                              Annuler la fin des travaux
+                            </button>
+                          )}
+                          {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
+                            <button type="button" onClick={() => changerStatut(tma._id, 'refuse')}>
+                              Refuser la TMA
+                            </button>
+                          )}
+                          {tma.statut === 'refuse' && (
+                            <button type="button" onClick={() => annulerRefus(tma._id)}>
+                              Annuler le refus
+                            </button>
+                          )}
+                          {TRANSITIONS_AUTORISEES[tma.statut].includes('annule') && (
+                            <button
+                              type="button"
+                              className="bouton-danger"
+                              onClick={() => changerStatut(tma._id, 'annule')}
+                            >
+                              Annuler la TMA
+                            </button>
+                          )}
+                          {tma.statut === 'annule' && (
+                            <button type="button" onClick={() => annulerAnnulation(tma._id)}>
+                              Annuler l'annulation
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  </>
+                )}
+              </Fragment>
             ))}
-          </tfoot>
-        )}
-      </table>
+          </tbody>
+          {tmaFiltrees.length > 0 && (
+            <tfoot>
+              {[ligneTotalTTC, ligneTotalTVA, ligneTotalHT].map((ligne) => (
+                <tr key={ligne[0]}>
+                  {ligne.map((valeur, i) => (
+                    <td key={i} className={i === 7 || i === 8 ? 'colonne-montant' : undefined}>
+                      {valeur}
+                    </td>
+                  ))}
+                  <td />
+                </tr>
+              ))}
+            </tfoot>
+          )}
+        </table>
       </div>
     </>
   )

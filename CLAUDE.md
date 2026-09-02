@@ -15,7 +15,9 @@ autres fichiers de `docs/` (renvois ci-dessous).
 React 19/Vite/Sass (`client/`) · Node/Express 5/MongoDB Atlas (`server/`,
 ESM) · JWT (7j) + bcrypt, API entièrement protégée, 3 rôles
 (admin/gestionnaire/lecture) · Exports `exceljs`/`jspdf` générés côté
-navigateur · `morgan` (logs), `oxlint` (lint front seulement) · Tests
+navigateur · `morgan` (logs), `oxlint` (lint front seulement), `prettier`
+(formatage, front ET back — `npm run format`/`format:check`, config
+partagée `.prettierrc.json` à la racine) · Tests
 automatisés (Vitest) : fonctions de calcul pur, middleware d'authentification
 et intégration base de données (`mongodb-memory-server`) côté serveur ;
 fonctions de calcul pur, composants React et contextes (`AuthContext`,

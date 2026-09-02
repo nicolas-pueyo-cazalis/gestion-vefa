@@ -30,14 +30,15 @@ function FormulaireSignatureActe({ lot, colonnes, onEnregistrer, onFermer }) {
         <form onSubmit={soumettre} className="formulaire-contacts">
           <label>
             Date de signature de l'acte
-            <input
-              type="date"
-              value={dateActe}
-              onChange={(e) => setDateActe(e.target.value)}
-            />
+            <input type="date" value={dateActe} onChange={(e) => setDateActe(e.target.value)} />
           </label>
           {lot.acquereur && (
-            <ChampsContact titre="Notaire" valeur={notaire} onChange={setNotaire} onValiditeChange={setNotaireValide} />
+            <ChampsContact
+              titre="Notaire"
+              valeur={notaire}
+              onChange={setNotaire}
+              onValiditeChange={setNotaireValide}
+            />
           )}
           <label className="champ-description">
             Commentaire
@@ -45,7 +46,9 @@ function FormulaireSignatureActe({ lot, colonnes, onEnregistrer, onFermer }) {
           </label>
           <div className="boutons-alignes-champs">
             <button type="submit">Enregistrer</button>
-            <button type="button" onClick={onFermer}>Annuler</button>
+            <button type="button" onClick={onFermer}>
+              Annuler
+            </button>
           </div>
         </form>
       </td>

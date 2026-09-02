@@ -36,8 +36,16 @@ async function creerTma(champsTma = {}) {
 describe('recalculerTma (intégration, vraie base en mémoire)', () => {
   it('passe la TMA à "chiffré" avec le bon montant une fois TOUTES les entreprises répondues', async () => {
     const { tma } = await creerTma()
-    await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId(), montantDevis: 3000 })
-    await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId(), montantDevis: 2000 })
+    await TmaEntreprise.create({
+      tma: tma._id,
+      entreprise: new mongoose.Types.ObjectId(),
+      montantDevis: 3000,
+    })
+    await TmaEntreprise.create({
+      tma: tma._id,
+      entreprise: new mongoose.Types.ObjectId(),
+      montantDevis: 2000,
+    })
 
     const tmaRecalculee = await recalculerTma(tma._id)
 
@@ -48,7 +56,11 @@ describe('recalculerTma (intégration, vraie base en mémoire)', () => {
 
   it('reste à "étude" tant qu\'une seule entreprise sur deux a répondu (ne bascule pas prématurément)', async () => {
     const { tma } = await creerTma()
-    await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId(), montantDevis: 3000 })
+    await TmaEntreprise.create({
+      tma: tma._id,
+      entreprise: new mongoose.Types.ObjectId(),
+      montantDevis: 3000,
+    })
     // 2ᵉ entreprise sollicitée mais pas encore de devis reçu (montantDevis vide)
     await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId() })
 
@@ -60,8 +72,16 @@ describe('recalculerTma (intégration, vraie base en mémoire)', () => {
 
   it('ne recalcule jamais montantClient si montantClientManuel est activé, même avec de nouveaux devis', async () => {
     const { tma } = await creerTma({ montantClientManuel: true, montantClient: 9999 })
-    await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId(), montantDevis: 3000 })
-    await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId(), montantDevis: 2000 })
+    await TmaEntreprise.create({
+      tma: tma._id,
+      entreprise: new mongoose.Types.ObjectId(),
+      montantDevis: 3000,
+    })
+    await TmaEntreprise.create({
+      tma: tma._id,
+      entreprise: new mongoose.Types.ObjectId(),
+      montantDevis: 2000,
+    })
 
     const tmaRecalculee = await recalculerTma(tma._id)
 
@@ -76,8 +96,16 @@ describe('recalculerTma (intégration, vraie base en mémoire)', () => {
       dateEnvoiFactureClient: new Date('2026-06-01'),
       dateRetourClient: new Date('2026-06-10'),
     })
-    await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId(), montantDevis: 9000 })
-    await TmaEntreprise.create({ tma: tma._id, entreprise: new mongoose.Types.ObjectId(), montantDevis: 9000 })
+    await TmaEntreprise.create({
+      tma: tma._id,
+      entreprise: new mongoose.Types.ObjectId(),
+      montantDevis: 9000,
+    })
+    await TmaEntreprise.create({
+      tma: tma._id,
+      entreprise: new mongoose.Types.ObjectId(),
+      montantDevis: 9000,
+    })
 
     const tmaRecalculee = await recalculerTma(tma._id)
 

@@ -38,7 +38,11 @@ function SectionAlertes({ programme, onEnregistrer }) {
       <h2>Fenêtre d'alertes</h2>
       <form onSubmit={soumettre}>
         <label className="champ-case-a-cocher">
-          <input type="checkbox" checked={alertesActivees} onChange={(e) => setAlertesActivees(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={alertesActivees}
+            onChange={(e) => setAlertesActivees(e.target.checked)}
+          />
           Afficher la fenêtre d'alertes au démarrage
         </label>
         {TYPES_ALERTES.map(({ cle, libelle }) => (

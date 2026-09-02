@@ -11,7 +11,7 @@ describe('StatCard', () => {
     expect(screen.getByText('42')).toBeInTheDocument()
   })
 
-  it('n\'affiche aucun bloc pourcentage si non fourni', () => {
+  it("n'affiche aucun bloc pourcentage si non fourni", () => {
     const { container } = render(<StatCard libelle="Lots" valeur={42} />)
     expect(container.querySelector('.pourcentage')).toBeNull()
   })
@@ -22,7 +22,9 @@ describe('StatCard', () => {
   })
 
   it('affiche le bloc pourcentage avec sa valeur et son libellé', () => {
-    render(<StatCard libelle="Actés" valeur={12} pourcentage={30} libellePourcentage="du programme" />)
+    render(
+      <StatCard libelle="Actés" valeur={12} pourcentage={30} libellePourcentage="du programme" />,
+    )
     expect(screen.getByText('30% du programme')).toBeInTheDocument()
   })
 
@@ -31,7 +33,7 @@ describe('StatCard', () => {
     expect(container.querySelector('.carte')).toHaveClass('carte--acte')
   })
 
-  it('n\'applique aucune classe de statut si non fourni (carte neutre)', () => {
+  it("n'applique aucune classe de statut si non fourni (carte neutre)", () => {
     const { container } = render(<StatCard libelle="Lots" valeur={42} />)
     const carte = container.querySelector('.carte')
     expect(carte).toHaveClass('carte')

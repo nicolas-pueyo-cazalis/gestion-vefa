@@ -28,7 +28,7 @@ function renderAvecRoutes(cheminInitial = '/lots') {
 }
 
 describe('RouteProtegee', () => {
-  it('n\'affiche rien pendant la vérification de la session (pas de flash de redirection)', () => {
+  it("n'affiche rien pendant la vérification de la session (pas de flash de redirection)", () => {
     mockUseAuth.mockReturnValue({ utilisateur: null, chargement: true })
 
     const { container } = renderAvecRoutes()
@@ -36,7 +36,7 @@ describe('RouteProtegee', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('redirige vers /connexion si personne n\'est connecté', () => {
+  it("redirige vers /connexion si personne n'est connecté", () => {
     mockUseAuth.mockReturnValue({ utilisateur: null, chargement: false })
 
     renderAvecRoutes()

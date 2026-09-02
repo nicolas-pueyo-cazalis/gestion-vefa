@@ -17,7 +17,7 @@ describe('useFermerAvecEchap', () => {
     expect(onFermer).toHaveBeenCalledOnce()
   })
 
-  it('n\'appelle pas le callback pour une autre touche', () => {
+  it("n'appelle pas le callback pour une autre touche", () => {
     const onFermer = vi.fn()
     renderHook(() => useFermerAvecEchap(onFermer))
 
@@ -26,7 +26,7 @@ describe('useFermerAvecEchap', () => {
     expect(onFermer).not.toHaveBeenCalled()
   })
 
-  it('retire l\'écouteur au démontage (pas d\'appel après unmount)', () => {
+  it("retire l'écouteur au démontage (pas d'appel après unmount)", () => {
     const onFermer = vi.fn()
     const { unmount } = renderHook(() => useFermerAvecEchap(onFermer))
 

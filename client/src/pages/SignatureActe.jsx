@@ -49,7 +49,9 @@ function texteRechercheSignatureActe(lot, delaiMois) {
     formatDate(lot.dateActe),
     LIBELLES_STATUT[statut],
     lot.commentaire,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 function SignatureActe() {
@@ -143,7 +145,16 @@ function SignatureActe() {
     return {
       nomFichier: `signature-acte-${programme.nom}`,
       titre: `Signature acte — ${programme.nom}`,
-      entetes: ['Lot', 'Client', 'Réservation', 'Notaire', 'Limite signature', "Date de l'acte", 'Statut', 'Commentaire'],
+      entetes: [
+        'Lot',
+        'Client',
+        'Réservation',
+        'Notaire',
+        'Limite signature',
+        "Date de l'acte",
+        'Statut',
+        'Commentaire',
+      ],
       lignes: lotsFiltres.map((lot) => [
         lot.reference,
         nomComplet(lot.acquereur),
@@ -185,7 +196,11 @@ function SignatureActe() {
 
       <div className="barre-actions barre-actions--marge">
         <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
-        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un dossier..." />
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un dossier..."
+        />
         <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
           Exporter
         </button>
@@ -194,7 +209,11 @@ function SignatureActe() {
       {exportOuvert && (
         <FenetreExport
           options={[
-            { valeur: 'tableau', libelle: 'Tableau de la signature acte', donnees: donneesExportTableau },
+            {
+              valeur: 'tableau',
+              libelle: 'Tableau de la signature acte',
+              donnees: donneesExportTableau,
+            },
             { valeur: 'cartes', libelle: 'Statistiques (cartes)', donnees: donneesExportCartes },
           ]}
           onFermer={() => setExportOuvert(false)}
@@ -228,13 +247,20 @@ function SignatureActe() {
                   <td>{lot.reference}</td>
                   <td>{nomComplet(lot.acquereur)}</td>
                   <td>{formatDate(lot.dateReservation)}</td>
-                  <td><BoutonContact titre="Notaire" contact={lot.acquereur?.notaire} /></td>
+                  <td>
+                    <BoutonContact titre="Notaire" contact={lot.acquereur?.notaire} />
+                  </td>
                   <td>{formatDate(calculerDateLimiteMois(lot.dateReservation, delaiMois))}</td>
                   <td>{formatDate(lot.dateActe)}</td>
                   <td>
-                    <Badge statut={statutSignature(lot, delaiMois)} texte={LIBELLES_STATUT[statutSignature(lot, delaiMois)]} />
+                    <Badge
+                      statut={statutSignature(lot, delaiMois)}
+                      texte={LIBELLES_STATUT[statutSignature(lot, delaiMois)]}
+                    />
                   </td>
-                  <td><span className="commentaire-cellule">{lot.commentaire || '—'}</span></td>
+                  <td>
+                    <span className="commentaire-cellule">{lot.commentaire || '—'}</span>
+                  </td>
                   <td className="actions">
                     <button
                       type="button"
@@ -243,7 +269,16 @@ function SignatureActe() {
                       aria-label="Modifier"
                       onClick={() => setIdEnEdition(lot._id)}
                     >
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                       </svg>

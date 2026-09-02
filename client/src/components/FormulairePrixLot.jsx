@@ -8,7 +8,9 @@ import { formatMontant } from '../utils/formatMontant.js'
 // Pas de <form> imbriqué (FormulaireEditionLot.jsx en a déjà un) : bouton
 // "Enregistrer le prix" en type="button", géré à part du submit principal.
 function FormulairePrixLot({ lot, onEnregistrer, onFermer }) {
-  const [nouveauPrix, setNouveauPrix] = useState(lot.estAnnexeSeule ? (lot.prixTTC ?? '') : (lot.prixLogementSeul ?? ''))
+  const [nouveauPrix, setNouveauPrix] = useState(
+    lot.estAnnexeSeule ? (lot.prixTTC ?? '') : (lot.prixLogementSeul ?? ''),
+  )
   const [motif, setMotif] = useState('')
   const [erreur, setErreur] = useState('')
 
@@ -44,7 +46,9 @@ function FormulairePrixLot({ lot, onEnregistrer, onFermer }) {
       <button type="button" onClick={enregistrer} disabled={!nouveauPrix || !motif}>
         Enregistrer le prix
       </button>
-      <button type="button" onClick={onFermer}>Annuler</button>
+      <button type="button" onClick={onFermer}>
+        Annuler
+      </button>
     </fieldset>
   )
 }

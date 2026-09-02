@@ -1,5 +1,9 @@
 import { Router } from 'express'
-import Tma, { TRANSITIONS_AUTORISEES, calculerStatutAutomatique, calculerMontantClient } from '../models/Tma.js'
+import Tma, {
+  TRANSITIONS_AUTORISEES,
+  calculerStatutAutomatique,
+  calculerMontantClient,
+} from '../models/Tma.js'
 import Lot from '../models/Lot.js'
 import TmaEntreprise from '../models/TmaEntreprise.js'
 import Compteur from '../models/Compteur.js'
@@ -60,7 +64,9 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
       return res.status(404).json({ message: 'Lot introuvable' })
     }
     if (!lotDoc.acquereur) {
-      return res.status(400).json({ message: 'Ce lot n\'a pas encore d\'acquéreur — impossible de créer une TMA.' })
+      return res
+        .status(400)
+        .json({ message: "Ce lot n'a pas encore d'acquéreur — impossible de créer une TMA." })
     }
 
     // montantEntreprises explicitement à `null` (pas juste absent) : "pas
@@ -70,7 +76,11 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     // plus systématiquement `null` (20/07/2026, point 184) : si des frais
     // d'ouverture de dossier sont paramétrés, ils sont dus dès la création.
     const tma = await Tma.create({
-      lot, acquereur: lotDoc.acquereur, localisation, description, dateDemande,
+      lot,
+      acquereur: lotDoc.acquereur,
+      localisation,
+      description,
+      dateDemande,
       nombreEntreprisesConcernees: nombreEntreprisesConcernees ?? undefined,
       montantEntreprises: null,
       montantClient: calculerMontantClient(null, lotDoc.programme?.parametres),
@@ -99,11 +109,13 @@ router.patch('/:id/acquereur', autoriserRoles('admin', 'gestionnaire'), async (r
       req.params.id,
       { acquereur },
       { new: true, runValidators: true },
-    ).populate({
-      path: 'lot',
-      select: 'reference statut acquereur',
-      populate: { path: 'acquereur', select: 'civilite prenom nom' },
-    }).populate('acquereur', 'civilite prenom nom')
+    )
+      .populate({
+        path: 'lot',
+        select: 'reference statut acquereur',
+        populate: { path: 'acquereur', select: 'civilite prenom nom' },
+      })
+      .populate('acquereur', 'civilite prenom nom')
 
     if (!tma) {
       return res.status(404).json({ message: 'TMA introuvable' })
@@ -199,7 +211,8 @@ router.patch('/:id/dates', autoriserRoles('admin', 'gestionnaire'), async (req, 
 
     if (tma.dateRetourClient && !tma.dateEnvoiFactureClient) {
       return res.status(400).json({
-        message: 'Impossible de renseigner la date de retour client avant la date d\'envoi de la facture.',
+        message:
+          "Impossible de renseigner la date de retour client avant la date d'envoi de la facture.",
       })
     }
 
@@ -223,7 +236,7 @@ router.patch('/:id/annuler-refus', autoriserRoles('admin', 'gestionnaire'), asyn
       return res.status(404).json({ message: 'TMA introuvable' })
     }
     if (tma.statut !== 'refuse' || !tma.statutAvantRefus) {
-      return res.status(400).json({ message: 'Cette TMA n\'a pas été refusée, rien à annuler' })
+      return res.status(400).json({ message: "Cette TMA n'a pas été refusée, rien à annuler" })
     }
 
     tma.statut = tma.statutAvantRefus
@@ -237,25 +250,29 @@ router.patch('/:id/annuler-refus', autoriserRoles('admin', 'gestionnaire'), asyn
 
 // PATCH /api/tma/:id/annuler-annulation — restaure le statut précédent une
 // annulation (13/07/2026, point 129) — même principe que /annuler-refus.
-router.patch('/:id/annuler-annulation', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
-  try {
-    const tma = await Tma.findById(req.params.id)
+router.patch(
+  '/:id/annuler-annulation',
+  autoriserRoles('admin', 'gestionnaire'),
+  async (req, res) => {
+    try {
+      const tma = await Tma.findById(req.params.id)
 
-    if (!tma) {
-      return res.status(404).json({ message: 'TMA introuvable' })
-    }
-    if (tma.statut !== 'annule' || !tma.statutAvantAnnulation) {
-      return res.status(400).json({ message: 'Cette TMA n\'a pas été annulée, rien à annuler' })
-    }
+      if (!tma) {
+        return res.status(404).json({ message: 'TMA introuvable' })
+      }
+      if (tma.statut !== 'annule' || !tma.statutAvantAnnulation) {
+        return res.status(400).json({ message: "Cette TMA n'a pas été annulée, rien à annuler" })
+      }
 
-    tma.statut = tma.statutAvantAnnulation
-    tma.statutAvantAnnulation = undefined
-    await tma.save()
-    res.json(tma)
-  } catch (erreur) {
-    repondreErreurServeur(res, erreur)
-  }
-})
+      tma.statut = tma.statutAvantAnnulation
+      tma.statutAvantAnnulation = undefined
+      await tma.save()
+      res.json(tma)
+    } catch (erreur) {
+      repondreErreurServeur(res, erreur)
+    }
+  },
+)
 
 // PATCH /api/tma/:id/annuler-termine — revient en arrière après un passage
 // (manuel) à "Terminé" par erreur (20/07/2026, point 172). Contrairement à
@@ -271,7 +288,7 @@ router.patch('/:id/annuler-termine', autoriserRoles('admin', 'gestionnaire'), as
       return res.status(404).json({ message: 'TMA introuvable' })
     }
     if (tma.statut !== 'termine') {
-      return res.status(400).json({ message: 'Cette TMA n\'est pas terminée, rien à annuler' })
+      return res.status(400).json({ message: "Cette TMA n'est pas terminée, rien à annuler" })
     }
 
     tma.statut = 'valide'
@@ -291,7 +308,8 @@ router.patch('/:id/annuler-termine', autoriserRoles('admin', 'gestionnaire'), as
 // changent — l'avertissement est affiché côté client avant l'envoi.
 router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const { localisation, description, commentaire, montantClient, nombreEntreprisesConcernees } = req.body
+    const { localisation, description, commentaire, montantClient, nombreEntreprisesConcernees } =
+      req.body
     const tma = await Tma.findById(req.params.id)
     if (!tma) {
       return res.status(404).json({ message: 'TMA introuvable' })
@@ -312,15 +330,17 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
       // lot, figé lui aussi une fois Acté.
       if (['valide', 'termine'].includes(tma.statut)) {
         return res.status(400).json({
-          message: 'TMA validée : le montant TTC client n\'est plus modifiable.',
+          message: "TMA validée : le montant TTC client n'est plus modifiable.",
         })
       }
       tma.montantClientManuel = true
       tma.montantClient = montantClient
     }
     const nombreEntreprisesConcerneesModifie =
-      nombreEntreprisesConcernees !== undefined && nombreEntreprisesConcernees !== tma.nombreEntreprisesConcernees
-    if (nombreEntreprisesConcernees !== undefined) tma.nombreEntreprisesConcernees = nombreEntreprisesConcernees
+      nombreEntreprisesConcernees !== undefined &&
+      nombreEntreprisesConcernees !== tma.nombreEntreprisesConcernees
+    if (nombreEntreprisesConcernees !== undefined)
+      tma.nombreEntreprisesConcernees = nombreEntreprisesConcernees
 
     await tma.save()
 
@@ -336,7 +356,11 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
     }
 
     const tmaPeuplee = await Tma.findById(tma._id).populate([
-      { path: 'lot', select: 'reference statut acquereur', populate: { path: 'acquereur', select: 'civilite prenom nom' } },
+      {
+        path: 'lot',
+        select: 'reference statut acquereur',
+        populate: { path: 'acquereur', select: 'civilite prenom nom' },
+      },
       { path: 'acquereur', select: 'civilite prenom nom' },
     ])
     res.json(tmaPeuplee)
@@ -355,7 +379,10 @@ router.patch('/:id/infos', autoriserRoles('admin', 'gestionnaire'), async (req, 
 // qu'une génération concurrente ne récupère deux fois le même numéro.
 router.post('/:id/devis-numero', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
-    const tma = await Tma.findById(req.params.id).populate({ path: 'lot', populate: { path: 'programme' } })
+    const tma = await Tma.findById(req.params.id).populate({
+      path: 'lot',
+      populate: { path: 'programme' },
+    })
     if (!tma) {
       return res.status(404).json({ message: 'TMA introuvable' })
     }

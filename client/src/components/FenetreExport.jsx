@@ -46,7 +46,8 @@ function FenetreExport({ options, onFermer }) {
     setPhaseChoisie(phase)
     // Tous les lots cochés par défaut à chaque changement de phase — la
     // liste elle-même dépend de la phase choisie (voir lotsPourPhase).
-    const lots = optionCiblee?.type === 'generation' && phase ? optionCiblee.lotsPourPhase(phase) : []
+    const lots =
+      optionCiblee?.type === 'generation' && phase ? optionCiblee.lotsPourPhase(phase) : []
     setLotsChoisis(new Set(lots.map((l) => l.valeur)))
   }
 
@@ -86,7 +87,13 @@ function FenetreExport({ options, onFermer }) {
 
   return (
     <div className="fenetre-fond" onClick={onFermer}>
-      <div className="fenetre-contenu" role="dialog" aria-modal="true" aria-label="Exporter" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fenetre-contenu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Exporter"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3>Exporter</h3>
 
         <fieldset className="choix-export">
@@ -110,7 +117,9 @@ function FenetreExport({ options, onFermer }) {
             {option.sousOptionsLibelle ?? 'Lequel ?'}
             <select value={sousChoix} onChange={(e) => setSousChoix(e.target.value)}>
               {option.sousOptions.map((so) => (
-                <option key={so.valeur} value={so.valeur}>{so.libelle}</option>
+                <option key={so.valeur} value={so.valeur}>
+                  {so.libelle}
+                </option>
               ))}
             </select>
           </label>
@@ -128,7 +137,9 @@ function FenetreExport({ options, onFermer }) {
               {option.libelleChoix1 ?? 'Quelle phase ?'}
               <select value={phaseChoisie} onChange={(e) => choisirPhase(option, e.target.value)}>
                 {option.phases.map((p) => (
-                  <option key={p.valeur} value={p.valeur}>{p.libelle}</option>
+                  <option key={p.valeur} value={p.valeur}>
+                    {p.libelle}
+                  </option>
                 ))}
               </select>
             </label>
@@ -137,7 +148,8 @@ function FenetreExport({ options, onFermer }) {
               <legend>{option.libelleChoix2 ?? 'Logements concernés'}</legend>
               {lotsDisponibles.length === 0 && (
                 <p className="avertissement-cellule">
-                  {option.messageChoix2Vide ?? 'Aucun logement prêt pour cette phase (attestation MOE manquante, ou déjà émis).'}
+                  {option.messageChoix2Vide ??
+                    'Aucun logement prêt pour cette phase (attestation MOE manquante, ou déjà émis).'}
                 </p>
               )}
               {lotsDisponibles.map((lot) => (
@@ -172,14 +184,24 @@ function FenetreExport({ options, onFermer }) {
                   devient le 1er enfant — un style "au rang" (nth-child)
                   lui donnerait par erreur la couleur prévue pour Excel. */}
               {formatsProposes.includes('excel') && (
-                <button type="button" className="bouton-export-excel" onClick={() => exporter('excel')}>Exporter en Excel</button>
+                <button
+                  type="button"
+                  className="bouton-export-excel"
+                  onClick={() => exporter('excel')}
+                >
+                  Exporter en Excel
+                </button>
               )}
               {formatsProposes.includes('pdf') && (
-                <button type="button" className="bouton-export-pdf" onClick={() => exporter('pdf')}>Exporter en PDF</button>
+                <button type="button" className="bouton-export-pdf" onClick={() => exporter('pdf')}>
+                  Exporter en PDF
+                </button>
               )}
             </>
           )}
-          <button type="button" className="bouton-export-annuler" onClick={onFermer}>Annuler</button>
+          <button type="button" className="bouton-export-annuler" onClick={onFermer}>
+            Annuler
+          </button>
         </div>
       </div>
     </div>

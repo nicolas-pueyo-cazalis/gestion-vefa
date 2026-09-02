@@ -8,7 +8,13 @@ function FenetreContact({ titre, contact, onFermer }) {
   useFermerAvecEchap(onFermer)
   return (
     <div className="fenetre-fond" onClick={onFermer}>
-      <div className="fenetre-contenu" role="dialog" aria-modal="true" aria-label={titre} onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fenetre-contenu"
+        role="dialog"
+        aria-modal="true"
+        aria-label={titre}
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3>{titre}</h3>
         {!contact?.nom && <p>Aucune coordonnée renseignée.</p>}
         {contact?.nom && (
@@ -41,7 +47,9 @@ function FenetreContact({ titre, contact, onFermer }) {
             )}
           </dl>
         )}
-        <button type="button" onClick={onFermer}>Fermer</button>
+        <button type="button" onClick={onFermer}>
+          Fermer
+        </button>
       </div>
     </div>
   )

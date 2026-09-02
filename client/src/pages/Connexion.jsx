@@ -60,7 +60,9 @@ function Connexion() {
               type="button"
               className="bouton-oeil"
               onClick={() => setMotDePasseVisible((v) => !v)}
-              aria-label={motDePasseVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              aria-label={
+                motDePasseVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+              }
             >
               {motDePasseVisible ? 'Masquer' : 'Afficher'}
             </button>

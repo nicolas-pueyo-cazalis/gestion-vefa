@@ -7,8 +7,12 @@ function versDateInput(valeur) {
 }
 
 function FormulaireDatesTma({ tma, colonnes, onEnregistrer, onFermer }) {
-  const [dateEnvoiEntreprises, setDateEnvoiEntreprises] = useState(versDateInput(tma.dateEnvoiEntreprises))
-  const [dateEnvoiFactureClient, setDateEnvoiFactureClient] = useState(versDateInput(tma.dateEnvoiFactureClient))
+  const [dateEnvoiEntreprises, setDateEnvoiEntreprises] = useState(
+    versDateInput(tma.dateEnvoiEntreprises),
+  )
+  const [dateEnvoiFactureClient, setDateEnvoiFactureClient] = useState(
+    versDateInput(tma.dateEnvoiFactureClient),
+  )
   const [dateRetourClient, setDateRetourClient] = useState(versDateInput(tma.dateRetourClient))
 
   function soumettre(evenement) {
@@ -53,7 +57,9 @@ function FormulaireDatesTma({ tma, colonnes, onEnregistrer, onFermer }) {
             />
           </label>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
         </form>
       </td>
     </tr>

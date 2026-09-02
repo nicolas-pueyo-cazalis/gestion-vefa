@@ -31,13 +31,17 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const { programme, type, numero, prix } = req.body
     if (!programme || !type || numero == null || prix == null) {
-      return res.status(400).json({ message: 'Les champs "programme", "type", "numero" et "prix" sont requis' })
+      return res
+        .status(400)
+        .json({ message: 'Les champs "programme", "type", "numero" et "prix" sont requis' })
     }
     const annexe = await Annexe.create({ programme, type, numero, prix })
     res.status(201).json(annexe)
   } catch (erreur) {
     if (erreur.code === 11000) {
-      return res.status(400).json({ message: `Le numéro ${req.body.numero} est déjà utilisé pour ce type d'annexe.` })
+      return res
+        .status(400)
+        .json({ message: `Le numéro ${req.body.numero} est déjà utilisé pour ce type d'annexe.` })
     }
     repondreErreurServeur(res, erreur)
   }
@@ -54,7 +58,9 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       return res.status(404).json({ message: 'Annexe introuvable' })
     }
     if (annexe.lot) {
-      return res.status(400).json({ message: 'Impossible de modifier une annexe déjà attribuée à un logement.' })
+      return res
+        .status(400)
+        .json({ message: 'Impossible de modifier une annexe déjà attribuée à un logement.' })
     }
     const { numero, prix } = req.body
     if (numero !== undefined) annexe.numero = numero
@@ -63,7 +69,9 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     res.json(annexe)
   } catch (erreur) {
     if (erreur.code === 11000) {
-      return res.status(400).json({ message: `Le numéro ${req.body.numero} est déjà utilisé pour ce type d'annexe.` })
+      return res
+        .status(400)
+        .json({ message: `Le numéro ${req.body.numero} est déjà utilisé pour ce type d'annexe.` })
     }
     repondreErreurServeur(res, erreur)
   }
@@ -80,7 +88,9 @@ router.delete('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) 
       return res.status(404).json({ message: 'Annexe introuvable' })
     }
     if (annexe.lot) {
-      return res.status(400).json({ message: 'Impossible de supprimer une annexe déjà attribuée à un logement.' })
+      return res
+        .status(400)
+        .json({ message: 'Impossible de supprimer une annexe déjà attribuée à un logement.' })
     }
     await annexe.deleteOne()
     res.status(204).end()

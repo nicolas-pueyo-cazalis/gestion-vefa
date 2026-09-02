@@ -20,7 +20,12 @@ function CatalogueAnnexesType({ type, libelle, programmeId, annexes, onChangemen
     const reponse = await apiFetch(`${API_URL}/api/annexes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ programme: programmeId, type, numero: Number(numero), prix: Number(prix) }),
+      body: JSON.stringify({
+        programme: programmeId,
+        type,
+        numero: Number(numero),
+        prix: Number(prix),
+      }),
     })
     if (!reponse.ok) {
       const { message } = await reponse.json()
@@ -51,18 +56,33 @@ function CatalogueAnnexesType({ type, libelle, programmeId, annexes, onChangemen
           <li key={a._id}>
             N°{a.numero} — {formatMontant(a.prix, 0)} —{' '}
             {a.lot ? `attribuée à ${a.lot.reference}` : 'libre'}
-            {!a.lot && <button type="button" onClick={() => supprimer(a._id)}>Retirer</button>}
+            {!a.lot && (
+              <button type="button" onClick={() => supprimer(a._id)}>
+                Retirer
+              </button>
+            )}
           </li>
         ))}
       </ul>
       <form onSubmit={ajouter}>
         <label>
           N°
-          <input type="number" value={numero} onChange={(e) => setNumero(e.target.value)} required />
+          <input
+            type="number"
+            value={numero}
+            onChange={(e) => setNumero(e.target.value)}
+            required
+          />
         </label>
         <label>
           Prix (€)
-          <input type="number" step="0.01" value={prix} onChange={(e) => setPrix(e.target.value)} required />
+          <input
+            type="number"
+            step="0.01"
+            value={prix}
+            onChange={(e) => setPrix(e.target.value)}
+            required
+          />
         </label>
         <button type="submit">Ajouter</button>
         {erreur && <span className="erreur-champ">{erreur}</span>}

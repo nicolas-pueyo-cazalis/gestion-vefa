@@ -60,7 +60,11 @@ function SectionInfosProgramme({ programme, onEnregistrer }) {
         </label>
         <label>
           Commune
-          <input value={commune} onChange={(e) => setCommune(e.target.value)} onBlur={completerCodePostal} />
+          <input
+            value={commune}
+            onChange={(e) => setCommune(e.target.value)}
+            onBlur={completerCodePostal}
+          />
         </label>
         <label>
           Code postal
@@ -76,7 +80,11 @@ function SectionInfosProgramme({ programme, onEnregistrer }) {
         </label>
         <label>
           Date de livraison
-          <input type="date" value={dateLivraison} onChange={(e) => setDateLivraison(e.target.value)} />
+          <input
+            type="date"
+            value={dateLivraison}
+            onChange={(e) => setDateLivraison(e.target.value)}
+          />
         </label>
         <label>
           IBAN

@@ -25,7 +25,10 @@ function FormulaireBaremeLot({ lotId, prixTTC, appels, colonnes, onEnregistrer, 
       alert(`La somme des pourcentages doit faire 100% (actuellement ${totalPourcent}%).`)
       return
     }
-    const phases = appels.map((a) => ({ id: a._id, pourcentage: Number(pourcentages[a._id]) / 100 }))
+    const phases = appels.map((a) => ({
+      id: a._id,
+      pourcentage: Number(pourcentages[a._id]) / 100,
+    }))
     onEnregistrer(lotId, phases)
   }
 
@@ -51,7 +54,9 @@ function FormulaireBaremeLot({ lotId, prixTTC, appels, colonnes, onEnregistrer, 
             Total : {totalPourcent}% {totalPourcent !== 100 && '— doit faire 100%'}
           </p>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
         </form>
       </td>
     </tr>

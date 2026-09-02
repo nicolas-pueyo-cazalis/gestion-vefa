@@ -14,7 +14,9 @@ function BoutonContact({ titre, contact }) {
       <button type="button" className="lien-contact" onClick={() => setOuvert(true)}>
         {contact.nom}
       </button>
-      {ouvert && <FenetreContact titre={titre} contact={contact} onFermer={() => setOuvert(false)} />}
+      {ouvert && (
+        <FenetreContact titre={titre} contact={contact} onFermer={() => setOuvert(false)} />
+      )}
     </>
   )
 }

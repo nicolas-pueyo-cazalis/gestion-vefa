@@ -133,7 +133,9 @@ function FormulaireEditionClient({ acquereur, colonnes, onEnregistrer, onFermer 
             <input value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
           </label>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
         </form>
       </td>
     </tr>

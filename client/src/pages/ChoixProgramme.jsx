@@ -64,7 +64,9 @@ function ChoixProgramme() {
               <li key={programme._id}>
                 <button type="button" onClick={() => selectionner(programme)}>
                   <span className="nom-programme">{programme.nom}</span>
-                  {programme.commune && <span className="commune-programme">{programme.commune}</span>}
+                  {programme.commune && (
+                    <span className="commune-programme">{programme.commune}</span>
+                  )}
                 </button>
               </li>
             ))}

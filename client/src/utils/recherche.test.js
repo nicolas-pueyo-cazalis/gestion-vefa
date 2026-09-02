@@ -12,7 +12,7 @@ describe('correspondRecherche', () => {
     expect(correspondRecherche('Lot A01 — Dupont', 'DUPONT')).toBe(true)
   })
 
-  it('exige que TOUS les mots de la requête soient présents, dans n\'importe quel ordre', () => {
+  it("exige que TOUS les mots de la requête soient présents, dans n'importe quel ordre", () => {
     expect(correspondRecherche('Lot A01 — Dupont', 'dupont a01')).toBe(true)
     expect(correspondRecherche('Lot A01 — Dupont', 'dupont a02')).toBe(false)
   })

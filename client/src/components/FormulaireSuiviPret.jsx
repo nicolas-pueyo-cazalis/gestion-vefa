@@ -15,7 +15,9 @@ function versDateInput(valeur) {
 function FormulaireSuiviPret({ acquereur, lot, colonnes, onEnregistrer, onFermer }) {
   const [banque, setBanque] = useState(acquereur.banque ?? {})
   const [courtier, setCourtier] = useState(acquereur.courtier ?? {})
-  const [dateOffrePretRecue, setDateOffrePretRecue] = useState(versDateInput(acquereur.dateOffrePretRecue))
+  const [dateOffrePretRecue, setDateOffrePretRecue] = useState(
+    versDateInput(acquereur.dateOffrePretRecue),
+  )
   const [banqueValide, setBanqueValide] = useState(true)
   const [courtierValide, setCourtierValide] = useState(true)
   const [commentaire, setCommentaire] = useState(lot.commentaire ?? '')
@@ -38,8 +40,18 @@ function FormulaireSuiviPret({ acquereur, lot, colonnes, onEnregistrer, onFermer
     <tr className="formulaire-dates">
       <td colSpan={colonnes}>
         <form onSubmit={soumettre} className="formulaire-contacts">
-          <ChampsContact titre="Banque" valeur={banque} onChange={setBanque} onValiditeChange={setBanqueValide} />
-          <ChampsContact titre="Courtier" valeur={courtier} onChange={setCourtier} onValiditeChange={setCourtierValide} />
+          <ChampsContact
+            titre="Banque"
+            valeur={banque}
+            onChange={setBanque}
+            onValiditeChange={setBanqueValide}
+          />
+          <ChampsContact
+            titre="Courtier"
+            valeur={courtier}
+            onChange={setCourtier}
+            onValiditeChange={setCourtierValide}
+          />
           <label>
             Offre de prêt reçue le
             <input
@@ -54,7 +66,9 @@ function FormulaireSuiviPret({ acquereur, lot, colonnes, onEnregistrer, onFermer
           </label>
           <div className="boutons-alignes-champs">
             <button type="submit">Enregistrer</button>
-            <button type="button" onClick={onFermer}>Annuler</button>
+            <button type="button" onClick={onFermer}>
+              Annuler
+            </button>
           </div>
         </form>
       </td>

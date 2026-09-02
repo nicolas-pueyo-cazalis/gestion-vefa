@@ -22,10 +22,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 
 ## A. Suivi qualité / audits du projet
 
-- **Check-up de présentation/qualité d'écriture de l'ensemble du code**
-  (indentation, alinéas, cohérence de style, lisibilité — front et back)
-  — distinct des audits déjà faits (architecture/sécurité, duplication),
-  ici uniquement la forme du code. *(point 285)*
 - **Explication complète et pédagogique de tous les tests automatisés**
   (130 tests côté client + la suite serveur, chantiers 1 à 14) — Nicolas
   est novice, veut comprendre quels tests existent, pourquoi, et leur
@@ -40,8 +36,8 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   (`docs/audit-securite.md` ou `docs/audit-checkup.md`) couvrant sécurité/
   RGPD/qualité (211-232), check-up "développeur confirmé" (237, 66/100),
   revue "professionnel de l'immobilier" (271, 62/100), revue visuelle du
-  code (276), check-up de présentation/écriture du code (285, pas encore
-  fait). *(points 233, 238)*
+  code (276), check-up de présentation/écriture du code (285, fait, a
+  mené à l'adoption de Prettier, point 293). *(points 233, 238)*
 - **Corriger les code smells restants déjà identifiés** (audit sans
   correction) : `versDateInput()` dupliquée dans 8 composants, 3 "god
   components" (Tma.jsx/Lots.jsx/AppelsDeFonds.jsx) à découper.

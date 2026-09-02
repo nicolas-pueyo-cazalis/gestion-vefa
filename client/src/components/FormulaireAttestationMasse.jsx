@@ -18,14 +18,22 @@ function FormulaireAttestationMasse({ phases, onAppliquer, onVoirRecap }) {
     <section className="section-parametres">
       <div className="entete-section-avec-action">
         <h2>Attestation MOE par phase</h2>
-        <button type="button" className="lien-discret" onClick={onVoirRecap}>Voir le récapitulatif</button>
+        <button type="button" className="lien-discret" onClick={onVoirRecap}>
+          Voir le récapitulatif
+        </button>
       </div>
       <form onSubmit={soumettre}>
         <label>
           Phase
           <select value={phase} onChange={(e) => setPhase(e.target.value)} required>
-            <option value="" disabled>Choisir une phase...</option>
-            {phases.map((p) => <option key={p} value={p}>{p}</option>)}
+            <option value="" disabled>
+              Choisir une phase...
+            </option>
+            {phases.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
           </select>
         </label>
         <label>

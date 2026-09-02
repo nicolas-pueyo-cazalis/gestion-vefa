@@ -31,14 +31,26 @@ function LigneEntreprise({ ligne, delaiRetourEntrepriseTmaJours, onEnregistrer, 
     return (
       <li>
         <form onSubmit={soumettre} className="ligne-entreprise-edition">
-          <span>{ligne.corpsDeTravaux} — Lot {ligne.entreprise.numeroLot ?? '—'} — {ligne.entreprise.nom}</span>
+          <span>
+            {ligne.corpsDeTravaux} — Lot {ligne.entreprise.numeroLot ?? '—'} —{' '}
+            {ligne.entreprise.nom}
+          </span>
           <label>
             Description
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </label>
           <label>
             Date d'envoi
-            <input type="date" value={dateEnvoi} onChange={(e) => setDateEnvoi(e.target.value)} required />
+            <input
+              type="date"
+              value={dateEnvoi}
+              onChange={(e) => setDateEnvoi(e.target.value)}
+              required
+            />
           </label>
           <label>
             Montant TTC devis (€)
@@ -54,7 +66,9 @@ function LigneEntreprise({ ligne, delaiRetourEntrepriseTmaJours, onEnregistrer, 
             <input type="date" value={dateRetour} onChange={(e) => setDateRetour(e.target.value)} />
           </label>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={() => setEnEdition(false)}>Annuler</button>
+          <button type="button" onClick={() => setEnEdition(false)}>
+            Annuler
+          </button>
         </form>
       </li>
     )
@@ -69,15 +83,20 @@ function LigneEntreprise({ ligne, delaiRetourEntrepriseTmaJours, onEnregistrer, 
   return (
     <li>
       {ligne.corpsDeTravaux} — Lot {ligne.entreprise.numeroLot ?? '—'} — {ligne.entreprise.nom}
-      {ligne.description && <> — {ligne.description}</>} — envoyée le {versDateInput(ligne.dateEnvoi) || '—'} —{' '}
+      {ligne.description && <> — {ligne.description}</>} — envoyée le{' '}
+      {versDateInput(ligne.dateEnvoi) || '—'} —{' '}
       {ligne.montantDevis === null ? 'en attente de devis' : formatMontant(ligne.montantDevis)} —{' '}
       {enRetard ? (
         <span className="avertissement-cellule">En retard</span>
       ) : (
         <>reçu le {versDateInput(ligne.dateRetour) || '—'}</>
       )}
-      <button type="button" onClick={() => setEnEdition(true)}>Modifier</button>
-      <button type="button" onClick={() => onSupprimer(ligne._id)}>Retirer</button>
+      <button type="button" onClick={() => setEnEdition(true)}>
+        Modifier
+      </button>
+      <button type="button" onClick={() => onSupprimer(ligne._id)}>
+        Retirer
+      </button>
     </li>
   )
 }

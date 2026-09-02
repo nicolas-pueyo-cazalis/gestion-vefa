@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { tmaObsolete, texteRechercheTma } from './Tma.jsx'
 
 describe('tmaObsolete', () => {
-  it('faux si l\'acquéreur actuel du lot est le même que celui de la TMA', () => {
+  it("faux si l'acquéreur actuel du lot est le même que celui de la TMA", () => {
     const tma = { lot: { acquereur: { _id: 'a1' } }, acquereur: { _id: 'a1' } }
     expect(tmaObsolete(tma)).toBe(false)
   })
@@ -34,7 +34,7 @@ describe('texteRechercheTma', () => {
     expect(texte).toContain('Étude')
   })
 
-  it('n\'inclut pas le nom du client d\'origine si la TMA est obsolète', () => {
+  it("n'inclut pas le nom du client d'origine si la TMA est obsolète", () => {
     const tma = {
       lot: { reference: 'A01', acquereur: null },
       acquereur: { _id: 'a1', civilite: 'M.', prenom: 'Nicolas', nom: 'Cazalis' },

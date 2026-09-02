@@ -26,7 +26,9 @@ function SectionEtages({ programme, onEnregistrer }) {
         {etages.map((etage) => (
           <li key={etage}>
             {etage}
-            <button type="button" onClick={() => retirer(etage)}>×</button>
+            <button type="button" onClick={() => retirer(etage)}>
+              ×
+            </button>
           </li>
         ))}
       </ul>

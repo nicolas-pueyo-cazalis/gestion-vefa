@@ -39,7 +39,12 @@ router.post('/connexion', async (req, res) => {
 
     res.json({
       jeton,
-      utilisateur: { id: utilisateur._id, email: utilisateur.email, nom: utilisateur.nom, role: utilisateur.role },
+      utilisateur: {
+        id: utilisateur._id,
+        email: utilisateur.email,
+        nom: utilisateur.nom,
+        role: utilisateur.role,
+      },
     })
   } catch (erreur) {
     repondreErreurServeur(res, erreur)

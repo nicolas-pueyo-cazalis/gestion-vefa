@@ -40,57 +40,67 @@ describe('calculerDateLimiteMois', () => {
     expect(calculerDateLimiteMois(new Date(2026, 0, 15), 3)).toEqual(new Date(2026, 3, 15))
   })
 
-  it('gère seule le débordement d\'année (réservation en novembre + 3 mois)', () => {
+  it("gère seule le débordement d'année (réservation en novembre + 3 mois)", () => {
     expect(calculerDateLimiteMois(new Date(2026, 10, 10), 3)).toEqual(new Date(2027, 1, 10))
   })
 })
 
 describe('statutAppel', () => {
   it('renvoie "regle" dès que dateReglement est renseignée, prioritaire sur tout le reste', () => {
-    expect(statutAppel({
-      dateReglement: new Date('2026-06-01'),
-      dateEmission: null,
-      dateAttestationMOE: null,
-    })).toBe('regle')
+    expect(
+      statutAppel({
+        dateReglement: new Date('2026-06-01'),
+        dateEmission: null,
+        dateAttestationMOE: null,
+      }),
+    ).toBe('regle')
   })
 
   it('renvoie "a_emettre" si l\'attestation MOE est faite mais l\'appel pas encore émis', () => {
-    expect(statutAppel({
-      dateReglement: null,
-      dateEmission: null,
-      dateAttestationMOE: new Date('2026-05-01'),
-    })).toBe('a_emettre')
+    expect(
+      statutAppel({
+        dateReglement: null,
+        dateEmission: null,
+        dateAttestationMOE: new Date('2026-05-01'),
+      }),
+    ).toBe('a_emettre')
   })
 
   it('renvoie "attente" sans attestation ni émission', () => {
-    expect(statutAppel({ dateReglement: null, dateEmission: null, dateAttestationMOE: null })).toBe('attente')
+    expect(statutAppel({ dateReglement: null, dateEmission: null, dateAttestationMOE: null })).toBe(
+      'attente',
+    )
   })
 
   it('renvoie "retard" si émis et la date limite de règlement est dépassée sans règlement', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-08-01'))
 
-    expect(statutAppel({
-      dateReglement: null,
-      dateEmission: new Date('2026-06-01'),
-      dateLimiteReglement: new Date('2026-07-01'),
-    })).toBe('retard')
+    expect(
+      statutAppel({
+        dateReglement: null,
+        dateEmission: new Date('2026-06-01'),
+        dateLimiteReglement: new Date('2026-07-01'),
+      }),
+    ).toBe('retard')
   })
 
   it('renvoie "emis" si émis et dans les temps', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-06-15'))
 
-    expect(statutAppel({
-      dateReglement: null,
-      dateEmission: new Date('2026-06-01'),
-      dateLimiteReglement: new Date('2026-07-01'),
-    })).toBe('emis')
+    expect(
+      statutAppel({
+        dateReglement: null,
+        dateEmission: new Date('2026-06-01'),
+        dateLimiteReglement: new Date('2026-07-01'),
+      }),
+    ).toBe('emis')
   })
 })
 
 describe('statutPret', () => {
-  it('renvoie null tant que le lot n\'est pas réservé (pas de point de départ)', () => {
+  it("renvoie null tant que le lot n'est pas réservé (pas de point de départ)", () => {
     expect(statutPret({ dateReservation: null }, 45)).toBeNull()
   })
 
@@ -128,7 +138,7 @@ describe('statutPret', () => {
 })
 
 describe('statutSignature', () => {
-  it('renvoie null tant que le lot n\'est pas réservé', () => {
+  it("renvoie null tant que le lot n'est pas réservé", () => {
     expect(statutSignature({ dateReservation: null }, 3)).toBeNull()
   })
 
@@ -155,44 +165,65 @@ describe('statutSignature', () => {
 })
 
 describe('estEntrepriseEnRetard', () => {
-  it('n\'est jamais en retard si un montant de devis est déjà renseigné, même à 0 (falsy mais valide)', () => {
+  it("n'est jamais en retard si un montant de devis est déjà renseigné, même à 0 (falsy mais valide)", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-06-01'))
 
-    expect(estEntrepriseEnRetard({ montantDevis: 0, dateEnvoi: new Date('2026-01-01') }, 15)).toBe(false)
+    expect(estEntrepriseEnRetard({ montantDevis: 0, dateEnvoi: new Date('2026-01-01') }, 15)).toBe(
+      false,
+    )
   })
 
   it('est en retard si aucun devis reçu et le délai est dépassé', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-20'))
 
-    expect(estEntrepriseEnRetard({ montantDevis: null, dateEnvoi: new Date('2026-01-01') }, 15)).toBe(true)
+    expect(
+      estEntrepriseEnRetard({ montantDevis: null, dateEnvoi: new Date('2026-01-01') }, 15),
+    ).toBe(true)
   })
 
-  it('n\'est pas en retard si aucun devis reçu mais dans les temps', () => {
+  it("n'est pas en retard si aucun devis reçu mais dans les temps", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-05'))
 
-    expect(estEntrepriseEnRetard({ montantDevis: null, dateEnvoi: new Date('2026-01-01') }, 15)).toBe(false)
+    expect(
+      estEntrepriseEnRetard({ montantDevis: null, dateEnvoi: new Date('2026-01-01') }, 15),
+    ).toBe(false)
   })
 })
 
 describe('estFactureTmaEnRetard', () => {
   it('n\'est jamais en retard si le statut n\'est pas "facture"', () => {
-    expect(estFactureTmaEnRetard({ statut: 'valide', dateEnvoiFactureClient: new Date('2026-01-01') }, 15)).toBe(false)
+    expect(
+      estFactureTmaEnRetard(
+        { statut: 'valide', dateEnvoiFactureClient: new Date('2026-01-01') },
+        15,
+      ),
+    ).toBe(false)
   })
 
   it('est en retard si le statut est "facture" et le délai de réponse est dépassé', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-20'))
 
-    expect(estFactureTmaEnRetard({ statut: 'facture', dateEnvoiFactureClient: new Date('2026-01-01') }, 15)).toBe(true)
+    expect(
+      estFactureTmaEnRetard(
+        { statut: 'facture', dateEnvoiFactureClient: new Date('2026-01-01') },
+        15,
+      ),
+    ).toBe(true)
   })
 
   it('n\'est pas en retard si le statut est "facture" mais dans les temps', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-05'))
 
-    expect(estFactureTmaEnRetard({ statut: 'facture', dateEnvoiFactureClient: new Date('2026-01-01') }, 15)).toBe(false)
+    expect(
+      estFactureTmaEnRetard(
+        { statut: 'facture', dateEnvoiFactureClient: new Date('2026-01-01') },
+        15,
+      ),
+    ).toBe(false)
   })
 })

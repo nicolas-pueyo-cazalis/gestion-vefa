@@ -5,8 +5,12 @@ function stubLocalStorage(valeurs = {}) {
   const magasin = { ...valeurs }
   vi.stubGlobal('localStorage', {
     getItem: vi.fn((cle) => magasin[cle] ?? null),
-    setItem: vi.fn((cle, valeur) => { magasin[cle] = valeur }),
-    removeItem: vi.fn((cle) => { delete magasin[cle] }),
+    setItem: vi.fn((cle, valeur) => {
+      magasin[cle] = valeur
+    }),
+    removeItem: vi.fn((cle) => {
+      delete magasin[cle]
+    }),
   })
   return magasin
 }
@@ -21,19 +25,22 @@ afterEach(() => {
 })
 
 describe('apiFetch', () => {
-  it('ajoute le jeton stocké dans l\'en-tête Authorization', async () => {
+  it("ajoute le jeton stocké dans l'en-tête Authorization", async () => {
     stubLocalStorage({ jeton: 'abc123' })
     const fetchSimule = vi.fn().mockResolvedValue({ status: 200 })
     vi.stubGlobal('fetch', fetchSimule)
 
     await apiFetch('/api/lots')
 
-    expect(fetchSimule).toHaveBeenCalledWith('/api/lots', expect.objectContaining({
-      headers: expect.objectContaining({ Authorization: 'Bearer abc123' }),
-    }))
+    expect(fetchSimule).toHaveBeenCalledWith(
+      '/api/lots',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer abc123' }),
+      }),
+    )
   })
 
-  it('n\'ajoute aucun en-tête Authorization si aucun jeton n\'est stocké', async () => {
+  it("n'ajoute aucun en-tête Authorization si aucun jeton n'est stocké", async () => {
     stubLocalStorage()
     const fetchSimule = vi.fn().mockResolvedValue({ status: 200 })
     vi.stubGlobal('fetch', fetchSimule)
@@ -65,7 +72,7 @@ describe('apiFetch', () => {
     expect(window.location.href).toBe('')
   })
 
-  it('alerte l\'utilisateur ET relance l\'exception si le serveur est injoignable', async () => {
+  it("alerte l'utilisateur ET relance l'exception si le serveur est injoignable", async () => {
     stubLocalStorage()
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Failed to fetch')))
 

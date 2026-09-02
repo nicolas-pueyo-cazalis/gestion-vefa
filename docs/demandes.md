@@ -1974,6 +1974,33 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      leurs fonctions module-level pures testées — le découpage interne
      des composants eux-mêmes reste une dette distincte (point 236).
 
+293. ✅ **Check-up de présentation/qualité d'écriture du code fait
+     (01/09/2026)** (point 285) — 2 sous-agents en parallèle (serveur,
+     client), consigne stricte : constats sourcés (fichier + ligne),
+     aucune correction pendant l'audit. Constat de départ vérifié :
+     **aucun outil de formatage configuré nulle part** (pas de Prettier,
+     pas de `.editorconfig`, `.oxlintrc.json` du client ne contient que 2
+     règles React, rien sur le style). Résultat : code globalement très
+     cohérent malgré ça (discipline manuelle sur 7 semaines), avec
+     quelques dérives isolées trouvées et vérifiées personnellement avant
+     restitution — 3 fichiers datés du tout premier jour du projet restés
+     en guillemets doubles/points-virgules (`formatMontant.js`,
+     `data/lots.js`, `data/tma.js`), un vrai bug d'indentation dans le
+     `<thead>` de `Tma.jsx` (lignes 608-624), quelques lignes anormalement
+     longues des deux côtés, 2 micro-incohérences côté serveur (guillemets
+     pour échapper une apostrophe, position de `&&`). Recommandation
+     convergente des deux audits : adopter Prettier.
+     **Décision de Nicolas : adopté.** `prettier` installé en
+     devDependency dans `client/` et `server/` (paquets npm séparés, pas
+     de monorepo), config partagée `.prettierrc.json`/`.prettierignore` à
+     la racine (`semi: false`, `singleQuote: true`, `printWidth: 100`,
+     `trailingComma: "all"` — cohérent avec ce que les audits avaient déjà
+     trouvé majoritaire). Scripts `format`/`format:check` ajoutés aux deux
+     `package.json`. Un seul passage `--write` sur tout le code JS/JSX
+     (95 fichiers touchés, formatage pur — vérifié par relecture d'un
+     extrait, aucune valeur métier changée). **Non-régression vérifiée** :
+     55/55 côté serveur, 130/130 côté client, `oxlint` 0 erreur.
+
 ---
 
 ## Notes

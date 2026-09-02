@@ -20,8 +20,11 @@ function nomComplet(acquereur) {
 // à repérer d'un coup d'œil les fiches encore à compléter.
 function coordonneesCompletes(acquereur) {
   return Boolean(
-    acquereur.adresse && acquereur.commune && acquereur.codePostal
-      && acquereur.telephone && acquereur.email,
+    acquereur.adresse &&
+    acquereur.commune &&
+    acquereur.codePostal &&
+    acquereur.telephone &&
+    acquereur.email,
   )
 }
 
@@ -41,7 +44,9 @@ function texteRechercheClient(acquereur) {
     formatTelephoneAffichage(acquereur.telephone),
     acquereur.email,
     acquereur.commentaire,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 // Affichage demandé par Nicolas : format national "06 XX XX XX XX" pour
@@ -123,7 +128,16 @@ function Clients() {
     return {
       nomFichier: `clients-${programmeActif.nom}`,
       titre: `Clients — ${programmeActif.nom}`,
-      entetes: ['N° logement', 'Nom', 'Adresse', 'Commune', 'Code postal', 'Téléphone', 'Email', 'Commentaire'],
+      entetes: [
+        'N° logement',
+        'Nom',
+        'Adresse',
+        'Commune',
+        'Code postal',
+        'Téléphone',
+        'Email',
+        'Commentaire',
+      ],
       lignes: acquereursTries.map((acquereur) => [
         numerosLogements(acquereur),
         nomComplet(acquereur),
@@ -148,7 +162,11 @@ function Clients() {
       </section>
 
       <div className="barre-actions">
-        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un client..." />
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un client..."
+        />
         <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
           Exporter
         </button>
@@ -188,13 +206,21 @@ function Clients() {
               <Fragment key={acquereur._id}>
                 <tr>
                   <td className="logement-cellule">{numerosLogements(acquereur)}</td>
-                  <td><span className="nom-client">{nomComplet(acquereur)}</span></td>
-                  <td><span className="adresse-cellule">{acquereur.adresse || '—'}</span></td>
+                  <td>
+                    <span className="nom-client">{nomComplet(acquereur)}</span>
+                  </td>
+                  <td>
+                    <span className="adresse-cellule">{acquereur.adresse || '—'}</span>
+                  </td>
                   <td>{acquereur.commune || '—'}</td>
                   <td>{acquereur.codePostal || '—'}</td>
                   <td>{formatTelephoneAffichage(acquereur.telephone) || '—'}</td>
-                  <td><span className="email-cellule">{acquereur.email || '—'}</span></td>
-                  <td><span className="commentaire-cellule">{acquereur.commentaire || '—'}</span></td>
+                  <td>
+                    <span className="email-cellule">{acquereur.email || '—'}</span>
+                  </td>
+                  <td>
+                    <span className="commentaire-cellule">{acquereur.commentaire || '—'}</span>
+                  </td>
                   <td className="actions">
                     <button
                       type="button"
@@ -203,7 +229,16 @@ function Clients() {
                       aria-label="Modifier"
                       onClick={() => setIdEnEdition(acquereur._id)}
                     >
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                       </svg>

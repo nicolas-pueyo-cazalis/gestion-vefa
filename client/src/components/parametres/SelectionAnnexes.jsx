@@ -7,14 +7,20 @@ import { formatMontant } from '../../utils/formatMontant.js'
 // Annexes). N'affiche que les annexes encore libres, PLUS celles déjà
 // attribuées à CE lot (`lotId`, absent = formulaire de création, aucune
 // annexe encore attribuée à personne).
-function SelectionAnnexes({ type, libelle, annexesDuType, lotId, selectionnees, onChange, disabled }) {
+function SelectionAnnexes({
+  type,
+  libelle,
+  annexesDuType,
+  lotId,
+  selectionnees,
+  onChange,
+  disabled,
+}) {
   const choix = annexesDuType.filter((a) => !a.lot || a.lot._id === lotId)
 
   function basculer(id) {
     onChange(
-      selectionnees.includes(id)
-        ? selectionnees.filter((s) => s !== id)
-        : [...selectionnees, id],
+      selectionnees.includes(id) ? selectionnees.filter((s) => s !== id) : [...selectionnees, id],
     )
   }
 

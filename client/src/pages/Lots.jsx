@@ -51,7 +51,9 @@ export function texteRechercheLot(lot) {
     dateActuelle(lot),
     nomAcquereur(lot.acquereur),
     lot.commentaire,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 export function prixParM2(lot) {
@@ -63,7 +65,10 @@ export function prixParM2(lot) {
 // les surfaces gardent toujours 2 décimales, même quand la valeur est un
 // nombre rond (45 m² s'affiche "45,00 m²").
 export function formatteDecimales(valeur) {
-  return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valeur)
+  return new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(valeur)
 }
 
 export function afficheSurface(valeur) {
@@ -80,7 +85,10 @@ export function afficheSurface(valeur) {
 // d'accord), pas "Parkings extérieurs".
 export function pluraliser(mot, pluriel) {
   if (!pluriel) return mot
-  return mot.split(' ').map((mot) => `${mot}s`).join(' ')
+  return mot
+    .split(' ')
+    .map((mot) => `${mot}s`)
+    .join(' ')
 }
 
 export function ligneSurfaces(mot, valeurs) {
@@ -124,7 +132,12 @@ export function dateActuelle(lot) {
 // rappel visuel — sauf si l'acquéreur a explicitement déclaré "sans prêt"
 // (page Suivi de prêt), auquel cas la question ne se pose pas.
 export function offrePretManquante(lot) {
-  return lot.statut === 'acte' && lot.acquereur && !lot.acquereur.sansPret && !lot.acquereur.dateOffrePretRecue
+  return (
+    lot.statut === 'acte' &&
+    lot.acquereur &&
+    !lot.acquereur.sansPret &&
+    !lot.acquereur.dateOffrePretRecue
+  )
 }
 
 // Historique fusionné dans la page Lots (17/07/2026, remarque de Nicolas —
@@ -133,7 +146,9 @@ export function offrePretManquante(lot) {
 // une COPIE du nom du client (civiliteClient/nomClient/prenomClient), pas
 // une référence vivante — voir server/models/HistoriqueAnnulation.js.
 export function nomClient(entree) {
-  return [entree.civiliteClient, entree.prenomClient, entree.nomClient].filter(Boolean).join(' ') || '—'
+  return (
+    [entree.civiliteClient, entree.prenomClient, entree.nomClient].filter(Boolean).join(' ') || '—'
+  )
 }
 
 // Dernière date atteinte avant l'annulation (acte > réservation > option) —
@@ -205,7 +220,12 @@ function Lots() {
   useEffect(() => {
     async function chargerTout() {
       try {
-        await Promise.all([chargerAcquereurs(), chargerLots(), chargerAnnexes(), chargerHistorique()])
+        await Promise.all([
+          chargerAcquereurs(),
+          chargerLots(),
+          chargerAnnexes(),
+          chargerHistorique(),
+        ])
       } catch (e) {
         setErreur(e.message)
       } finally {
@@ -383,9 +403,19 @@ function Lots() {
   // que l'export corresponde exactement à ce qui est lu à l'écran.
   function donneesExportTableau() {
     const entetes = [
-      'Lot', 'Étage', 'Type', 'Orientation', 'Surface SHAB',
+      'Lot',
+      'Étage',
+      'Type',
+      'Orientation',
+      'Surface SHAB',
       ...(afficherColonneSousPlafondBas ? ['Surface < 1,80m'] : []),
-      'Annexes', 'Prix TTC', 'Prix TTC/m² SHAB', 'Statut', 'Date', 'Client', 'Commentaire',
+      'Annexes',
+      'Prix TTC',
+      'Prix TTC/m² SHAB',
+      'Statut',
+      'Date',
+      'Client',
+      'Commentaire',
     ]
     const lignes = lotsFiltres.map((lot) => [
       lot.estAnnexeSeule ? '—' : lot.reference,
@@ -427,14 +457,38 @@ function Lots() {
     const lignes = [
       ['Prix moyen TTC/m²', moyennePrixM2 !== null ? formatMontant(moyennePrixM2, 0) : '—'],
       ['Commercialisation — Lots au total', String(lots.length)],
-      ['Commercialisation — Actés', `${parStatut.acte} (${pourcentage(parStatut.acte, lots.length)}% du programme)`],
-      ['Commercialisation — Réservés', `${parStatut.reserve} (${pourcentage(parStatut.reserve, lots.length)}% du programme)`],
-      ['Commercialisation — Options', `${parStatut.option} (${pourcentage(parStatut.option, lots.length)}% du programme)`],
-      ['Commercialisation — Libres', `${parStatut.libre} (${pourcentage(parStatut.libre, lots.length)}% du programme)`],
-      ["Chiffre d'affaires — CA acté", `${formatMontant(caParStatut.acte, 0)} (${pourcentage(caParStatut.acte, totalCA)}% du CA total)`],
-      ["Chiffre d'affaires — CA réservé", `${formatMontant(caParStatut.reserve, 0)} (${pourcentage(caParStatut.reserve, totalCA)}% du CA total)`],
-      ["Chiffre d'affaires — CA options", `${formatMontant(caParStatut.option, 0)} (${pourcentage(caParStatut.option, totalCA)}% du CA total)`],
-      ["Chiffre d'affaires — CA libre", `${formatMontant(caParStatut.libre, 0)} (${pourcentage(caParStatut.libre, totalCA)}% du CA total)`],
+      [
+        'Commercialisation — Actés',
+        `${parStatut.acte} (${pourcentage(parStatut.acte, lots.length)}% du programme)`,
+      ],
+      [
+        'Commercialisation — Réservés',
+        `${parStatut.reserve} (${pourcentage(parStatut.reserve, lots.length)}% du programme)`,
+      ],
+      [
+        'Commercialisation — Options',
+        `${parStatut.option} (${pourcentage(parStatut.option, lots.length)}% du programme)`,
+      ],
+      [
+        'Commercialisation — Libres',
+        `${parStatut.libre} (${pourcentage(parStatut.libre, lots.length)}% du programme)`,
+      ],
+      [
+        "Chiffre d'affaires — CA acté",
+        `${formatMontant(caParStatut.acte, 0)} (${pourcentage(caParStatut.acte, totalCA)}% du CA total)`,
+      ],
+      [
+        "Chiffre d'affaires — CA réservé",
+        `${formatMontant(caParStatut.reserve, 0)} (${pourcentage(caParStatut.reserve, totalCA)}% du CA total)`,
+      ],
+      [
+        "Chiffre d'affaires — CA options",
+        `${formatMontant(caParStatut.option, 0)} (${pourcentage(caParStatut.option, totalCA)}% du CA total)`,
+      ],
+      [
+        "Chiffre d'affaires — CA libre",
+        `${formatMontant(caParStatut.libre, 0)} (${pourcentage(caParStatut.libre, totalCA)}% du CA total)`,
+      ],
     ]
     return {
       nomFichier: `lots-statistiques-${programme.nom}`,
@@ -454,7 +508,14 @@ function Lots() {
       sections: [
         {
           sousTitre: 'Ventes annulées',
-          entetes: ['Logement', 'Statut avant annulation', 'Date', 'Client', 'Commentaire', 'Annulé le'],
+          entetes: [
+            'Logement',
+            'Statut avant annulation',
+            'Date',
+            'Client',
+            'Commentaire',
+            'Annulé le',
+          ],
           lignes: historiqueAnnulations.map((entree) => [
             entree.referenceLot,
             STATUTS_LOT[entree.statutAvantAnnulation],
@@ -491,7 +552,11 @@ function Lots() {
     }
     const disponibles = annexes.filter((a) => !a.lot)
     const entetes = ['Type', 'N°', 'Prix']
-    const lignes = disponibles.map((a) => [libellesType[a.type] ?? a.type, String(a.numero), formatMontant(a.prix)])
+    const lignes = disponibles.map((a) => [
+      libellesType[a.type] ?? a.type,
+      String(a.numero),
+      formatMontant(a.prix),
+    ])
     const totaux = [['Total', formatMontant(disponibles.reduce((somme, a) => somme + a.prix, 0))]]
     return {
       nomFichier: `lots-annexes-a-la-vente-${programme.nom}`,
@@ -511,7 +576,9 @@ function Lots() {
         <h1 className="titre-page">Tableau de bord des lots</h1>
         <div className="cle-chiffre">
           <span className="label">Prix moyen TTC/m²</span>
-          <span className="valeur">{moyennePrixM2 !== null ? formatMontant(moyennePrixM2, 0) : '—'}</span>
+          <span className="valeur">
+            {moyennePrixM2 !== null ? formatMontant(moyennePrixM2, 0) : '—'}
+          </span>
         </div>
       </div>
 
@@ -582,9 +649,15 @@ function Lots() {
 
       <div className="barre-actions">
         <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
-        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un lot..." />
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un lot..."
+        />
         {!venteAnnexeOuverte && (
-          <button type="button" onClick={() => setVenteAnnexeOuverte(true)}>Vendre une annexe</button>
+          <button type="button" onClick={() => setVenteAnnexeOuverte(true)}>
+            Vendre une annexe
+          </button>
         )}
       </div>
 
@@ -608,7 +681,9 @@ function Lots() {
               <th ref={refTheadShab}>Surface SHAB</th>
               {afficherColonneSousPlafondBas && <th>Surface &lt; 1,80m</th>}
               <th>Annexes</th>
-              <th ref={refTheadPrixTTC} className="colonne-montant">Prix TTC</th>
+              <th ref={refTheadPrixTTC} className="colonne-montant">
+                Prix TTC
+              </th>
               <th className="colonne-montant">Prix TTC/m² SHAB</th>
               <th>Statut</th>
               <th>Date</th>
@@ -631,16 +706,24 @@ function Lots() {
                     <td>{lot.type}</td>
                     <td>{lot.orientation}</td>
                     <td>{afficheSurface(lot.surfaceHabitable)}</td>
-                    {afficherColonneSousPlafondBas && <td>{afficheSurface(lot.surfaceSousPlafondBas)}</td>}
+                    {afficherColonneSousPlafondBas && (
+                      <td>{afficheSurface(lot.surfaceSousPlafondBas)}</td>
+                    )}
                     <td>
                       {lignesAnnexes.length > 0 ? (
                         <div className="annexes-cellule">
-                          {lignesAnnexes.map((ligne, i) => <div key={i}>{ligne}</div>)}
+                          {lignesAnnexes.map((ligne, i) => (
+                            <div key={i}>{ligne}</div>
+                          ))}
                         </div>
-                      ) : '—'}
+                      ) : (
+                        '—'
+                      )}
                     </td>
                     <td className="colonne-montant">{formatMontant(lot.prixTTC, 0)}</td>
-                    <td className="colonne-montant">{prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}</td>
+                    <td className="colonne-montant">
+                      {prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}
+                    </td>
                     <td>
                       <Badge statut={lot.statut} texte={STATUTS_LOT[lot.statut]} />
                       {offrePretManquante(lot) && (
@@ -648,8 +731,12 @@ function Lots() {
                       )}
                     </td>
                     <td>{dateActuelle(lot)}</td>
-                    <td><span className="nom-client">{nomAcquereur(lot.acquereur)}</span></td>
-                    <td><span className="commentaire-cellule">{lot.commentaire || '—'}</span></td>
+                    <td>
+                      <span className="nom-client">{nomAcquereur(lot.acquereur)}</span>
+                    </td>
+                    <td>
+                      <span className="commentaire-cellule">{lot.commentaire || '—'}</span>
+                    </td>
                     <td className="actions">
                       <button
                         type="button"
@@ -658,7 +745,16 @@ function Lots() {
                         aria-label="Modifier"
                         onClick={() => setIdEnEdition(lot._id)}
                       >
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <path d="M12 20h9" />
                           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
@@ -691,14 +787,20 @@ function Lots() {
         <div className="pied-totaux" ref={refPiedTotaux}>
           <div
             className="pied-totaux-ligne pied-totaux-flottant"
-            style={{ left: `${positionShab ?? 0}px`, visibility: positionShab === null ? 'hidden' : 'visible' }}
+            style={{
+              left: `${positionShab ?? 0}px`,
+              visibility: positionShab === null ? 'hidden' : 'visible',
+            }}
           >
             <span className="label">SHAB totale</span>
             <span className="valeur">{afficheSurface(totalSurface)}</span>
           </div>
           <div
             className="pied-totaux-groupe pied-totaux-flottant pied-totaux-flottant--gauche"
-            style={{ left: `${positionPrixTTC ?? 0}px`, visibility: positionPrixTTC === null ? 'hidden' : 'visible' }}
+            style={{
+              left: `${positionPrixTTC ?? 0}px`,
+              visibility: positionPrixTTC === null ? 'hidden' : 'visible',
+            }}
           >
             <div className="pied-totaux-ligne pied-totaux-principal">
               <span className="label">Total TTC</span>
@@ -734,7 +836,16 @@ function Lots() {
           className={`bouton-accordeon${historiqueOuvert ? ' bouton-accordeon--ouvert' : ''}`}
           onClick={() => setHistoriqueOuvert((v) => !v)}
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M9 6l6 6-6 6" />
           </svg>
           Historique (ventes annulées, modifications de prix)
@@ -772,15 +883,28 @@ function Lots() {
                     <Fragment key={entree._id}>
                       <tr>
                         <td>{entree.referenceLot}</td>
-                        <td><Badge statut={entree.statutAvantAnnulation} texte={STATUTS_LOT[entree.statutAvantAnnulation]} /></td>
+                        <td>
+                          <Badge
+                            statut={entree.statutAvantAnnulation}
+                            texte={STATUTS_LOT[entree.statutAvantAnnulation]}
+                          />
+                        </td>
                         <td>{derniereDateAnnulation(entree)}</td>
-                        <td><span className="nom-client">{nomClient(entree)}</span></td>
-                        <td><span className="commentaire-cellule">{entree.commentaire || '—'}</span></td>
+                        <td>
+                          <span className="nom-client">{nomClient(entree)}</span>
+                        </td>
+                        <td>
+                          <span className="commentaire-cellule">{entree.commentaire || '—'}</span>
+                        </td>
                         <td>{formatDate(entree.dateAnnulation)}</td>
                         <td className="actions">
                           <button
                             type="button"
-                            onClick={() => setIdAnnulationOuverte(idAnnulationOuverte === entree._id ? null : entree._id)}
+                            onClick={() =>
+                              setIdAnnulationOuverte(
+                                idAnnulationOuverte === entree._id ? null : entree._id,
+                              )
+                            }
                           >
                             {idAnnulationOuverte === entree._id ? 'Masquer' : 'Détail'}
                           </button>
@@ -796,16 +920,27 @@ function Lots() {
                                   <p>Acquisition avec fonds personnels.</p>
                                 ) : (
                                   <ul>
-                                    <li>Banque : <BoutonContact titre="Banque" contact={entree.banque} /></li>
-                                    <li>Courtier : <BoutonContact titre="Courtier" contact={entree.courtier} /></li>
-                                    <li>Offre reçue le : {formatDate(entree.dateOffrePretRecue)}</li>
+                                    <li>
+                                      Banque :{' '}
+                                      <BoutonContact titre="Banque" contact={entree.banque} />
+                                    </li>
+                                    <li>
+                                      Courtier :{' '}
+                                      <BoutonContact titre="Courtier" contact={entree.courtier} />
+                                    </li>
+                                    <li>
+                                      Offre reçue le : {formatDate(entree.dateOffrePretRecue)}
+                                    </li>
                                   </ul>
                                 )}
                               </div>
                               <div className="detail-annulation-bloc">
                                 <h3>Acte</h3>
                                 <ul>
-                                  <li>Notaire : <BoutonContact titre="Notaire" contact={entree.notaire} /></li>
+                                  <li>
+                                    Notaire :{' '}
+                                    <BoutonContact titre="Notaire" contact={entree.notaire} />
+                                  </li>
                                   <li>Date de l'acte : {formatDate(entree.dateActe)}</li>
                                 </ul>
                               </div>
@@ -818,7 +953,9 @@ function Lots() {
                                     {entree.appelsDeFonds.map((appel, i) => (
                                       <li key={i}>
                                         {appel.phase.nom} — {formatMontant(appel.montant)}
-                                        {appel.dateReglement ? ` — réglé le ${formatDate(appel.dateReglement)}` : ' — non réglé'}
+                                        {appel.dateReglement
+                                          ? ` — réglé le ${formatDate(appel.dateReglement)}`
+                                          : ' — non réglé'}
                                       </li>
                                     ))}
                                   </ul>
@@ -832,7 +969,11 @@ function Lots() {
                                   <ul>
                                     {tmaDuLot.map((tma) => (
                                       <li key={tma._id}>
-                                        {tma.description} — <Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} />
+                                        {tma.description} —{' '}
+                                        <Badge
+                                          statut={tma.statut}
+                                          texte={STATUTS_TMA[tma.statut]}
+                                        />
                                       </li>
                                     ))}
                                   </ul>
@@ -872,7 +1013,9 @@ function Lots() {
                     <td>{entree.referenceLot}</td>
                     <td className="colonne-montant">{formatMontant(entree.ancienPrix)}</td>
                     <td className="colonne-montant">{formatMontant(entree.nouveauPrix)}</td>
-                    <td><span className="commentaire-cellule">{entree.motif}</span></td>
+                    <td>
+                      <span className="commentaire-cellule">{entree.motif}</span>
+                    </td>
                     <td>{formatDate(entree.createdAt)}</td>
                   </tr>
                 ))}
@@ -885,10 +1028,22 @@ function Lots() {
       {exportOuvert && (
         <FenetreExport
           options={[
-            { valeur: 'tableau', libelle: 'Tableau récapitulatif des lots', donnees: donneesExportTableau },
+            {
+              valeur: 'tableau',
+              libelle: 'Tableau récapitulatif des lots',
+              donnees: donneesExportTableau,
+            },
             { valeur: 'cartes', libelle: 'Statistiques (cartes)', donnees: donneesExportCartes },
-            { valeur: 'historique', libelle: 'Historique (annulations, modifications de prix)', donnees: donneesExportHistorique },
-            { valeur: 'annexes', libelle: 'Annexes à la vente', donnees: donneesExportAnnexesALaVente },
+            {
+              valeur: 'historique',
+              libelle: 'Historique (annulations, modifications de prix)',
+              donnees: donneesExportHistorique,
+            },
+            {
+              valeur: 'annexes',
+              libelle: 'Annexes à la vente',
+              donnees: donneesExportAnnexesALaVente,
+            },
           ]}
           onFermer={() => setExportOuvert(false)}
         />

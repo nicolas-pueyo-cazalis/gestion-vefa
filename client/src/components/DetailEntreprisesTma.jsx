@@ -8,7 +8,13 @@ function versDateInput(valeur) {
   return valeur ? valeur.slice(0, 10) : ''
 }
 
-function DetailEntreprisesTma({ tma, colonnes, delaiRetourEntrepriseTmaJours, onChangement, onFermer }) {
+function DetailEntreprisesTma({
+  tma,
+  colonnes,
+  delaiRetourEntrepriseTmaJours,
+  onChangement,
+  onFermer,
+}) {
   const [lignes, setLignes] = useState([])
   const [entreprisesDisponibles, setEntreprisesDisponibles] = useState([])
   const [chargement, setChargement] = useState(true)
@@ -20,7 +26,9 @@ function DetailEntreprisesTma({ tma, colonnes, delaiRetourEntrepriseTmaJours, on
   // Pré-rempli avec la date d'envoi entreprises de la TMA (généralement
   // toutes les entreprises sont sollicitées en même temps), reste modifiable
   // au cas où une entreprise en particulier est contactée plus tard.
-  const [dateEnvoi, setDateEnvoi] = useState(versDateInput(tma.dateEnvoiEntreprises) || new Date().toISOString().slice(0, 10))
+  const [dateEnvoi, setDateEnvoi] = useState(
+    versDateInput(tma.dateEnvoiEntreprises) || new Date().toISOString().slice(0, 10),
+  )
   const [montantDevis, setMontantDevis] = useState('')
   const [dateRetour, setDateRetour] = useState('')
   // Description (21/07/2026, remarque de Nicolas) : ce qui est demandé à
@@ -107,7 +115,13 @@ function DetailEntreprisesTma({ tma, colonnes, delaiRetourEntrepriseTmaJours, on
     setLignes((liste) =>
       liste.map((ligne) =>
         ligne._id === id
-          ? { ...ligne, montantDevis: ligneMiseAJour.montantDevis, dateRetour: ligneMiseAJour.dateRetour, statut: ligneMiseAJour.statut, description: ligneMiseAJour.description }
+          ? {
+              ...ligne,
+              montantDevis: ligneMiseAJour.montantDevis,
+              dateRetour: ligneMiseAJour.dateRetour,
+              statut: ligneMiseAJour.statut,
+              description: ligneMiseAJour.description,
+            }
           : ligne,
       ),
     )
@@ -152,9 +166,13 @@ function DetailEntreprisesTma({ tma, colonnes, delaiRetourEntrepriseTmaJours, on
               disabled={!tma.dateEnvoiEntreprises || !tma.nombreEntreprisesConcernees}
               required
             >
-              <option value="" disabled>Choisir...</option>
+              <option value="" disabled>
+                Choisir...
+              </option>
               {entreprisesDisponibles.map((e) => (
-                <option key={e._id} value={e._id}>{e.corpsDeTravaux} — Lot {e.numeroLot ?? '—'} — {e.nom}</option>
+                <option key={e._id} value={e._id}>
+                  {e.corpsDeTravaux} — Lot {e.numeroLot ?? '—'} — {e.nom}
+                </option>
               ))}
             </select>
           </label>
@@ -183,7 +201,12 @@ function DetailEntreprisesTma({ tma, colonnes, delaiRetourEntrepriseTmaJours, on
           </label>
           <label>
             Date d'envoi
-            <input type="date" value={dateEnvoi} onChange={(e) => setDateEnvoi(e.target.value)} required />
+            <input
+              type="date"
+              value={dateEnvoi}
+              onChange={(e) => setDateEnvoi(e.target.value)}
+              required
+            />
           </label>
           <label>
             Montant TTC devis (€)
@@ -199,7 +222,9 @@ function DetailEntreprisesTma({ tma, colonnes, delaiRetourEntrepriseTmaJours, on
             <input type="date" value={dateRetour} onChange={(e) => setDateRetour(e.target.value)} />
           </label>
           <button type="submit">Ajouter</button>
-          <button type="button" onClick={onFermer}>Fermer</button>
+          <button type="button" onClick={onFermer}>
+            Fermer
+          </button>
         </form>
       </td>
     </tr>

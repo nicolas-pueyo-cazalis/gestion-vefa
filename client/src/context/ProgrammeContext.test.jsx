@@ -12,8 +12,12 @@ function stubLocalStorage(valeurs = {}) {
   const magasin = { ...valeurs }
   vi.stubGlobal('localStorage', {
     getItem: vi.fn((cle) => magasin[cle] ?? null),
-    setItem: vi.fn((cle, valeur) => { magasin[cle] = valeur }),
-    removeItem: vi.fn((cle) => { delete magasin[cle] }),
+    setItem: vi.fn((cle, valeur) => {
+      magasin[cle] = valeur
+    }),
+    removeItem: vi.fn((cle) => {
+      delete magasin[cle]
+    }),
   })
   return magasin
 }
@@ -23,7 +27,7 @@ afterEach(() => {
 })
 
 describe('ProgrammeProvider / useProgramme', () => {
-  it('ne décide rien tant qu\'AuthContext n\'a pas fini sa propre vérification (garde-fou du bug historique, point 143)', async () => {
+  it("ne décide rien tant qu'AuthContext n'a pas fini sa propre vérification (garde-fou du bug historique, point 143)", async () => {
     mockUseAuth.mockReturnValue({ utilisateur: null, chargement: true })
     stubLocalStorage({ programmeId: 'prog1' })
     const fetchSimule = vi.fn()
@@ -37,7 +41,7 @@ describe('ProgrammeProvider / useProgramme', () => {
     expect(fetchSimule).not.toHaveBeenCalled()
   })
 
-  it('n\'a pas de programme actif si personne n\'est connecté', async () => {
+  it("n'a pas de programme actif si personne n'est connecté", async () => {
     mockUseAuth.mockReturnValue({ utilisateur: null, chargement: false })
     stubLocalStorage()
     vi.stubGlobal('fetch', vi.fn())
@@ -48,7 +52,7 @@ describe('ProgrammeProvider / useProgramme', () => {
     expect(result.current.programmeActif).toBeNull()
   })
 
-  it('n\'appelle pas l\'API si aucun programme n\'est stocké, même connecté', async () => {
+  it("n'appelle pas l'API si aucun programme n'est stocké, même connecté", async () => {
     mockUseAuth.mockReturnValue({ utilisateur: { id: '1', role: 'admin' }, chargement: false })
     stubLocalStorage()
     const fetchSimule = vi.fn()
@@ -64,10 +68,13 @@ describe('ProgrammeProvider / useProgramme', () => {
   it('restaure le programme actif si le programme stocké existe toujours', async () => {
     mockUseAuth.mockReturnValue({ utilisateur: { id: '1', role: 'admin' }, chargement: false })
     stubLocalStorage({ programmeId: 'prog1', jeton: 'abc' })
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ _id: 'prog1', nom: 'Les Jardins' }),
-    }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ _id: 'prog1', nom: 'Les Jardins' }),
+      }),
+    )
 
     const { result } = renderHook(() => useProgramme(), { wrapper: ProgrammeProvider })
 
@@ -97,17 +104,22 @@ describe('ProgrammeProvider / useProgramme', () => {
 
     result.current.choisirProgramme({ _id: 'prog2', nom: 'Le Clos Fleuri' })
 
-    await waitFor(() => expect(result.current.programmeActif).toEqual({ _id: 'prog2', nom: 'Le Clos Fleuri' }))
+    await waitFor(() =>
+      expect(result.current.programmeActif).toEqual({ _id: 'prog2', nom: 'Le Clos Fleuri' }),
+    )
     expect(magasin.programmeId).toBe('prog2')
   })
 
   it('changerDeProgramme() retire le programme stocké et vide le contexte', async () => {
     mockUseAuth.mockReturnValue({ utilisateur: { id: '1', role: 'admin' }, chargement: false })
     const magasin = stubLocalStorage({ programmeId: 'prog1' })
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ _id: 'prog1', nom: 'Les Jardins' }),
-    }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ _id: 'prog1', nom: 'Les Jardins' }),
+      }),
+    )
 
     const { result } = renderHook(() => useProgramme(), { wrapper: ProgrammeProvider })
     await waitFor(() => expect(result.current.programmeActif).not.toBeNull())

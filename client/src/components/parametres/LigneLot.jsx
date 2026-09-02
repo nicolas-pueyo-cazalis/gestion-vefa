@@ -25,7 +25,9 @@ function LigneLot({ lot, etagesDisponibles, annexes, onEnregistrer, onSupprimer 
   const [type, setType] = useState(lot.type ?? '')
   const [orientation, setOrientation] = useState(lot.orientation ?? '')
   const [surfaceHabitable, setSurfaceHabitable] = useState(lot.surfaceHabitable ?? '')
-  const [surfaceSousPlafondBas, setSurfaceSousPlafondBas] = useState(lot.surfaceSousPlafondBas ?? '')
+  const [surfaceSousPlafondBas, setSurfaceSousPlafondBas] = useState(
+    lot.surfaceSousPlafondBas ?? '',
+  )
   const [surfacesTerrasses, setSurfacesTerrasses] = useState(lot.surfacesTerrasses ?? [])
   const [surfacesBalcons, setSurfacesBalcons] = useState(lot.surfacesBalcons ?? [])
   const [surfacesLoggias, setSurfacesLoggias] = useState(lot.surfacesLoggias ?? [])
@@ -80,7 +82,11 @@ function LigneLot({ lot, etagesDisponibles, annexes, onEnregistrer, onSupprimer 
             Étage
             <select value={etage} onChange={(e) => setEtage(e.target.value)}>
               <option value="">—</option>
-              {etagesDisponibles.map((e) => <option key={e} value={e}>{e}</option>)}
+              {etagesDisponibles.map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
             </select>
           </label>
           <label>
@@ -91,12 +97,21 @@ function LigneLot({ lot, etagesDisponibles, annexes, onEnregistrer, onSupprimer 
             Orientation
             <select value={orientation} onChange={(e) => setOrientation(e.target.value)}>
               <option value="">—</option>
-              {ORIENTATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+              {ORIENTATIONS.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
             </select>
           </label>
           <label>
             Surface habitable (m²)
-            <input type="number" step="0.01" value={surfaceHabitable} onChange={(e) => setSurfaceHabitable(e.target.value)} />
+            <input
+              type="number"
+              step="0.01"
+              value={surfaceHabitable}
+              onChange={(e) => setSurfaceHabitable(e.target.value)}
+            />
           </label>
           <label>
             Surface &lt; 1,80m (m²)
@@ -107,12 +122,29 @@ function LigneLot({ lot, etagesDisponibles, annexes, onEnregistrer, onSupprimer 
               onChange={(e) => setSurfaceSousPlafondBas(e.target.value)}
             />
           </label>
-          <ListeSurfaces label="Terrasses (m²)" valeurs={surfacesTerrasses} onChange={setSurfacesTerrasses} />
-          <ListeSurfaces label="Balcons (m²)" valeurs={surfacesBalcons} onChange={setSurfacesBalcons} />
-          <ListeSurfaces label="Loggias (m²)" valeurs={surfacesLoggias} onChange={setSurfacesLoggias} />
+          <ListeSurfaces
+            label="Terrasses (m²)"
+            valeurs={surfacesTerrasses}
+            onChange={setSurfacesTerrasses}
+          />
+          <ListeSurfaces
+            label="Balcons (m²)"
+            valeurs={surfacesBalcons}
+            onChange={setSurfacesBalcons}
+          />
+          <ListeSurfaces
+            label="Loggias (m²)"
+            valeurs={surfacesLoggias}
+            onChange={setSurfacesLoggias}
+          />
           <label>
             Jardin (m²)
-            <input type="number" step="0.01" value={surfaceJardin} onChange={(e) => setSurfaceJardin(e.target.value)} />
+            <input
+              type="number"
+              step="0.01"
+              value={surfaceJardin}
+              onChange={(e) => setSurfaceJardin(e.target.value)}
+            />
           </label>
           {estActe && (
             <p className="avertissement-cellule avertissement-pleine-largeur">
@@ -137,11 +169,14 @@ function LigneLot({ lot, etagesDisponibles, annexes, onEnregistrer, onSupprimer 
           </div>
           <p className="apercu-montant">
             Prix logement seul : {formatMontant(lot.prixLogementSeul ?? 0, 0)} — Prix total (avec
-            annexes) : {formatMontant(apercuPrixTotal, 0)} — modifiable uniquement depuis la page Lots.
+            annexes) : {formatMontant(apercuPrixTotal, 0)} — modifiable uniquement depuis la page
+            Lots.
           </p>
           {erreur && <p className="erreur-champ">{erreur}</p>}
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={() => setEnEdition(false)}>Annuler</button>
+          <button type="button" onClick={() => setEnEdition(false)}>
+            Annuler
+          </button>
         </form>
       </li>
     )
@@ -155,9 +190,12 @@ function LigneLot({ lot, etagesDisponibles, annexes, onEnregistrer, onSupprimer 
       {lot.orientation && ` — ${lot.orientation}`}
       {lot.surfaceHabitable != null && ` — ${lot.surfaceHabitable} m² habitables`}
       {lot.surfaceSousPlafondBas != null && ` — ${lot.surfaceSousPlafondBas} m² < 1,80m`}
-      {lot.surfacesTerrasses?.length > 0 && ` — terrasse${lot.surfacesTerrasses.length > 1 ? 's' : ''} : ${lot.surfacesTerrasses.join(', ')} m²`}
-      {lot.surfacesBalcons?.length > 0 && ` — balcon${lot.surfacesBalcons.length > 1 ? 's' : ''} : ${lot.surfacesBalcons.join(', ')} m²`}
-      {lot.surfacesLoggias?.length > 0 && ` — loggia${lot.surfacesLoggias.length > 1 ? 's' : ''} : ${lot.surfacesLoggias.join(', ')} m²`}
+      {lot.surfacesTerrasses?.length > 0 &&
+        ` — terrasse${lot.surfacesTerrasses.length > 1 ? 's' : ''} : ${lot.surfacesTerrasses.join(', ')} m²`}
+      {lot.surfacesBalcons?.length > 0 &&
+        ` — balcon${lot.surfacesBalcons.length > 1 ? 's' : ''} : ${lot.surfacesBalcons.join(', ')} m²`}
+      {lot.surfacesLoggias?.length > 0 &&
+        ` — loggia${lot.surfacesLoggias.length > 1 ? 's' : ''} : ${lot.surfacesLoggias.join(', ')} m²`}
       {lot.surfaceJardin != null && ` — ${lot.surfaceJardin} m² jardin`}
       {TYPES_ANNEXES.map(({ valeur, libelle }) => {
         const resume = resumeAnnexes(annexesDuLot, valeur, libelle)
@@ -165,8 +203,12 @@ function LigneLot({ lot, etagesDisponibles, annexes, onEnregistrer, onSupprimer 
       })}
       {lot.prixLogementSeul != null && ` — logement seul ${formatMontant(lot.prixLogementSeul, 0)}`}
       {lot.prixTTC != null && ` — total ${formatMontant(lot.prixTTC, 0)}`}
-      <button type="button" onClick={() => setEnEdition(true)}>Modifier</button>
-      <button type="button" onClick={() => onSupprimer(lot._id)}>Retirer</button>
+      <button type="button" onClick={() => setEnEdition(true)}>
+        Modifier
+      </button>
+      <button type="button" onClick={() => onSupprimer(lot._id)}>
+        Retirer
+      </button>
     </li>
   )
 }

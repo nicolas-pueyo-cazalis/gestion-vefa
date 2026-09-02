@@ -32,8 +32,11 @@ function renderBandeau() {
 }
 
 describe('Bandeau', () => {
-  it('affiche le nom et l\'adresse du programme actif', () => {
-    mockUseAuth.mockReturnValue({ utilisateur: { nom: 'Nicolas', role: 'admin' }, deconnecter: vi.fn() })
+  it("affiche le nom et l'adresse du programme actif", () => {
+    mockUseAuth.mockReturnValue({
+      utilisateur: { nom: 'Nicolas', role: 'admin' },
+      deconnecter: vi.fn(),
+    })
     mockUseProgramme.mockReturnValue({
       programmeActif: { nom: 'Les Jardins', adresse: '12 rue des Fleurs', commune: 'Lyon' },
       changerDeProgramme: vi.fn(),
@@ -45,8 +48,11 @@ describe('Bandeau', () => {
     expect(screen.getByText('12 rue des Fleurs, Lyon')).toBeInTheDocument()
   })
 
-  it('affiche le nom de l\'utilisateur et son rôle', () => {
-    mockUseAuth.mockReturnValue({ utilisateur: { nom: 'Nicolas', role: 'gestionnaire' }, deconnecter: vi.fn() })
+  it("affiche le nom de l'utilisateur et son rôle", () => {
+    mockUseAuth.mockReturnValue({
+      utilisateur: { nom: 'Nicolas', role: 'gestionnaire' },
+      deconnecter: vi.fn(),
+    })
     mockUseProgramme.mockReturnValue({ programmeActif: {}, changerDeProgramme: vi.fn() })
 
     renderBandeau()
@@ -55,8 +61,11 @@ describe('Bandeau', () => {
     expect(screen.getByText('(gestionnaire)')).toBeInTheDocument()
   })
 
-  it('affiche l\'email si l\'utilisateur n\'a pas de nom renseigné', () => {
-    mockUseAuth.mockReturnValue({ utilisateur: { email: 'nicolas@test.fr', role: 'admin' }, deconnecter: vi.fn() })
+  it("affiche l'email si l'utilisateur n'a pas de nom renseigné", () => {
+    mockUseAuth.mockReturnValue({
+      utilisateur: { email: 'nicolas@test.fr', role: 'admin' },
+      deconnecter: vi.fn(),
+    })
     mockUseProgramme.mockReturnValue({ programmeActif: {}, changerDeProgramme: vi.fn() })
 
     renderBandeau()
@@ -65,7 +74,10 @@ describe('Bandeau', () => {
   })
 
   it('affiche un tiret pour chaque repère du programme non renseigné', () => {
-    mockUseAuth.mockReturnValue({ utilisateur: { nom: 'Nicolas', role: 'admin' }, deconnecter: vi.fn() })
+    mockUseAuth.mockReturnValue({
+      utilisateur: { nom: 'Nicolas', role: 'admin' },
+      deconnecter: vi.fn(),
+    })
     mockUseProgramme.mockReturnValue({ programmeActif: {}, changerDeProgramme: vi.fn() })
 
     renderBandeau()
@@ -89,7 +101,10 @@ describe('Bandeau', () => {
 
   it('"Changer de programme" appelle changerDeProgramme() et navigue vers /programmes', () => {
     const changerDeProgramme = vi.fn()
-    mockUseAuth.mockReturnValue({ utilisateur: { nom: 'Nicolas', role: 'admin' }, deconnecter: vi.fn() })
+    mockUseAuth.mockReturnValue({
+      utilisateur: { nom: 'Nicolas', role: 'admin' },
+      deconnecter: vi.fn(),
+    })
     mockUseProgramme.mockReturnValue({ programmeActif: {}, changerDeProgramme })
 
     renderBandeau()

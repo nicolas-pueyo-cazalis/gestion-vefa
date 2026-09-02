@@ -10,7 +10,11 @@ function SectionBareme({ programme, onEnregistrer }) {
   }
 
   function modifierPourcentage(index, valeurEnPourcent) {
-    setPhases(phases.map((p, i) => (i === index ? { ...p, pourcentage: Number(valeurEnPourcent) / 100 } : p)))
+    setPhases(
+      phases.map((p, i) =>
+        i === index ? { ...p, pourcentage: Number(valeurEnPourcent) / 100 } : p,
+      ),
+    )
   }
 
   function retirer(index) {
@@ -61,12 +65,24 @@ function SectionBareme({ programme, onEnregistrer }) {
               onChange={(e) => modifierPourcentage(index, e.target.value)}
             />
             <span>%</span>
-            <button type="button" onClick={() => deplacer(index, -1)} disabled={index === 0}>↑</button>
-            <button type="button" onClick={() => deplacer(index, 1)} disabled={index === phases.length - 1}>↓</button>
-            <button type="button" onClick={() => retirer(index)}>Retirer</button>
+            <button type="button" onClick={() => deplacer(index, -1)} disabled={index === 0}>
+              ↑
+            </button>
+            <button
+              type="button"
+              onClick={() => deplacer(index, 1)}
+              disabled={index === phases.length - 1}
+            >
+              ↓
+            </button>
+            <button type="button" onClick={() => retirer(index)}>
+              Retirer
+            </button>
           </div>
         ))}
-        <button type="button" onClick={ajouter}>Ajouter une phase</button>
+        <button type="button" onClick={ajouter}>
+          Ajouter une phase
+        </button>
         <p className={totalPourcent === 100 ? 'total-ok' : 'total-erreur'}>
           Total : {totalPourcent}% {totalPourcent !== 100 && '— doit faire 100%'}
         </p>

@@ -32,7 +32,7 @@ describe('formatteDecimales', () => {
 })
 
 describe('afficheSurface', () => {
-  it('formate une surface avec l\'unité m²', () => {
+  it("formate une surface avec l'unité m²", () => {
     expect(afficheSurface(45)).toBe('45,00 m²')
   })
 
@@ -51,7 +51,7 @@ describe('pluraliser', () => {
     expect(pluraliser('Parking extérieur', true)).toBe('Parkings extérieurs')
   })
 
-  it('fonctionne aussi sur un libellé d\'un seul mot', () => {
+  it("fonctionne aussi sur un libellé d'un seul mot", () => {
     expect(pluraliser('Cave', true)).toBe('Caves')
   })
 })
@@ -79,7 +79,9 @@ describe('ligneAnnexesType', () => {
   ]
 
   it('filtre les annexes par type et liste leurs numéros, avec un pluriel grammaticalement correct sur les 2 mots', () => {
-    expect(ligneAnnexesType('Parking extérieur', annexes, 'parking_ext')).toBe('Parkings extérieurs n° 3, 5')
+    expect(ligneAnnexesType('Parking extérieur', annexes, 'parking_ext')).toBe(
+      'Parkings extérieurs n° 3, 5',
+    )
   })
 
   it('renvoie null si aucune annexe de ce type', () => {
@@ -99,18 +101,18 @@ describe('afficheAnnexes', () => {
     expect(afficheAnnexes(lot)).toEqual(['Terrasse : 12,50 m²', 'Cave n° 2'])
   })
 
-  it('renvoie un tableau vide si le lot n\'a aucune annexe', () => {
+  it("renvoie un tableau vide si le lot n'a aucune annexe", () => {
     expect(afficheAnnexes({})).toEqual([])
   })
 })
 
 describe('dateActuelle', () => {
-  it('priorise la date d\'acte sur la réservation et l\'option', () => {
+  it("priorise la date d'acte sur la réservation et l'option", () => {
     const lot = { dateActe: '2026-09-01', dateReservation: '2026-06-01', dateOption: '2026-01-01' }
     expect(dateActuelle(lot)).toBe('01/09/2026')
   })
 
-  it('utilise la date de réservation si pas d\'acte', () => {
+  it("utilise la date de réservation si pas d'acte", () => {
     const lot = { dateReservation: '2026-06-01', dateOption: '2026-01-01' }
     expect(dateActuelle(lot)).toBe('01/06/2026')
   })
@@ -131,25 +133,29 @@ describe('offrePretManquante', () => {
     expect(offrePretManquante(lot)).toBeFalsy()
   })
 
-  it('faux si le lot n\'est pas encore Acté', () => {
+  it("faux si le lot n'est pas encore Acté", () => {
     const lot = { statut: 'reserve', acquereur: { sansPret: false, dateOffrePretRecue: null } }
     expect(offrePretManquante(lot)).toBeFalsy()
   })
 })
 
 describe('nomClient', () => {
-  it('assemble civilité, prénom et nom de l\'historique', () => {
-    expect(nomClient({ civiliteClient: 'M.', prenomClient: 'Nicolas', nomClient: 'Cazalis' })).toBe('M. Nicolas Cazalis')
+  it("assemble civilité, prénom et nom de l'historique", () => {
+    expect(nomClient({ civiliteClient: 'M.', prenomClient: 'Nicolas', nomClient: 'Cazalis' })).toBe(
+      'M. Nicolas Cazalis',
+    )
   })
 
-  it('renvoie un tiret cadratin si rien n\'est renseigné', () => {
+  it("renvoie un tiret cadratin si rien n'est renseigné", () => {
     expect(nomClient({})).toBe('—')
   })
 })
 
 describe('derniereDateAnnulation', () => {
-  it('priorise la date d\'acte, comme dateActuelle', () => {
-    expect(derniereDateAnnulation({ dateActe: '2026-09-01', dateReservation: '2026-06-01' })).toBe('01/09/2026')
+  it("priorise la date d'acte, comme dateActuelle", () => {
+    expect(derniereDateAnnulation({ dateActe: '2026-09-01', dateReservation: '2026-06-01' })).toBe(
+      '01/09/2026',
+    )
   })
 })
 

@@ -77,7 +77,9 @@ function FormulaireVenteAnnexe({ annexesDisponibles, acquereurs, onCreer, onFerm
     // Nicolas) — pas de champ "Référence" séparé à saisir. Si aucun
     // client n'est encore choisi, l'annexe elle-même sert de repère
     // provisoire (reference reste un champ obligatoire côté serveur).
-    const reference = nomNom ? `${civiliteNom} ${nomNom}` : libelleAnnexe(annexesDisponibles.find((a) => a._id === annexeId))
+    const reference = nomNom
+      ? `${civiliteNom} ${nomNom}`
+      : libelleAnnexe(annexesDisponibles.find((a) => a._id === annexeId))
     onCreer({ annexeId, reference, infosVente })
   }
 
@@ -86,7 +88,9 @@ function FormulaireVenteAnnexe({ annexesDisponibles, acquereurs, onCreer, onFerm
       <section className="section-parametres">
         <h2>Vendre une annexe</h2>
         <p>Aucune annexe de disponible à la vente.</p>
-        <button type="button" onClick={onFermer}>Fermer</button>
+        <button type="button" onClick={onFermer}>
+          Fermer
+        </button>
       </section>
     )
   }
@@ -98,9 +102,13 @@ function FormulaireVenteAnnexe({ annexesDisponibles, acquereurs, onCreer, onFerm
         <label>
           Annexe
           <select value={annexeId} onChange={(e) => setAnnexeId(e.target.value)} required>
-            <option value="" disabled>Choisir...</option>
+            <option value="" disabled>
+              Choisir...
+            </option>
             {annexesDisponibles.map((a) => (
-              <option key={a._id} value={a._id}>{libelleAnnexe(a)}</option>
+              <option key={a._id} value={a._id}>
+                {libelleAnnexe(a)}
+              </option>
             ))}
           </select>
         </label>
@@ -108,7 +116,9 @@ function FormulaireVenteAnnexe({ annexesDisponibles, acquereurs, onCreer, onFerm
           Statut
           <select value={statut} onChange={(e) => changerStatut(e.target.value)}>
             {Object.entries(STATUTS_LOT).map(([valeur, libelle]) => (
-              <option key={valeur} value={valeur}>{libelle}</option>
+              <option key={valeur} value={valeur}>
+                {libelle}
+              </option>
             ))}
           </select>
         </label>
@@ -176,7 +186,9 @@ function FormulaireVenteAnnexe({ annexesDisponibles, acquereurs, onCreer, onFerm
         </label>
         <div className="boutons-alignes-champs">
           <button type="submit">Créer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
         </div>
       </form>
     </section>

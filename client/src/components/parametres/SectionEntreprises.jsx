@@ -100,13 +100,16 @@ function SectionEntreprises({ entreprises, onChangement }) {
         {entreprises.length === 0 && <li>Aucune entreprise pour l'instant.</li>}
         {entreprises.map((e) => (
           <li key={e._id}>
-            {e.numeroLot && `Lot ${e.numeroLot} — `}{e.corpsDeTravaux} — {e.nom}
+            {e.numeroLot && `Lot ${e.numeroLot} — `}
+            {e.corpsDeTravaux} — {e.nom}
             {e.contact?.adresse && ` — ${e.contact.adresse}`}
             {e.contact?.codePostal && ` ${e.contact.codePostal}`}
             {e.contact?.commune && ` ${e.contact.commune}`}
             {e.contact?.telephone && ` — ${e.contact.telephone}`}
             {e.contact?.email && ` — ${e.contact.email}`}
-            <button type="button" onClick={() => supprimer(e._id)}>Retirer</button>
+            <button type="button" onClick={() => supprimer(e._id)}>
+              Retirer
+            </button>
           </li>
         ))}
       </ul>
@@ -117,11 +120,19 @@ function SectionEntreprises({ entreprises, onChangement }) {
         </label>
         <label>
           Corps de travaux
-          <input value={corpsDeTravaux} onChange={(e) => setCorpsDeTravaux(e.target.value)} required />
+          <input
+            value={corpsDeTravaux}
+            onChange={(e) => setCorpsDeTravaux(e.target.value)}
+            required
+          />
         </label>
         <label>
           N° de lot
-          <input value={numeroLot} onChange={(e) => setNumeroLot(e.target.value)} placeholder="ex: 01" />
+          <input
+            value={numeroLot}
+            onChange={(e) => setNumeroLot(e.target.value)}
+            placeholder="ex: 01"
+          />
         </label>
         <label>
           Adresse

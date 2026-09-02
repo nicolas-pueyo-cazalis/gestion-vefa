@@ -62,12 +62,16 @@ function FormulaireAppelDeFonds({ appel, colonnes, onEnregistrer, onFermer, onOu
             <input value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
           </label>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
           {onOuvrirBaremeLot && (
             // .bouton-danger réutilisée pour le rouge demandé par Nicolas
             // (20/07/2026) — pas une action destructrice ici, juste besoin
             // de la faire ressortir des deux boutons voisins.
-            <button type="button" className="bouton-danger" onClick={onOuvrirBaremeLot}>Barème du lot</button>
+            <button type="button" className="bouton-danger" onClick={onOuvrirBaremeLot}>
+              Barème du lot
+            </button>
           )}
         </form>
       </td>

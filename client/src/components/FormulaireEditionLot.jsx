@@ -10,7 +10,15 @@ function versDateInput(valeur) {
 
 const NOUVEL_ACQUEREUR = '__nouveau__'
 
-function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnulerVente, onEnregistrerPrix, onFermer }) {
+function FormulaireEditionLot({
+  lot,
+  acquereurs,
+  colonnes,
+  onEnregistrer,
+  onAnnulerVente,
+  onEnregistrerPrix,
+  onFermer,
+}) {
   // Prix modifiable uniquement depuis ce panneau (17/07/2026, remarque de
   // Nicolas : un seul bouton "crayon" — Paramètres ne sert plus qu'au
   // paramétrage initial), et seulement avant l'Acté (plus de négociation
@@ -86,7 +94,11 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnu
   // simplement le formulaire sans rien modifier (juste "revenir en
   // arrière" sur l'édition en cours, sans toucher au logement).
   function annulerVente() {
-    if (window.confirm(`Annuler la vente du logement ${lot.reference} ? Il repassera "Libre" (de nouveau à la vente) ; le statut, les dates, le client et le commentaire actuels seront conservés dans l'historique des annulations.`)) {
+    if (
+      window.confirm(
+        `Annuler la vente du logement ${lot.reference} ? Il repassera "Libre" (de nouveau à la vente) ; le statut, les dates, le client et le commentaire actuels seront conservés dans l'historique des annulations.`,
+      )
+    ) {
       onAnnulerVente(lot._id)
     }
   }
@@ -99,7 +111,9 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnu
             Statut
             <select value={statut} onChange={(e) => changerStatut(e.target.value)}>
               {Object.entries(STATUTS_LOT).map(([valeur, libelle]) => (
-                <option key={valeur} value={valeur}>{libelle}</option>
+                <option key={valeur} value={valeur}>
+                  {libelle}
+                </option>
               ))}
             </select>
           </label>
@@ -166,15 +180,25 @@ function FormulaireEditionLot({ lot, acquereurs, colonnes, onEnregistrer, onAnnu
             <input value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
           </label>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
           {statut !== 'libre' && (
-            <button type="button" className="bouton-danger" onClick={annulerVente}>Annuler la vente</button>
+            <button type="button" className="bouton-danger" onClick={annulerVente}>
+              Annuler la vente
+            </button>
           )}
           {lot.statut !== 'acte' && !prixOuvert && (
-            <button type="button" onClick={() => setPrixOuvert(true)}>Modifier le prix</button>
+            <button type="button" onClick={() => setPrixOuvert(true)}>
+              Modifier le prix
+            </button>
           )}
           {prixOuvert && (
-            <FormulairePrixLot lot={lot} onEnregistrer={onEnregistrerPrix} onFermer={() => setPrixOuvert(false)} />
+            <FormulairePrixLot
+              lot={lot}
+              onEnregistrer={onEnregistrerPrix}
+              onFermer={() => setPrixOuvert(false)}
+            />
           )}
         </form>
       </td>

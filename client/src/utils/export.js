@@ -81,78 +81,84 @@ export async function exporterExcel(donnees) {
 
   let ligneFigeApres = null // ySplit calculé une seule fois, sur la 1ère section
 
-  sections.forEach(({ sousTitre, entetes, lignes, totaux, lignesTotal, stylesLignes }, indexSection) => {
-    if (sousTitre) {
-      const ligneSousTitre = feuille.addRow([sousTitre])
-      ligneSousTitre.font = { bold: true, size: 12 }
-      feuille.mergeCells(feuille.rowCount, 1, feuille.rowCount, largeurMax)
-    }
-
-    const ligneEntetes = feuille.addRow(entetes)
-    ligneEntetes.eachCell((cellule) => {
-      cellule.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-      cellule.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COULEUR_ENTETE } }
-    })
-    if (indexSection === 0) ligneFigeApres = feuille.rowCount
-
-    lignes.forEach((ligne, i) => {
-      const nouvelleLigne = feuille.addRow(ligne)
-      // Alignement en haut (pas centré verticalement) : une cellule
-      // "Annexes" peut contenir plusieurs lignes de texte (\n), affichées
-      // proprement seulement avec `wrapText`.
-      nouvelleLigne.alignment = { vertical: 'top', wrapText: true }
-      // `stylesLignes` (21/07/2026, export détail entreprises des TMA) :
-      // certaines lignes doivent ressortir visuellement du lot (la ligne
-      // "demande" en gras scelle la demande, les lignes "entreprise" en
-      // italique les distinguent) — tableau parallèle à `lignes`, un style
-      // optionnel par ligne ('gras' | 'italique').
-      const style = stylesLignes?.[i]
-      const policeLigne = style === 'gras' ? { bold: true } : style === 'italique' ? { italic: true } : null
-      if (policeLigne) nouvelleLigne.font = policeLigne
-      // "En retard" toujours en rouge (21/07/2026, remarque de Nicolas),
-      // quelle que soit la ligne — combiné au style de la ligne (gras ou
-      // italique) plutôt que de l'écraser.
-      ligne.forEach((valeur, colIndex) => {
-        if (valeur === 'En retard') {
-          nouvelleLigne.getCell(colIndex + 1).font = { ...policeLigne, color: { argb: 'FFDC2626' } }
-        }
-      })
-    })
-
-    lignesTotal?.forEach((ligne) => {
-      const nouvelleLigne = feuille.addRow(ligne)
-      nouvelleLigne.font = { bold: true }
-      nouvelleLigne.eachCell((cellule) => {
-        cellule.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2F6' } }
-      })
-    })
-
-    if (totaux?.length > 0) {
-      feuille.addRow([])
-      totaux.forEach(([libelle, valeur]) => {
-        feuille.addRow([libelle, valeur]).font = { bold: true }
-      })
-    }
-
-    // Ligne vide entre deux sections.
-    if (indexSection < sections.length - 1) feuille.addRow([])
-
-    // Largeur de chaque colonne ≈ le texte le plus long qu'elle contient
-    // (en-tête compris), plafonnée pour ne pas produire une colonne
-    // démesurée à cause d'un commentaire très long. Prend le plus grand
-    // besoin toutes sections confondues (une seule feuille, mêmes colonnes).
-    entetes.forEach((entete, i) => {
-      const colonne = feuille.getColumn(i + 1)
-      let plusLongue = Math.max(entete.length, colonne.width ?? 0)
-      for (const ligne of [...lignes, ...(lignesTotal ?? [])]) {
-        const texte = String(ligne[i] ?? '')
-        for (const sousLigne of texte.split('\n')) {
-          plusLongue = Math.max(plusLongue, sousLigne.length)
-        }
+  sections.forEach(
+    ({ sousTitre, entetes, lignes, totaux, lignesTotal, stylesLignes }, indexSection) => {
+      if (sousTitre) {
+        const ligneSousTitre = feuille.addRow([sousTitre])
+        ligneSousTitre.font = { bold: true, size: 12 }
+        feuille.mergeCells(feuille.rowCount, 1, feuille.rowCount, largeurMax)
       }
-      colonne.width = Math.min(plusLongue + 2, 40)
-    })
-  })
+
+      const ligneEntetes = feuille.addRow(entetes)
+      ligneEntetes.eachCell((cellule) => {
+        cellule.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+        cellule.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COULEUR_ENTETE } }
+      })
+      if (indexSection === 0) ligneFigeApres = feuille.rowCount
+
+      lignes.forEach((ligne, i) => {
+        const nouvelleLigne = feuille.addRow(ligne)
+        // Alignement en haut (pas centré verticalement) : une cellule
+        // "Annexes" peut contenir plusieurs lignes de texte (\n), affichées
+        // proprement seulement avec `wrapText`.
+        nouvelleLigne.alignment = { vertical: 'top', wrapText: true }
+        // `stylesLignes` (21/07/2026, export détail entreprises des TMA) :
+        // certaines lignes doivent ressortir visuellement du lot (la ligne
+        // "demande" en gras scelle la demande, les lignes "entreprise" en
+        // italique les distinguent) — tableau parallèle à `lignes`, un style
+        // optionnel par ligne ('gras' | 'italique').
+        const style = stylesLignes?.[i]
+        const policeLigne =
+          style === 'gras' ? { bold: true } : style === 'italique' ? { italic: true } : null
+        if (policeLigne) nouvelleLigne.font = policeLigne
+        // "En retard" toujours en rouge (21/07/2026, remarque de Nicolas),
+        // quelle que soit la ligne — combiné au style de la ligne (gras ou
+        // italique) plutôt que de l'écraser.
+        ligne.forEach((valeur, colIndex) => {
+          if (valeur === 'En retard') {
+            nouvelleLigne.getCell(colIndex + 1).font = {
+              ...policeLigne,
+              color: { argb: 'FFDC2626' },
+            }
+          }
+        })
+      })
+
+      lignesTotal?.forEach((ligne) => {
+        const nouvelleLigne = feuille.addRow(ligne)
+        nouvelleLigne.font = { bold: true }
+        nouvelleLigne.eachCell((cellule) => {
+          cellule.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2F6' } }
+        })
+      })
+
+      if (totaux?.length > 0) {
+        feuille.addRow([])
+        totaux.forEach(([libelle, valeur]) => {
+          feuille.addRow([libelle, valeur]).font = { bold: true }
+        })
+      }
+
+      // Ligne vide entre deux sections.
+      if (indexSection < sections.length - 1) feuille.addRow([])
+
+      // Largeur de chaque colonne ≈ le texte le plus long qu'elle contient
+      // (en-tête compris), plafonnée pour ne pas produire une colonne
+      // démesurée à cause d'un commentaire très long. Prend le plus grand
+      // besoin toutes sections confondues (une seule feuille, mêmes colonnes).
+      entetes.forEach((entete, i) => {
+        const colonne = feuille.getColumn(i + 1)
+        let plusLongue = Math.max(entete.length, colonne.width ?? 0)
+        for (const ligne of [...lignes, ...(lignesTotal ?? [])]) {
+          const texte = String(ligne[i] ?? '')
+          for (const sousLigne of texte.split('\n')) {
+            plusLongue = Math.max(plusLongue, sousLigne.length)
+          }
+        }
+        colonne.width = Math.min(plusLongue + 2, 40)
+      })
+    },
+  )
 
   // Fige titre + ligne vide + en-têtes de la 1ère section : elles restent
   // visibles en défilant dans un tableau long, comme un en-tête HTML.
@@ -177,11 +183,18 @@ export async function exporterExcel(donnees) {
 // `{ 1: 40 }` pour "Client") plafonne certaines colonnes à une largeur
 // raisonnable ; le texte plus long que ce plafond revient alors à la
 // ligne (seul cas où c'est encore permis, comme les en-têtes).
-export function calculerLargeursColonnesFigees(doc, { entetes, lignes, lignesTotal }, { fontSize, cellPadding, largeursMax, margeHorizontale }) {
+export function calculerLargeursColonnesFigees(
+  doc,
+  { entetes, lignes, lignesTotal },
+  { fontSize, cellPadding, largeursMax, margeHorizontale },
+) {
   doc.setFontSize(fontSize)
   const largeurs = entetes.map((_, i) => {
     const cellules = [...lignes, ...(lignesTotal ?? [])].map((ligne) => String(ligne[i] ?? ''))
-    const largeurMax = Math.max(0, ...cellules.map((texte) => doc.getTextWidth(nettoyerPourPdf(texte))))
+    const largeurMax = Math.max(
+      0,
+      ...cellules.map((texte) => doc.getTextWidth(nettoyerPourPdf(texte))),
+    )
     // Plancher à 10mm : évite une colonne ridiculement étroite quand toutes
     // les cellules sont vides (ex: une phase jamais émise pour aucun lot).
     let largeur = Math.max(largeurMax + cellPadding * 2 + 1, 10)
@@ -267,7 +280,11 @@ export function exporterPDF(donnees) {
         ? { fontSize: 5.5, cellPadding: 0.75, overflow: 'linebreak' }
         : { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
       columnStyles: pageUnique
-        ? calculerLargeursColonnesFigees(doc, { entetes, lignes, lignesTotal }, { fontSize: 5.5, cellPadding: 0.75, largeursMax, margeHorizontale: 14 })
+        ? calculerLargeursColonnesFigees(
+            doc,
+            { entetes, lignes, lignesTotal },
+            { fontSize: 5.5, cellPadding: 0.75, largeursMax, margeHorizontale: 14 },
+          )
         : undefined,
       // `textColor`/`fontStyle` explicites (pas seulement `fillColor`) :
       // sans ça, l'en-tête ne se distinguait pas visuellement du corps du
@@ -306,7 +323,11 @@ export function exporterPDF(donnees) {
 // (utils/statuts.js), plus adapté à un tableau qu'à une lettre.
 function formatDateLongue(date) {
   if (!date) return ''
-  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(date))
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(date))
 }
 
 // Courrier d'appel de fonds (20/07/2026, remarque de Nicolas — modèle
@@ -316,9 +337,20 @@ function formatDateLongue(date) {
 // par ligne avec jsPDF directement, plutôt que via autoTable comme les
 // autres exports.
 function exporterCourrierAppelDeFonds({
-  nomFichier, promoteur, numeroAppel, phaseNom, programmeNom, lotReference,
-  acquereurNom, prixVente, dateAttestation, lignesPhases, montantARegler,
-  dateLimite, iban, bic,
+  nomFichier,
+  promoteur,
+  numeroAppel,
+  phaseNom,
+  programmeNom,
+  lotReference,
+  acquereurNom,
+  prixVente,
+  dateAttestation,
+  lignesPhases,
+  montantARegler,
+  dateLimite,
+  iban,
+  bic,
 }) {
   const doc = new jsPDF() // portrait
   const marge = 20
@@ -369,8 +401,8 @@ function exporterCourrierAppelDeFonds({
 
   doc.setFontSize(11)
   const paragraphe = doc.splitTextToSize(
-    `Conformément à l'attestation du Maître d'Œuvre du ${formatDateLongue(dateAttestation)}, `
-    + "nous vous prions de trouver ci-dessous l'appel de fonds correspondant.",
+    `Conformément à l'attestation du Maître d'Œuvre du ${formatDateLongue(dateAttestation)}, ` +
+      "nous vous prions de trouver ci-dessous l'appel de fonds correspondant.",
     largeurUtile,
   )
   doc.text(paragraphe, marge, y)
@@ -417,8 +449,15 @@ function exporterCourrierAppelDeFonds({
 // cocher dans la fenêtre de génération) — `lignesDemandes`, un tableau
 // même s'il n'y en a qu'une.
 function exporterDevisTma({
-  nomFichier, numeroDevis, dateGeneration, clientNom, maitreOuvrageNom,
-  programmeNom, lotReference, lignesDemandes, tauxTva,
+  nomFichier,
+  numeroDevis,
+  dateGeneration,
+  clientNom,
+  maitreOuvrageNom,
+  programmeNom,
+  lotReference,
+  lignesDemandes,
+  tauxTva,
 }) {
   const doc = new jsPDF() // portrait
   const marge = 20
@@ -467,8 +506,8 @@ function exporterDevisTma({
 
   doc.setFontSize(9)
   const paragraphe = doc.splitTextToSize(
-    "Travaux modificatifs demandés par l'acquéreur dans le cadre de l'opération en VEFA, "
-    + 'conformément aux plans et descriptifs initiaux.',
+    "Travaux modificatifs demandés par l'acquéreur dans le cadre de l'opération en VEFA, " +
+      'conformément aux plans et descriptifs initiaux.',
     largeurUtile,
   )
   doc.text(paragraphe, marge, y)
@@ -481,7 +520,10 @@ function exporterDevisTma({
   autoTable(doc, {
     head: [['N°TMA', 'Date de la demande', 'Désignation', 'Montant TTC (€)']],
     body: lignesDemandes.map((l) => [
-      String(l.numeroDemande), formatDate(l.dateDemande), nettoyerPourPdf(l.designation) || '—', nettoyerPourPdf(formatMontant(l.montantTTC)),
+      String(l.numeroDemande),
+      formatDate(l.dateDemande),
+      nettoyerPourPdf(l.designation) || '—',
+      nettoyerPourPdf(formatMontant(l.montantTTC)),
     ]),
     startY: y,
     margin: { left: marge, right: marge },

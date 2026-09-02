@@ -23,7 +23,9 @@ router.get('/', async (req, res) => {
     if (programme) {
       filtre = { lots: { $in: await getIdsLotsDuProgramme(programme) } }
     }
-    const acquereurs = await Acquereur.find(filtre).sort({ nom: 1, prenom: 1 }).populate('lots', 'reference')
+    const acquereurs = await Acquereur.find(filtre)
+      .sort({ nom: 1, prenom: 1 })
+      .populate('lots', 'reference')
     res.json(acquereurs)
   } catch (erreur) {
     repondreErreurServeur(res, erreur)
@@ -36,12 +38,30 @@ router.get('/', async (req, res) => {
 router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const {
-      civilite, nom, prenom, adresse, commune, codePostal,
-      telephone, email, banque, courtier, dateOffrePretRecue,
+      civilite,
+      nom,
+      prenom,
+      adresse,
+      commune,
+      codePostal,
+      telephone,
+      email,
+      banque,
+      courtier,
+      dateOffrePretRecue,
     } = req.body
     const acquereur = await Acquereur.create({
-      civilite, nom, prenom, adresse, commune, codePostal,
-      telephone, email, banque, courtier, dateOffrePretRecue,
+      civilite,
+      nom,
+      prenom,
+      adresse,
+      commune,
+      codePostal,
+      telephone,
+      email,
+      banque,
+      courtier,
+      dateOffrePretRecue,
     })
     res.status(201).json(acquereur)
   } catch (erreur) {

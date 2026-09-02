@@ -6,13 +6,16 @@ import mongoose from 'mongoose'
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const contactSchema = new mongoose.Schema({
-  nom: String,
-  adresse: String,
-  commune: String,
-  codePostal: String,
-  telephone: String, // format international E.164, ex: "+33612345678"
-  email: { type: String, match: EMAIL_REGEX },
-}, { _id: false })
+const contactSchema = new mongoose.Schema(
+  {
+    nom: String,
+    adresse: String,
+    commune: String,
+    codePostal: String,
+    telephone: String, // format international E.164, ex: "+33612345678"
+    email: { type: String, match: EMAIL_REGEX },
+  },
+  { _id: false },
+)
 
 export default contactSchema

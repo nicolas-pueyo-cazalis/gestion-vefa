@@ -42,7 +42,9 @@ export function texteRechercheAppel(appel) {
     formatDate(appel.dateReglement),
     LIBELLES_STATUT[statutAppel(appel)],
     appel.commentaire,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 const STATUTS_FILTRE = [
@@ -215,7 +217,10 @@ function AppelsDeFonds() {
   // encore émises restent quand même dues). Même règle sur la carte de
   // stat (somme sur tous les lots ayant au moins un appel) et dans le
   // récapitulatif par lot ci-dessous (ligne par ligne).
-  const soldeRestant = recapParLot.reduce((s, { lot, totalPaye: payeLot }) => s + lot.prixTTC - payeLot, 0)
+  const soldeRestant = recapParLot.reduce(
+    (s, { lot, totalPaye: payeLot }) => s + lot.prixTTC - payeLot,
+    0,
+  )
   const totalPrixTTCRecap = recapParLot.reduce((s, { lot }) => s + lot.prixTTC, 0)
 
   // Courrier d'appel de fonds (20/07/2026, remarque de Nicolas, modèle
@@ -292,7 +297,13 @@ function AppelsDeFonds() {
         formatMontant(lot.prixTTC - payeLot),
       ]),
       lignesTotal: [
-        ['Total', formatMontant(totalPrixTTCRecap), formatMontant(totalEmis), formatMontant(totalPaye), formatMontant(soldeRestant)],
+        [
+          'Total',
+          formatMontant(totalPrixTTCRecap),
+          formatMontant(totalEmis),
+          formatMontant(totalPaye),
+          formatMontant(soldeRestant),
+        ],
       ],
     }
   }
@@ -313,9 +324,15 @@ function AppelsDeFonds() {
   function donneesExportDetailParPhase() {
     const tauxTva = programme.parametres.tauxTva
     const entetes = [
-      'Lot', 'Client', 'Prix TTC',
-      ...phasesTriees.flatMap((phase) => [`${phase.nom} (${Math.round(phase.pourcentage * 100)}%)`, 'Réglé le']),
-      'Total payé', 'Reste à payer',
+      'Lot',
+      'Client',
+      'Prix TTC',
+      ...phasesTriees.flatMap((phase) => [
+        `${phase.nom} (${Math.round(phase.pourcentage * 100)}%)`,
+        'Réglé le',
+      ]),
+      'Total payé',
+      'Reste à payer',
     ]
     const lignes = recapParLot.map(({ lot, totalPaye: payeLot }) => {
       const appelsDuLot = appels.filter((a) => a.lot?._id === lot._id)
@@ -344,14 +361,29 @@ function AppelsDeFonds() {
         .filter((a) => a.phase.nom === phase.nom && a.dateEmission)
         .reduce((s, a) => s + a.montant, 0),
     )
-    function construireLigneTotal(libelle, montantPrixTTC, montantsParPhase, montantPaye, montantReste) {
+    function construireLigneTotal(
+      libelle,
+      montantPrixTTC,
+      montantsParPhase,
+      montantPaye,
+      montantReste,
+    ) {
       return [
-        libelle, '', formatMontant(montantPrixTTC),
+        libelle,
+        '',
+        formatMontant(montantPrixTTC),
         ...montantsParPhase.flatMap((montant) => [formatMontant(montant), '']),
-        formatMontant(montantPaye), formatMontant(montantReste),
+        formatMontant(montantPaye),
+        formatMontant(montantReste),
       ]
     }
-    const ligneTTC = construireLigneTotal('Montant total TTC', totalPrixTTCRecap, totauxTTCParPhase, totalPaye, soldeRestant)
+    const ligneTTC = construireLigneTotal(
+      'Montant total TTC',
+      totalPrixTTCRecap,
+      totauxTTCParPhase,
+      totalPaye,
+      soldeRestant,
+    )
     const ligneHT = construireLigneTotal(
       'Montant total HT',
       totalPrixTTCRecap / (1 + tauxTva),
@@ -415,15 +447,19 @@ function AppelsDeFonds() {
     }
 
     const dateDuJour = new Date().toISOString().slice(0, 10)
-    const reponses = await Promise.all(appelsAGenerer.map((appel) =>
-      apiFetch(`${API_URL}/api/appels-de-fonds/${appel._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dateEmission: dateDuJour }),
-      }),
-    ))
+    const reponses = await Promise.all(
+      appelsAGenerer.map((appel) =>
+        apiFetch(`${API_URL}/api/appels-de-fonds/${appel._id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dateEmission: dateDuJour }),
+        }),
+      ),
+    )
     if (reponses.some((r) => !r.ok)) {
-      alert("Les courriers ont été générés, mais \"Envoyé le\" n'a pas pu être mis à jour pour tous les logements.")
+      alert(
+        'Les courriers ont été générés, mais "Envoyé le" n\'a pas pu être mis à jour pour tous les logements.',
+      )
     }
 
     await chargerAppels()
@@ -462,11 +498,29 @@ function AppelsDeFonds() {
       )}
 
       <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
-      <FiltreMultiple titre="Phase :" options={nomsPhases} valeursActives={phasesActives} onChange={setPhasesActives} />
-      <FiltreMultiple titre="Lot :" options={referencesLots} valeursActives={lotsActifs} onChange={setLotsActifs} />
+      <FiltreMultiple
+        titre="Phase :"
+        options={nomsPhases}
+        valeursActives={phasesActives}
+        onChange={setPhasesActives}
+      />
+      <FiltreMultiple
+        titre="Lot :"
+        options={referencesLots}
+        valeursActives={lotsActifs}
+        onChange={setLotsActifs}
+      />
       <div className="barre-actions">
-        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un appel de fonds..." />
-        <button type="button" className="bouton-accordeon" onClick={() => setRecapParLotOuvert((v) => !v)}>
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un appel de fonds..."
+        />
+        <button
+          type="button"
+          className="bouton-accordeon"
+          onClick={() => setRecapParLotOuvert((v) => !v)}
+        >
           {recapParLotOuvert ? 'Masquer' : 'Voir'} le récapitulatif par lot
         </button>
         <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
@@ -485,9 +539,21 @@ function AppelsDeFonds() {
               lotsPourPhase,
               generer: genererAppelsDeFonds,
             },
-            { valeur: 'statistiques', libelle: 'Statistiques (cartes)', donnees: donneesExportStatistiques },
-            { valeur: 'recap-par-lot', libelle: 'Récapitulatif par lot', donnees: donneesExportRecapParLot },
-            { valeur: 'detail-par-phase', libelle: 'Récapitulatif détaillé par phase', donnees: donneesExportDetailParPhase },
+            {
+              valeur: 'statistiques',
+              libelle: 'Statistiques (cartes)',
+              donnees: donneesExportStatistiques,
+            },
+            {
+              valeur: 'recap-par-lot',
+              libelle: 'Récapitulatif par lot',
+              donnees: donneesExportRecapParLot,
+            },
+            {
+              valeur: 'detail-par-phase',
+              libelle: 'Récapitulatif détaillé par phase',
+              donnees: donneesExportDetailParPhase,
+            },
           ]}
           onFermer={() => setExportOuvert(false)}
         />
@@ -541,94 +607,111 @@ function AppelsDeFonds() {
       )}
 
       <div className="tableau-scroll">
-      <table className="tableau-lots">
-        <thead>
-          <tr>
-            <th>Lot</th>
-            <th>Phase</th>
-            <th>Avancement cumulé %</th>
-            <th>Avancement %</th>
-            <th className="colonne-montant">Montant TTC</th>
-            <th>Date attestation</th>
-            <th>Émis le</th>
-            <th>Limite règlement</th>
-            <th>Réglé le</th>
-            <th>Statut</th>
-            <th>Commentaire</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {appelsFiltres.length === 0 && (
+        <table className="tableau-lots">
+          <thead>
             <tr>
-              <td colSpan={NB_COLONNES}>
-                Aucun appel de fonds ne correspond à ce filtre.
-              </td>
+              <th>Lot</th>
+              <th>Phase</th>
+              <th>Avancement cumulé %</th>
+              <th>Avancement %</th>
+              <th className="colonne-montant">Montant TTC</th>
+              <th>Date attestation</th>
+              <th>Émis le</th>
+              <th>Limite règlement</th>
+              <th>Réglé le</th>
+              <th>Statut</th>
+              <th>Commentaire</th>
+              <th>Action</th>
             </tr>
-          )}
-          {appelsFiltres.map((appel, index) => {
-            // Une ligne par phase, mais le barème se négocie par LOGEMENT
-            // (13/07/2026) : le bouton/panneau n'apparaît qu'une fois, sur
-            // la dernière ligne de chaque lot (la liste est déjà triée par
-            // lot puis par phase.ordre, voir appelsTries plus haut).
-            const dernierDuLot = index === appelsFiltres.length - 1
-              || appelsFiltres[index + 1].lot?._id !== appel.lot?._id
-            const appelsDuLot = appelsFiltres.filter((a) => a.lot?._id === appel.lot?._id)
-            return (
-              <Fragment key={appel._id}>
-                <tr>
-                  <td>{appel.lot?.reference ?? '—'}</td>
-                  <td>{appel.phase.nom}</td>
-                  <td>{Math.round(cumulsParAppel[index] * 100)}%</td>
-                  <td>{Math.round(appel.phase.pourcentage * 100)}%</td>
-                  <td className="colonne-montant">{formatMontant(appel.montant)}</td>
-                  <td>{formatDate(appel.dateAttestationMOE)}</td>
-                  <td>{formatDate(appel.dateEmission)}</td>
-                  <td>{formatDate(appel.dateLimiteReglement)}</td>
-                  <td>{formatDate(appel.dateReglement)}</td>
-                  <td><Badge statut={statutAppel(appel)} texte={LIBELLES_STATUT[statutAppel(appel)]} /></td>
-                  <td><span className="commentaire-cellule">{appel.commentaire || '—'}</span></td>
-                  <td className="actions">
-                    <button
-                      type="button"
-                      className="bouton-icone"
-                      title="Modifier"
-                      aria-label="Modifier"
-                      onClick={() => setIdEnEdition(appel._id)}
-                    >
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-                {idEnEdition === appel._id && (
-                  <FormulaireAppelDeFonds
-                    appel={appel}
-                    colonnes={NB_COLONNES}
-                    onEnregistrer={enregistrer}
-                    onFermer={() => setIdEnEdition(null)}
-                    onOuvrirBaremeLot={
-                      dernierDuLot && appel.lot ? () => setIdLotBaremeOuvert(appel.lot._id) : undefined
-                    }
-                  />
-                )}
-                {dernierDuLot && idLotBaremeOuvert === appel.lot?._id && (
-                  <FormulaireBaremeLot
-                    lotId={appel.lot._id}
-                    prixTTC={appel.lot.prixTTC}
-                    appels={appelsDuLot}
-                    colonnes={NB_COLONNES}
-                    onEnregistrer={enregistrerBaremeLot}
-                    onFermer={() => setIdLotBaremeOuvert(null)}
-                  />
-                )}
-              </Fragment>
-            )
-          })}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {appelsFiltres.length === 0 && (
+              <tr>
+                <td colSpan={NB_COLONNES}>Aucun appel de fonds ne correspond à ce filtre.</td>
+              </tr>
+            )}
+            {appelsFiltres.map((appel, index) => {
+              // Une ligne par phase, mais le barème se négocie par LOGEMENT
+              // (13/07/2026) : le bouton/panneau n'apparaît qu'une fois, sur
+              // la dernière ligne de chaque lot (la liste est déjà triée par
+              // lot puis par phase.ordre, voir appelsTries plus haut).
+              const dernierDuLot =
+                index === appelsFiltres.length - 1 ||
+                appelsFiltres[index + 1].lot?._id !== appel.lot?._id
+              const appelsDuLot = appelsFiltres.filter((a) => a.lot?._id === appel.lot?._id)
+              return (
+                <Fragment key={appel._id}>
+                  <tr>
+                    <td>{appel.lot?.reference ?? '—'}</td>
+                    <td>{appel.phase.nom}</td>
+                    <td>{Math.round(cumulsParAppel[index] * 100)}%</td>
+                    <td>{Math.round(appel.phase.pourcentage * 100)}%</td>
+                    <td className="colonne-montant">{formatMontant(appel.montant)}</td>
+                    <td>{formatDate(appel.dateAttestationMOE)}</td>
+                    <td>{formatDate(appel.dateEmission)}</td>
+                    <td>{formatDate(appel.dateLimiteReglement)}</td>
+                    <td>{formatDate(appel.dateReglement)}</td>
+                    <td>
+                      <Badge
+                        statut={statutAppel(appel)}
+                        texte={LIBELLES_STATUT[statutAppel(appel)]}
+                      />
+                    </td>
+                    <td>
+                      <span className="commentaire-cellule">{appel.commentaire || '—'}</span>
+                    </td>
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="bouton-icone"
+                        title="Modifier"
+                        aria-label="Modifier"
+                        onClick={() => setIdEnEdition(appel._id)}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                  {idEnEdition === appel._id && (
+                    <FormulaireAppelDeFonds
+                      appel={appel}
+                      colonnes={NB_COLONNES}
+                      onEnregistrer={enregistrer}
+                      onFermer={() => setIdEnEdition(null)}
+                      onOuvrirBaremeLot={
+                        dernierDuLot && appel.lot
+                          ? () => setIdLotBaremeOuvert(appel.lot._id)
+                          : undefined
+                      }
+                    />
+                  )}
+                  {dernierDuLot && idLotBaremeOuvert === appel.lot?._id && (
+                    <FormulaireBaremeLot
+                      lotId={appel.lot._id}
+                      prixTTC={appel.lot.prixTTC}
+                      appels={appelsDuLot}
+                      colonnes={NB_COLONNES}
+                      onEnregistrer={enregistrerBaremeLot}
+                      onFermer={() => setIdLotBaremeOuvert(null)}
+                    />
+                  )}
+                </Fragment>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
     </>
   )

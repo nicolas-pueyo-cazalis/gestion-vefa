@@ -45,8 +45,15 @@ function nomComplet(acquereur) {
 function texteRechercheSuiviPret(lot, statut, delaiJours) {
   const acquereur = lot.acquereur
   if (statut === 'sans_pret') {
-    return [lot.reference, nomComplet(acquereur), formatDate(lot.dateReservation), 'Acquisition avec fonds personnels', lot.commentaire]
-      .filter(Boolean).join(' ')
+    return [
+      lot.reference,
+      nomComplet(acquereur),
+      formatDate(lot.dateReservation),
+      'Acquisition avec fonds personnels',
+      lot.commentaire,
+    ]
+      .filter(Boolean)
+      .join(' ')
   }
   return [
     lot.reference,
@@ -58,7 +65,9 @@ function texteRechercheSuiviPret(lot, statut, delaiJours) {
     formatDate(acquereur?.dateOffrePretRecue),
     LIBELLES_STATUT[statut],
     lot.commentaire,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 function SuiviPret() {
@@ -142,12 +151,19 @@ function SuiviPret() {
 
   const lotsFiltres = lotsConcernes
     .filter((lot) => statutActif === 'tous' || statutPret(lot, delaiJours) === statutActif)
-    .filter((lot) => correspondRecherche(texteRechercheSuiviPret(lot, statutPret(lot, delaiJours), delaiJours), recherche))
+    .filter((lot) =>
+      correspondRecherche(
+        texteRechercheSuiviPret(lot, statutPret(lot, delaiJours), delaiJours),
+        recherche,
+      ),
+    )
 
   const enAttente = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'attente').length
   const enRetard = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'retard').length
   const recues = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'recue').length
-  const sansPretNombre = lotsConcernes.filter((l) => statutPret(l, delaiJours) === 'sans_pret').length
+  const sansPretNombre = lotsConcernes.filter(
+    (l) => statutPret(l, delaiJours) === 'sans_pret',
+  ).length
 
   // Export #1 (20/07/2026, chantier des exports) : tableau du suivi de
   // prêt, respecte le statut + la recherche actifs, sans la colonne
@@ -157,20 +173,37 @@ function SuiviPret() {
     return {
       nomFichier: `suivi-pret-${programme.nom}`,
       titre: `Suivi de prêt — ${programme.nom}`,
-      entetes: ['Lot', 'Client', 'Réservation', 'Banque', 'Courtier', 'Limite obtention prêt', 'Offre reçue le', 'Statut', 'Commentaire'],
+      entetes: [
+        'Lot',
+        'Client',
+        'Réservation',
+        'Banque',
+        'Courtier',
+        'Limite obtention prêt',
+        'Offre reçue le',
+        'Statut',
+        'Commentaire',
+      ],
       lignes: lotsFiltres.map((lot) => {
         const statut = statutPret(lot, delaiJours)
         const acquereur = lot.acquereur
-        const colonnesPret = statut === 'sans_pret'
-          ? ['Acquisition avec fonds personnels', '—', '—', '—', '—']
-          : [
-            acquereur?.banque?.nom || '—',
-            acquereur?.courtier?.nom || '—',
-            formatDate(calculerDateLimiteJours(lot.dateReservation, delaiJours)),
-            formatDate(acquereur?.dateOffrePretRecue),
-            LIBELLES_STATUT[statut],
-          ]
-        return [lot.reference, nomComplet(acquereur), formatDate(lot.dateReservation), ...colonnesPret, lot.commentaire || '—']
+        const colonnesPret =
+          statut === 'sans_pret'
+            ? ['Acquisition avec fonds personnels', '—', '—', '—', '—']
+            : [
+                acquereur?.banque?.nom || '—',
+                acquereur?.courtier?.nom || '—',
+                formatDate(calculerDateLimiteJours(lot.dateReservation, delaiJours)),
+                formatDate(acquereur?.dateOffrePretRecue),
+                LIBELLES_STATUT[statut],
+              ]
+        return [
+          lot.reference,
+          nomComplet(acquereur),
+          formatDate(lot.dateReservation),
+          ...colonnesPret,
+          lot.commentaire || '—',
+        ]
       }),
     }
   }
@@ -205,7 +238,11 @@ function SuiviPret() {
 
       <div className="barre-actions barre-actions--marge">
         <FiltreStatuts statuts={STATUTS_FILTRE} actif={statutActif} onChange={setStatutActif} />
-        <BarreRecherche valeur={recherche} onChange={setRecherche} placeholder="Rechercher un dossier..." />
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un dossier..."
+        />
         <button type="button" className="bouton-accordeon" onClick={() => setExportOuvert(true)}>
           Exporter
         </button>
@@ -214,7 +251,11 @@ function SuiviPret() {
       {exportOuvert && (
         <FenetreExport
           options={[
-            { valeur: 'tableau', libelle: 'Tableau du suivi de prêt', donnees: donneesExportTableau },
+            {
+              valeur: 'tableau',
+              libelle: 'Tableau du suivi de prêt',
+              donnees: donneesExportTableau,
+            },
             { valeur: 'cartes', libelle: 'Statistiques (cartes)', donnees: donneesExportCartes },
           ]}
           onFermer={() => setExportOuvert(false)}
@@ -258,16 +299,24 @@ function SuiviPret() {
                       </td>
                     ) : (
                       <>
-                        <td><BoutonContact titre="Banque" contact={acquereur?.banque} /></td>
-                        <td><BoutonContact titre="Courtier" contact={acquereur?.courtier} /></td>
-                        <td>{formatDate(calculerDateLimiteJours(lot.dateReservation, delaiJours))}</td>
+                        <td>
+                          <BoutonContact titre="Banque" contact={acquereur?.banque} />
+                        </td>
+                        <td>
+                          <BoutonContact titre="Courtier" contact={acquereur?.courtier} />
+                        </td>
+                        <td>
+                          {formatDate(calculerDateLimiteJours(lot.dateReservation, delaiJours))}
+                        </td>
                         <td>{formatDate(acquereur?.dateOffrePretRecue)}</td>
                         <td>
                           <Badge statut={statut} texte={LIBELLES_STATUT[statut]} />
                         </td>
                       </>
                     )}
-                    <td><span className="commentaire-cellule">{lot.commentaire || '—'}</span></td>
+                    <td>
+                      <span className="commentaire-cellule">{lot.commentaire || '—'}</span>
+                    </td>
                     <td className="actions">
                       {acquereur && statut !== 'sans_pret' && (
                         <>
@@ -278,16 +327,33 @@ function SuiviPret() {
                             aria-label="Modifier"
                             onClick={() => setIdEnEdition(acquereur._id)}
                           >
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="16"
+                              height="16"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
                               <path d="M12 20h9" />
                               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                             </svg>
                           </button>
-                          <button type="button" onClick={() => basculerSansPret(acquereur._id, true)}>Sans prêt</button>
+                          <button
+                            type="button"
+                            onClick={() => basculerSansPret(acquereur._id, true)}
+                          >
+                            Sans prêt
+                          </button>
                         </>
                       )}
                       {acquereur && statut === 'sans_pret' && (
-                        <button type="button" onClick={() => basculerSansPret(acquereur._id, false)}>
+                        <button
+                          type="button"
+                          onClick={() => basculerSansPret(acquereur._id, false)}
+                        >
                           Reprendre le suivi
                         </button>
                       )}

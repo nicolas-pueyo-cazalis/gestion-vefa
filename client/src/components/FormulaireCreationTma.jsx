@@ -23,7 +23,8 @@ function FormulaireCreationTma({ lots, onCreer, onFermer }) {
       localisation,
       description,
       dateDemande: dateDemande || null,
-      nombreEntreprisesConcernees: nombreEntreprisesConcernees === '' ? null : Number(nombreEntreprisesConcernees),
+      nombreEntreprisesConcernees:
+        nombreEntreprisesConcernees === '' ? null : Number(nombreEntreprisesConcernees),
     })
   }
 
@@ -34,7 +35,9 @@ function FormulaireCreationTma({ lots, onCreer, onFermer }) {
         <label>
           Lot
           <select value={lot} onChange={(e) => setLot(e.target.value)} required>
-            <option value="" disabled>Choisir un lot...</option>
+            <option value="" disabled>
+              Choisir un lot...
+            </option>
             {lotsAvecAcquereur.map((l) => (
               <option key={l._id} value={l._id}>
                 {l.reference} — {nomAcquereur(l.acquereur)}
@@ -74,7 +77,9 @@ function FormulaireCreationTma({ lots, onCreer, onFermer }) {
         </label>
         <div className="boutons-alignes-champs">
           <button type="submit">Créer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
         </div>
       </form>
     </section>

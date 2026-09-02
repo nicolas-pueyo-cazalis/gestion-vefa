@@ -33,10 +33,12 @@ describe('ChoixProgramme', () => {
   it('affiche la liste des programmes une fois chargée', async () => {
     mockUseAuth.mockReturnValue({ utilisateur: { role: 'lecture' } })
     mockUseProgramme.mockReturnValue({ choisirProgramme: vi.fn() })
-    mockApiFetch.mockResolvedValue(reponseJson([
-      { _id: 'p1', nom: 'Les Jardins', commune: 'Lyon' },
-      { _id: 'p2', nom: 'Le Clos Fleuri' },
-    ]))
+    mockApiFetch.mockResolvedValue(
+      reponseJson([
+        { _id: 'p1', nom: 'Les Jardins', commune: 'Lyon' },
+        { _id: 'p2', nom: 'Le Clos Fleuri' },
+      ]),
+    )
 
     render(<ChoixProgramme />)
 
@@ -45,7 +47,7 @@ describe('ChoixProgramme', () => {
     expect(screen.getByText('Le Clos Fleuri')).toBeInTheDocument()
   })
 
-  it('affiche un message si aucun programme n\'existe encore', async () => {
+  it("affiche un message si aucun programme n'existe encore", async () => {
     mockUseAuth.mockReturnValue({ utilisateur: { role: 'admin' } })
     mockUseProgramme.mockReturnValue({ choisirProgramme: vi.fn() })
     mockApiFetch.mockResolvedValue(reponseJson([]))
@@ -55,7 +57,7 @@ describe('ChoixProgramme', () => {
     await waitFor(() => expect(screen.getByText(/Aucun programme/)).toBeInTheDocument())
   })
 
-  it('sélectionner un programme appelle choisirProgramme() et navigue vers l\'accueil', async () => {
+  it("sélectionner un programme appelle choisirProgramme() et navigue vers l'accueil", async () => {
     const choisirProgramme = vi.fn()
     mockUseAuth.mockReturnValue({ utilisateur: { role: 'lecture' } })
     mockUseProgramme.mockReturnValue({ choisirProgramme })
@@ -80,7 +82,7 @@ describe('ChoixProgramme', () => {
     await waitFor(() => expect(screen.getByLabelText('Nouveau programme')).toBeInTheDocument())
   })
 
-  it('n\'affiche pas le formulaire de création pour le rôle lecture', async () => {
+  it("n'affiche pas le formulaire de création pour le rôle lecture", async () => {
     mockUseAuth.mockReturnValue({ utilisateur: { role: 'lecture' } })
     mockUseProgramme.mockReturnValue({ choisirProgramme: vi.fn() })
     mockApiFetch.mockResolvedValue(reponseJson([]))
@@ -91,7 +93,7 @@ describe('ChoixProgramme', () => {
     expect(screen.queryByLabelText('Nouveau programme')).not.toBeInTheDocument()
   })
 
-  it('affiche le message d\'erreur du serveur si la création échoue, sans naviguer', async () => {
+  it("affiche le message d'erreur du serveur si la création échoue, sans naviguer", async () => {
     const choisirProgramme = vi.fn()
     mockUseAuth.mockReturnValue({ utilisateur: { role: 'admin' } })
     mockUseProgramme.mockReturnValue({ choisirProgramme })

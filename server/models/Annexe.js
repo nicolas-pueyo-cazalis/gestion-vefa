@@ -7,17 +7,20 @@ import mongoose from 'mongoose'
 // logement ; `lot` renseigné = vendue avec ce lot (voir server/routes/
 // lots.js, qui recalcule alors Lot.prixTTC à partir de Lot.prixLogementSeul
 // + la somme des annexes qui lui sont attribuées).
-const annexeSchema = new mongoose.Schema({
-  programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true },
-  // Parkings extérieurs et intérieurs distingués (17/07/2026, remarque de
-  // Nicolas) — deux catégories à part entière, chacune avec sa propre
-  // numérotation et son propre prix, pas une simple info complémentaire
-  // sur un même "parking".
-  type: { type: String, enum: ['parking_ext', 'parking_int', 'cave', 'cellier'], required: true },
-  numero: { type: Number, required: true },
-  prix: { type: Number, required: true },
-  lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', default: null },
-}, { timestamps: true })
+const annexeSchema = new mongoose.Schema(
+  {
+    programme: { type: mongoose.Schema.Types.ObjectId, ref: 'Programme', required: true },
+    // Parkings extérieurs et intérieurs distingués (17/07/2026, remarque de
+    // Nicolas) — deux catégories à part entière, chacune avec sa propre
+    // numérotation et son propre prix, pas une simple info complémentaire
+    // sur un même "parking".
+    type: { type: String, enum: ['parking_ext', 'parking_int', 'cave', 'cellier'], required: true },
+    numero: { type: Number, required: true },
+    prix: { type: Number, required: true },
+    lot: { type: mongoose.Schema.Types.ObjectId, ref: 'Lot', default: null },
+  },
+  { timestamps: true },
+)
 
 // Un même numéro ne peut pas être utilisé deux fois pour le même type au
 // sein d'un programme (même règle que l'ancienne saisie libre).

@@ -10,7 +10,13 @@ import { useState } from 'react'
 // programme qui désactive déjà tout calcul automatique — l'avertissement
 // et la confirmation n'ont alors plus lieu d'être, il n'y a plus rien
 // d'automatique à écraser.
-function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onEnregistrer, onFermer }) {
+function FormulaireInfosTma({
+  tma,
+  colonnes,
+  montantClientSaisiManuellement,
+  onEnregistrer,
+  onFermer,
+}) {
   const [localisation, setLocalisation] = useState(tma.localisation ?? '')
   const [description, setDescription] = useState(tma.description ?? '')
   const [commentaire, setCommentaire] = useState(tma.commentaire ?? '')
@@ -36,7 +42,8 @@ function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onE
       description,
       commentaire,
       montantClient: nouveauMontant,
-      nombreEntreprisesConcernees: nombreEntreprisesConcernees === '' ? null : Number(nombreEntreprisesConcernees),
+      nombreEntreprisesConcernees:
+        nombreEntreprisesConcernees === '' ? null : Number(nombreEntreprisesConcernees),
     })
   }
 
@@ -65,7 +72,7 @@ function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onE
               value={montantClient}
               onChange={(e) => setMontantClient(e.target.value)}
               disabled={montantVerrouille}
-              title={montantVerrouille ? 'TMA validée : le montant n\'est plus modifiable.' : ''}
+              title={montantVerrouille ? "TMA validée : le montant n'est plus modifiable." : ''}
             />
           </label>
           <label>
@@ -79,7 +86,9 @@ function FormulaireInfosTma({ tma, colonnes, montantClientSaisiManuellement, onE
             />
           </label>
           <button type="submit">Enregistrer</button>
-          <button type="button" onClick={onFermer}>Annuler</button>
+          <button type="button" onClick={onFermer}>
+            Annuler
+          </button>
           {!montantClientSaisiManuellement && !montantVerrouille && (
             <p className="avertissement-cellule avertissement-pleine-largeur">
               Modifier le montant client l'écrase définitivement : il ne sera plus recalculé

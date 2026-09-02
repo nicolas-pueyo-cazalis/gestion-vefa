@@ -58,7 +58,11 @@ export async function synchroniserAnnexesEtPrix(lot, annexeIds) {
     await Annexe.updateMany({ lot: lot._id, _id: { $nin: annexeIds } }, { lot: null })
     if (annexeIds.length > 0) {
       await Annexe.updateMany(
-        { _id: { $in: annexeIds }, programme: lot.programme, $or: [{ lot: null }, { lot: lot._id }] },
+        {
+          _id: { $in: annexeIds },
+          programme: lot.programme,
+          $or: [{ lot: null }, { lot: lot._id }],
+        },
         { lot: lot._id },
       )
     }
@@ -95,7 +99,9 @@ export async function genererAppelsDeFonds(lot, { seulementReservation = false }
   const nomsExistants = new Set(appelsExistants.map((appel) => appel.phase.nom))
   const phasesACreer = phases
     .map((phase, index) => ({ phase, index }))
-    .filter(({ phase, index }) => !nomsExistants.has(phase.nom) && (!seulementReservation || index === 0))
+    .filter(
+      ({ phase, index }) => !nomsExistants.has(phase.nom) && (!seulementReservation || index === 0),
+    )
   if (phasesACreer.length === 0) return
 
   // Remarque du 11/07/2026 (point 5) : une attestation MOE constate
@@ -230,8 +236,12 @@ router.get('/', async (req, res) => {
     // seraient mélangés dans une même liste.
     const { programme } = req.query
     const filtre = programme ? { programme } : {}
-    const lots = await Lot.find(filtre).sort({ reference: 1 })
-      .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
+    const lots = await Lot.find(filtre)
+      .sort({ reference: 1 })
+      .populate(
+        'acquereur',
+        'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret',
+      )
       .populate('annexes')
     res.json(lots)
   } catch (erreur) {
@@ -251,9 +261,20 @@ router.get('/', async (req, res) => {
 router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
   try {
     const {
-      programme, reference, etage, type, orientation,
-      surfaceHabitable, surfaceSousPlafondBas, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
-      prixLogementSeul, annexeIds, estAnnexeSeule,
+      programme,
+      reference,
+      etage,
+      type,
+      orientation,
+      surfaceHabitable,
+      surfaceSousPlafondBas,
+      surfacesTerrasses,
+      surfacesBalcons,
+      surfacesLoggias,
+      surfaceJardin,
+      prixLogementSeul,
+      annexeIds,
+      estAnnexeSeule,
     } = req.body
 
     // Vérification côté serveur (pas seulement dans le formulaire React) :
@@ -262,7 +283,10 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     // vendue à part, qui n'est pas un logement.
     const programmeDoc = await Programme.findById(programme)
     if (!estAnnexeSeule && programmeDoc?.nombreLogements != null) {
-      const nombreLotsExistants = await Lot.countDocuments({ programme, estAnnexeSeule: { $ne: true } })
+      const nombreLotsExistants = await Lot.countDocuments({
+        programme,
+        estAnnexeSeule: { $ne: true },
+      })
       if (nombreLotsExistants >= programmeDoc.nombreLogements) {
         return res.status(400).json({
           message: `Nombre maximum de logements déjà atteint (${programmeDoc.nombreLogements}).`,
@@ -271,9 +295,20 @@ router.post('/', autoriserRoles('admin', 'gestionnaire'), async (req, res) => {
     }
 
     const lot = await Lot.create({
-      programme, reference, etage, type, orientation,
-      surfaceHabitable, surfaceSousPlafondBas, surfacesTerrasses, surfacesBalcons, surfacesLoggias, surfaceJardin,
-      prixLogementSeul, prixTTC: prixLogementSeul, estAnnexeSeule,
+      programme,
+      reference,
+      etage,
+      type,
+      orientation,
+      surfaceHabitable,
+      surfaceSousPlafondBas,
+      surfacesTerrasses,
+      surfacesBalcons,
+      surfacesLoggias,
+      surfaceJardin,
+      prixLogementSeul,
+      prixTTC: prixLogementSeul,
+      estAnnexeSeule,
     })
     await synchroniserAnnexesEtPrix(lot, annexeIds)
     await lot.save()
@@ -336,18 +371,21 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
     // annexe vendue après coup passe par "Vendre une annexe" (nouveau
     // lot séparé), pas par une modification de celui-ci.
     if (ancienStatut === 'acte') {
-      const prixChange = champs.prixLogementSeul !== undefined && champs.prixLogementSeul !== lot.prixLogementSeul
+      const prixChange =
+        champs.prixLogementSeul !== undefined && champs.prixLogementSeul !== lot.prixLogementSeul
       let annexesChange = false
       if (annexeIds !== undefined) {
         const idsActuels = (await Annexe.find({ lot: lot._id }, '_id')).map((a) => a._id.toString())
         const idsDemandes = annexeIds.map(String)
-        annexesChange = idsActuels.length !== idsDemandes.length
-          || !idsActuels.every((id) => idsDemandes.includes(id))
+        annexesChange =
+          idsActuels.length !== idsDemandes.length ||
+          !idsActuels.every((id) => idsDemandes.includes(id))
       }
       if (prixChange || annexesChange) {
         return res.status(400).json({
-          message: 'Logement Acté : le prix et les annexes ne sont plus modifiables. '
-            + 'Utilisez "Vendre une annexe" (page Lots) pour une annexe vendue après coup.',
+          message:
+            'Logement Acté : le prix et les annexes ne sont plus modifiables. ' +
+            'Utilisez "Vendre une annexe" (page Lots) pour une annexe vendue après coup.',
         })
       }
     }
@@ -395,8 +433,12 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       // futur retour à "Acté" ne regénérerait jamais rien (sécurité
       // anti-doublon de genererAppelsDeFonds).
       await AppelDeFonds.deleteMany({ lot: lot._id })
-    } else if (ancienStatut === 'acte' && lot.statut === 'acte'
-      && 'dateActe' in champs && lot.dateActe?.getTime() !== ancienneDateActe) {
+    } else if (
+      ancienStatut === 'acte' &&
+      lot.statut === 'acte' &&
+      'dateActe' in champs &&
+      lot.dateActe?.getTime() !== ancienneDateActe
+    ) {
       // 2) Le lot reste "Acté" mais sa date d'acte est corrigée (valeur
       // réellement différente de l'ancienne) : les règlements déduits
       // automatiquement de cette même date (voir calculerEmissionAppel)
@@ -419,8 +461,10 @@ router.patch('/:id', autoriserRoles('admin', 'gestionnaire'), async (req, res) =
       }
     }
 
-    const lotPeuple = await lot
-      .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret')
+    const lotPeuple = await lot.populate(
+      'acquereur',
+      'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret',
+    )
     await lotPeuple.populate('annexes')
     res.json(lotPeuple)
   } catch (erreur) {
@@ -449,7 +493,7 @@ router.patch('/:id/prix', autoriserRoles('admin', 'gestionnaire'), async (req, r
       return res.status(404).json({ message: 'Lot introuvable' })
     }
     if (lot.statut === 'acte') {
-      return res.status(400).json({ message: 'Logement Acté : le prix n\'est plus modifiable.' })
+      return res.status(400).json({ message: "Logement Acté : le prix n'est plus modifiable." })
     }
 
     const ancienPrix = lot.prixTTC
@@ -507,13 +551,17 @@ router.post('/:id/annuler', autoriserRoles('admin', 'gestionnaire'), async (req,
     // était chargé en mémoire (email/téléphone/adresse compris) sans être
     // utilisé ; jamais renvoyé au client (`lot.acquereur` est vidé avant la
     // réponse), mais inutile à charger côté serveur.
-    const lot = await Lot.findById(req.params.id)
-      .populate('acquereur', 'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret lots')
+    const lot = await Lot.findById(req.params.id).populate(
+      'acquereur',
+      'civilite nom prenom banque courtier notaire dateOffrePretRecue sansPret lots',
+    )
     if (!lot) {
       return res.status(404).json({ message: 'Lot introuvable' })
     }
     if (lot.statut === 'libre') {
-      return res.status(400).json({ message: 'Ce logement est déjà libre, il n\'y a pas de vente à annuler.' })
+      return res
+        .status(400)
+        .json({ message: "Ce logement est déjà libre, il n'y a pas de vente à annuler." })
     }
 
     const appels = await AppelDeFonds.find({ lot: lot._id })

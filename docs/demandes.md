@@ -2108,6 +2108,28 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+300. ✅ **Chantier de tests exhaustifs état/affichage/API — `Lots.jsx` fait
+     (02-03/09/2026)**, 3ᵉ et dernière page, chantier terminé (voir
+     `docs/specs/tests-automatises-composants-pages-completes.md`). 16
+     nouveaux tests (`Lots.render.test.jsx`), 183/183 côté client. **1 bug
+     réel trouvé et corrigé cette fois-ci dans le code source** :
+     `enregistrerPrixLot()` appelait `setIdPrixEnEdition`, un identifiant
+     jamais déclaré — `ReferenceError` silencieuse dans une fonction
+     async (pas pendant le rendu), qui empêchait le sous-panneau de
+     modification du prix de se refermer après un enregistrement pourtant
+     réussi. Détecté en lisant le fichier avant d'écrire les tests ;
+     corrigé après validation explicite de Nicolas sur l'impact réel du
+     correctif, prouvé par un test écrit AVANT la correction (échoue sur
+     le code buggé, passe une fois corrigé). Détail complet :
+     `docs/bugs.md`. 4 bugs trouvés et corrigés dans les tests eux-mêmes
+     (sélecteurs ambigus, logique de fermeture de panneau inversée).
+     `git diff --stat client/src/pages/Lots.jsx` : 1 ligne supprimée,
+     rien d'autre. Les 3 pages "god components" ont maintenant une
+     couverture état/affichage/API complète — prochaine étape : le
+     découpage lui-même (point 236), pas encore démarré.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

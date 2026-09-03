@@ -922,3 +922,57 @@ découvre pas en testant les cas qui marchent — un audit ciblé du code
 (pas un rejeu manuel) a trouvé les deux failles en quelques minutes, alors
 qu'aucun test manuel du quotidien ne les aurait révélées (la base est
 quasiment toujours disponible en développement).
+
+---
+
+## `setIdPrixEnEdition` appelé mais jamais déclaré (`Lots.jsx`)
+
+**Contexte** (02-03/09/2026, chantier de tests exhaustifs sur `Lots.jsx`,
+point 236) — trouvé en lisant le fichier pour préparer
+`Lots.render.test.jsx`, pas signalé par Nicolas ni observé en usage
+manuel.
+
+**Symptôme réel** : modifier le prix d'un logement (bouton "Modifier le
+prix" du panneau d'édition d'un lot) enregistrait bien la nouvelle valeur
+en base (le PATCH réussissait, les données étaient rechargées), mais le
+sous-panneau `FormulairePrixLot` ne se refermait jamais après un succès —
+on aurait dit que "rien ne s'était passé" alors que le prix avait bel et
+bien changé.
+
+**Cause** : `enregistrerPrixLot()` (`Lots.jsx`) appelait
+`setIdPrixEnEdition(null)` après le rechargement réussi — un identifiant
+qui n'a **jamais existé** dans ce fichier (aucun `useState` correspondant,
+confirmé par recherche exhaustive). Cette référence provoque une
+`ReferenceError`, mais **dans une fonction async invoquée depuis un
+gestionnaire de clic** — pas pendant le rendu React. Conséquence :
+contrairement aux plantages "page blanche" déjà documentés plus haut
+(erreur pendant le rendu → composant démonté), ici l'erreur devient une
+promesse rejetée non gérée : elle n'affiche rien et ne casse rien de
+visible, elle empêche juste `FormulairePrixLot.onFermer()` d'être jamais
+atteint (le code qui suit l'`await` de la promesse rejetée dans
+`FormulairePrixLot.enregistrer()` ne s'exécute jamais). Code mort
+probable d'un refactor antérieur : `prixOuvert` (l'état qui contrôle
+réellement l'ouverture du sous-panneau) est entièrement local à
+`FormulaireEditionLot`, `Lots.jsx` n'a aucune raison légitime de le
+piloter depuis son propre état.
+
+**Correction** : suppression de la ligne orpheline
+`setIdPrixEnEdition(null)` — la fermeture est déjà assurée par
+`FormulairePrixLot` lui-même (`onFermer()` appelé quand `onEnregistrer`
+renvoie `null`).
+
+**Détecté par** : écriture d'un test avant correction
+(`Lots.render.test.jsx`, "changer le prix avec succès ferme le
+sous-panneau") — faisait exactement le scénario utilisateur réel
+(remplir prix + motif, cliquer "Enregistrer le prix") et constatait que
+la légende "Prix du logement" restait affichée après succès. Rejoué une
+fois le correctif appliqué : passe au vert.
+
+**Leçon** : une erreur dans une fonction async déclenchée par un
+gestionnaire d'événement ne plante pas React comme une erreur de rendu —
+elle casse silencieusement tout ce qui dépend de la suite de cette
+promesse (ici, un simple `onFermer()`). Un `ReferenceError` de ce genre
+peut donc vivre en production pendant longtemps sans qu'aucune erreur
+visible n'alerte personne — seul un test qui vérifie le VRAI
+comportement observable après une action (pas juste "l'appel API a été
+fait") l'aurait détecté.

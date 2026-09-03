@@ -1,6 +1,6 @@
 # Spec — Tests exhaustifs état/affichage/API des 3 pages "god components" — chantier 15+
 
-**Projet :** Gestion VEFA · **Date :** 02/09/2026 · **Statut :** en cours (2/3 pages faites)
+**Projet :** Gestion VEFA · **Date :** 03/09/2026 · **Statut :** terminé (3/3 pages faites)
 
 ## Objectif
 
@@ -176,3 +176,40 @@ Pour **chaque page**, couvrir chaque chemin de code distinct identifié
   **Reste à faire** : `Lots.jsx`, même méthode (routeur d'URL comme ici,
   plus proche de `Lots.jsx` que du positionnel utilisé pour
   `AppelsDeFonds.jsx`).
+- **v4 :** `Lots.jsx` faite — chantier terminé, 3/3 pages. Nouveau
+  `Lots.render.test.jsx` (16 tests), même routeur d'URL que pour
+  `Tma.jsx` (chargement en cascade : lots, acquéreurs, annexes, historique
+  fusionné). Couvre : chargement/erreur, rendu principal (avertissement
+  "Offre de prêt non reçue"), filtre par statut (boutons) + recherche,
+  panneau "Modifier" (ouverture/fermeture exclusive, succès, échec,
+  "Annuler la vente"), modification du prix, vente d'une annexe seule
+  (création réussie), accordéon Historique (ventes annulées + détail
+  dépliable, modifications de prix), et les 4 options d'export.
+  **1 bug réel trouvé dans le code source cette fois (pas dans le
+  test)** : `enregistrerPrixLot()` appelait `setIdPrixEnEdition(null)`, un
+  identifiant jamais déclaré dans le fichier (`ReferenceError` silencieuse
+  dans une fonction async, pas pendant le rendu — n'affiche rien, casse
+  juste la fermeture du sous-panneau de prix après un succès). Détail
+  complet : `docs/bugs.md`. Corrigé (suppression de la ligne orpheline,
+  seule modification apportée à `Lots.jsx` — vérifié via `git diff
+  --stat`), **prouvé par un test écrit avant le correctif** ("changer le
+  prix avec succès ferme le sous-panneau", constatait l'échec réel avant
+  correction, passe au vert après).
+  **4 bugs trouvés dans le test lui-même** : `queryByText('Statut')`/
+  `getByText('Détail')` ambigus (aussi des en-têtes de colonne de
+  tableau) — corrigés en ciblant un texte propre au panneau ("Date
+  option") ou le rôle précis (`getByRole('button', { name: 'Détail' })`) ;
+  logique de fermeture du panneau "Vendre une annexe" inversée dans le
+  test (le bouton "Vendre une annexe" RÉAPPARAÎT quand le panneau se
+  ferme, il ne disparaît pas) — corrigé en vérifiant la disparition du
+  contenu du panneau (`queryByLabelText('Annexe')`) plutôt que du bouton
+  bascule.
+  **Vérifications** : 183/183 côté client (suite complète), `oxlint` 0
+  erreur/0 avertissement sur le nouveau fichier, `git diff --stat
+  client/src/pages/Lots.jsx` : 1 ligne supprimée (le correctif), rien
+  d'autre.
+
+Chantier clos : les 3 pages "god components" ont maintenant une
+couverture état/affichage/API complète. Prochaine étape (hors périmètre
+de cette spec) : le découpage lui-même (point 236), page par page, avec
+son propre cycle de mode planification — pas encore démarré.

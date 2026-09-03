@@ -307,7 +307,6 @@ function Lots() {
       return message
     }
     await Promise.all([chargerLots(), chargerHistorique()])
-    setIdPrixEnEdition(null)
     return null
   }
 

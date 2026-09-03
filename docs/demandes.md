@@ -1863,17 +1863,18 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        oubli, à reconsidérer plus tard s'il change d'avis sur la
        visibilité du dépôt.
      **Ordre de traitement choisi par Nicolas : A → B → C → D → E → F.**
-282. ⏳ **Explication complète et pédagogique de tous les tests
-     automatisés** (demande explicite de Nicolas, 01/09/2026) : Nicolas
-     est novice et veut tout comprendre — quels tests existent, pourquoi
-     chacun a été écrit, à quoi il sert concrètement (pas juste "ça
-     teste X"). **Report explicite à la toute fin de la série de
-     chantiers de tests** (précision de Nicolas le 01/09/2026, point 289)
-     — pas maintenant. Couvrira à ce moment-là l'ensemble des tests
-     réellement faits (147 après le chantier 11, plus si d'autres
-     chantiers s'ajoutent avant la fin) : fonctions de calcul, middleware
-     d'authentification, scénarios d'intégration, composants React,
-     contextes, mécanisme de couverture.
+282. ✅ **Explication complète et pédagogique de tous les tests
+     automatisés faite (03/09/2026)** — `docs/explicationtest.md` (+
+     export PDF, `docs/explicationtest.pdf`). Couvre les 238 tests
+     automatisés du projet (183 côté client, 55 côté serveur) : c'est
+     quoi un test, vocabulaire Vitest, les 5 familles de tests du projet
+     (fonctions pures, middleware, composants React, contextes, pages
+     complètes état/affichage/API, intégration base de données), les 6
+     bugs réels trouvés par ces tests (avec renvoi à `docs/bugs.md`), le
+     mécanisme et les chiffres de couverture de code (31,38% serveur,
+     44,21% client au 03/09/2026), comment lancer les tests. Rédigé en
+     partant de zéro (aucun prérequis supposé), demande explicite de
+     Nicolas.
 283. ✅ **`resynchroniserMontantReservation()` fait (01/09/2026)** — exportée
      (`server/routes/lots.js`), 3 tests ajoutés à
      `lots.integration.test.js` : montant de la phase Réservation qui suit

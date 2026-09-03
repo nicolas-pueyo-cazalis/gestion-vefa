@@ -2091,6 +2091,23 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+299. ✅ **Chantier de tests exhaustifs état/affichage/API — `Tma.jsx` fait
+     (02-03/09/2026)**, 2ᵉ des 3 pages (voir
+     `docs/specs/tests-automatises-composants-pages-completes.md`). 20
+     nouveaux tests (`Tma.render.test.jsx`), 167/167 côté client. Mock
+     passé d'une chaîne positionnelle à un routeur d'URL (plus robuste vu
+     les fetch en cascade — `DetailEntreprisesTma` en déclenche 2 de plus
+     dès qu'un panneau s'ouvre). 3 bugs trouvés et corrigés **dans les
+     tests eux-mêmes** — aucun bug dans le code source. **1 comportement
+     réel découvert et vérifié dans le code** : `enregistrerInfos()` ne
+     ferme pas le panneau après un enregistrement réussi, contrairement
+     au panneau équivalent d'`AppelsDeFonds.jsx` — incohérence UX entre
+     les deux pages, notée pour plus tard (`docs/taches-a-traiter.md`),
+     pas corrigée (hors périmètre). Aucun fichier source modifié. Reste :
+     `Lots.jsx`, dernière page.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

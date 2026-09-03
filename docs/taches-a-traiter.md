@@ -92,6 +92,14 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   périmètre du chantier de tests). À regarder : soit cocher les logements
   disponibles dès l'ouverture pour la phase par défaut, soit juger que ce
   n'est pas gênant. *(point 298)*
+- **Panneau "Modifier" de la page TMA** : après un enregistrement réussi
+  des infos (localisation/description/montant/nombre d'entreprises), le
+  panneau reste ouvert — contrairement à la page Appels de fonds, où le
+  panneau équivalent se ferme automatiquement après un succès. Repéré et
+  vérifié dans le code en écrivant les tests de `Tma.jsx` (point 299),
+  pas corrigé (hors périmètre). À trancher : uniformiser (fermer partout)
+  ou juger que TMA a de bonnes raisons de rester ouvert (plusieurs
+  sous-parties à remplir à la suite dans le même panneau). *(point 299)*
 - **Repenser l'esthétique générale de l'application** (thème sombre actuel
   validé, améliorations à proposer). *(point 139)*
 - **Rendre l'application responsive** (toutes tailles d'écran). *(point 144)*

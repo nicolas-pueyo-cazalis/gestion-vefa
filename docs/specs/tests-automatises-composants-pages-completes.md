@@ -1,6 +1,6 @@
 # Spec — Tests exhaustifs état/affichage/API des 3 pages "god components" — chantier 15+
 
-**Projet :** Gestion VEFA · **Date :** 02/09/2026 · **Statut :** en cours (1/3 pages faite)
+**Projet :** Gestion VEFA · **Date :** 02/09/2026 · **Statut :** en cours (2/3 pages faites)
 
 ## Objectif
 
@@ -141,3 +141,38 @@ Pour **chaque page**, couvrir chaque chemin de code distinct identifié
   modifié (`git diff --stat client/src/pages/AppelsDeFonds.jsx` vide).
   **Reste à faire** : `Tma.jsx` puis `Lots.jsx`, même méthode, sessions
   séparées.
+- **v3 :** `Tma.jsx` faite. Nouveau `Tma.render.test.jsx` (20 tests).
+  **Changement de stratégie de mock** : `Tma.jsx` déclenche 3 GET au
+  chargement (lots, tma, tma-entreprises) et ouvrir un panneau en
+  déclenche 2 de plus via `DetailEntreprisesTma` (composant enfant avec
+  son propre `useEffect`) — une chaîne `mockResolvedValueOnce` positionnelle
+  devient vite intraçable. Remplacée par un **routeur d'URL**
+  (`mockApiFetch.mockImplementation` inspectant l'URL/la méthode plutôt que
+  l'ordre d'appel), avec `mockImplementationOnce` ponctuel pour simuler un
+  échec précis. Couvre : chargement/erreur, rendu principal (TMA obsolète :
+  avertissement + réattribution), filtre par statut (liste déroulante, pas
+  des boutons ici) + recherche, création (ouverture/fermeture, succès,
+  échec), panneau "Modifier" (ouverture/fermeture exclusive, panneau dates
+  masqué pour une TMA validée, succès, échec), retard entreprise,
+  réattribution, 2 transitions de statut représentatives (Refuser/Annuler
+  le refus — les 4 autres, structurellement identiques, ne sont pas
+  retestées), et les 4 options d'export.
+  **3 bugs trouvés, tous dans le test, pas dans le code source** :
+  mauvais libellé supposé pour `FormulaireDatesTma` (confondu avec celui
+  d'`AppelsDeFonds.jsx`) ; les boutons de transition de statut vivent dans
+  le panneau déplié, pas sur la ligne principale (oubli d'ouvrir le
+  panneau avant de chercher le bouton) ; toutes les fixtures TMA
+  partageaient la même localisation/description, rendant plusieurs
+  sélecteurs ambigus.
+  **1 comportement réel découvert** : contrairement à `AppelsDeFonds.jsx`,
+  `enregistrerInfos()` (Tma.jsx) ne ferme PAS le panneau après un
+  enregistrement réussi — seule la liste est rechargée, le panneau reste
+  ouvert. Vérifié dans le code source (`enregistrerInfos`, aucun
+  `setIdPanneauOuvert(null)`), caractérisé tel quel dans le test plutôt
+  que "corrigé" (hors périmètre de ce chantier de tests) — à signaler
+  pour cohérence UX avec les autres pages.
+  **Vérifications** : 167/167 côté client (suite complète), `oxlint` 0
+  erreur/0 avertissement, aucun fichier source modifié.
+  **Reste à faire** : `Lots.jsx`, même méthode (routeur d'URL comme ici,
+  plus proche de `Lots.jsx` que du positionnel utilisé pour
+  `AppelsDeFonds.jsx`).

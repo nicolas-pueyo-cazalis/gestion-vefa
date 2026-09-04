@@ -172,7 +172,7 @@ describe('AppelsDeFonds — filtres', () => {
 })
 
 describe('AppelsDeFonds — récapitulatif par lot', () => {
-  it('masqué par défaut, affiché au clic avec les bonnes lignes et totaux', async () => {
+  it('masqué par défaut, affiché au clic avec les bonnes lignes et totaux, masqué à nouveau au clic suivant', async () => {
     mockApiFetch.mockResolvedValue(reponseJson(appels))
     render(<AppelsDeFonds />)
     await screen.findByRole('table')
@@ -185,6 +185,12 @@ describe('AppelsDeFonds — récapitulatif par lot', () => {
     // Solde restant dû A01 = prixTTC - payé = 200000 - 20000 (seul a1 réglé).
     const ligneA01 = within(tableauRecap).getByText('A01').closest('tr')
     expect(within(ligneA01).getByText(/180 000,00/)).toBeInTheDocument()
+
+    // Vrai bascule (setRecapParLotOuvert((v) => !v), contrairement au
+    // crayon du panneau "Modifier" ci-dessous qui n'en a pas) : un 2e clic
+    // sur le même bouton (devenu "Masquer...") doit refermer le récap.
+    fireEvent.click(screen.getByText('Masquer le récapitulatif par lot'))
+    expect(screen.queryByText('Reste à payer')).not.toBeInTheDocument()
   })
 
   it("affiche un message si aucun appel de fonds n'existe", async () => {

@@ -2187,8 +2187,23 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      juste après masquait le problème. Assertion manquante ajoutée
      (`expect(screen.queryByText('Date envoi entreprises')).not.toBeInTheDocument()`),
      20/20 toujours vert — preuve désormais réelle, pas supposée, que le
-     bascule fonctionne. Suite complète client 183/183. Reste `Lots.jsx`,
-     dernière page, même méthode.
+     bascule fonctionne. Suite complète client 183/183.
+
+     **Vérification demandée par Nicolas sur `AppelsDeFonds.render.test.jsx`
+     par précaution, suite à ce trou** : relu intégralement. Le crayon
+     du panneau "Modifier" n'a pas de bascule sur cette page (comportement
+     différent de Tma, déjà noté et volontairement préservé lors du
+     découpage — pas un trou), et son test d'exclusivité (ouvrir la ligne
+     suivante ferme la précédente) est correctement assorti d'une
+     assertion. **1 trou du même genre trouvé ailleurs** : le bouton "Voir/
+     Masquer le récapitulatif par lot" est un vrai bascule
+     (`setRecapParLotOuvert((v) => !v)`), et seul le sens "afficher" était
+     testé — personne ne cliquait une 2ᵉ fois pour vérifier que "Masquer"
+     referme bien. Assertion ajoutée dans le test existant, 17/17
+     toujours vert. Suite complète client 183/183 confirmée après ce 2ᵉ
+     ajout. Reste `Lots.jsx`, dernière page, même méthode — la même
+     vérification (bascules/togglés non testés en sens inverse) sera
+     faite en amont cette fois, pas après coup.
 
 ---
 

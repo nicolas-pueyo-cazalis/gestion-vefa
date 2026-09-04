@@ -2890,3 +2890,174 @@ cohérence de style, lisibilité — distinct des audits déjà faits sur
 l'architecture/la sécurité et sur la duplication/les god components), et
 une décision à prendre avec Nicolas sur le découpage interne des 3 god
 components eux-mêmes.
+
+## 2026-09-01 (suite) — Check-up qualité d'écriture du code et adoption de Prettier
+
+Point 285 (check-up de présentation/écriture du code) mené via 2
+sous-agents d'audit en parallèle → conclusion : adopter Prettier côté
+front ET back (config partagée `.prettierrc.json` à la racine,
+`.prettierignore`), scripts `format`/`format:check` ajoutés aux deux
+`package.json`. Reformatage en masse vérifié comme un diff pur (aucun
+changement de comportement, juste de la mise en forme). 2 commits.
+
+## 2026-09-01 (suite) — Hooks Claude Code
+
+Nicolas a transmis 3 extraits de cours sur les hooks Claude Code et
+demandé leur mise en place, avec réflexion sur quelles actions
+automatiser. 6 hooks construits et testés individuellement (succès ET
+échec, toujours via un vrai fichier en entrée standard, jamais une
+chaîne échappée à la main — piège rencontré une fois) avant intégration
+dans `.claude/settings.json` (au niveau du projet, commité) :
+`bloquer-env.js` (PreToolUse, bloque toute édition de `.env`),
+`format-on-write.js` (PostToolUse, Prettier automatique),
+`lint-on-write.js` (PostToolUse, oxlint automatique),
+`erreur500-on-write.js` (PostToolUse, alerte sur `res.status(500)` en
+dur au lieu de `repondreErreurServeur()`), `test-on-write.js`
+(PostToolUse, asynchrone, relance en arrière-plan les tests concernés
+quand un fichier de test ou son fichier source associé est modifié),
+`status-on-stop.sh` (Stop, affiche `git status` en fin de tour).
+Contrainte machine : tout hook lançant du JS/npm doit passer par
+`wsl -e bash -lic "..."` (Node.js absent hors WSL sur cette machine).
+Documenté dans `docs/protocole-ia-vefa.md` (Étape 7) et
+`docs/a-prendre-en-compte.md` (point 9).
+
+## 2026-09-01 (suite) — Mode planification comme pratique standard
+
+Nicolas a demandé d'établir l'usage d'`EnterPlanMode` comme réflexe
+permanent pour tout chantier large ou risqué (refactor, multi-fichiers,
+choix d'architecture) — exploration en lecture seule, plan écrit,
+validation explicite avant toute exécution. Documenté dans
+`docs/protocole-ia-vefa.md` (Étape 1bis) et
+`docs/a-prendre-en-compte.md` (point 8), appliqué dès le chantier
+suivant et systématiquement depuis.
+
+## 2026-09-02/03 — Tests état/affichage/API des 3 pages (chantiers 15 à 17) et un vrai bug de production trouvé
+
+Suite du chantier "sécuriser avant découpage" (point 236) : après les
+fonctions pures (chantiers 13/14), chacune des 3 pages "god components"
+a reçu un fichier `.render.test.jsx` testant l'état, l'affichage et les
+appels API réels de la page entière, en mode planification à chaque
+fois.
+
+- **Chantier 15 (`AppelsDeFonds.jsx`, page pilote)** : 17 tests,
+  `AppelsDeFonds.render.test.jsx`. Établit la méthode (mocks
+  `apiFetch`/`useProgramme`/`utils/export.js`, `fireEvent` suffisant,
+  pas besoin de `@testing-library/user-event`). 2 bugs trouvés et
+  corrigés dans les tests eux-mêmes (mocks non réinitialisés entre
+  tests, sélecteur ambigu). 1 comportement réel découvert et
+  caractérisé tel quel (pas corrigé, hors périmètre) : la fenêtre
+  d'export "Générer un appel de fonds" ne coche aucun lot tant que la
+  phase n'est pas (re)choisie — noté point 298.
+- **Chantier 16 (`Tma.jsx`)** : 20 tests, `Tma.render.test.jsx`.
+  Changement de stratégie de mock (routeur d'URL plutôt que chaîne
+  positionnelle, à cause des fetch en cascade dès qu'un panneau
+  s'ouvre). 3 bugs de test corrigés. 1 comportement réel découvert et
+  caractérisé : `enregistrerInfos()` ne ferme pas le panneau après un
+  succès, contrairement à l'équivalent d'`AppelsDeFonds.jsx` — noté
+  point 299.
+- **Chantier 17 (`Lots.jsx`)** : en lisant le fichier pour préparer les
+  tests, **découverte d'un vrai bug de production** : `enregistrerPrixLot()`
+  appelait `setIdPrixEnEdition(null)`, un identifiant jamais déclaré
+  nulle part dans le fichier (code mort d'un ancien refactor) —
+  `ReferenceError` silencieuse dans une fonction async (pas pendant le
+  rendu, donc pas de "page blanche"), qui empêchait juste le
+  sous-panneau de modification du prix de se refermer après un
+  enregistrement pourtant réussi. Nicolas a demandé de clarifier
+  l'impact réel avant de corriger (l'évaluation initiale de gravité
+  était trop alarmiste, corrigée après relecture) puis a validé la
+  séquence : écrire d'abord le test qui prouve le bug, corriger,
+  revérifier. Fait — 16 tests, `Lots.render.test.jsx`, correctif d'une
+  seule ligne. Documenté dans `docs/bugs.md`.
+
+183/183 côté client après les 3 chantiers. Spec
+`docs/specs/tests-automatises-composants-pages-completes.md` (v2 à v4).
+**Chantier de tests des 3 god components terminé.**
+
+## 2026-09-03 — Explication pédagogique complète des tests automatisés (point 282)
+
+Report explicite (décidé le 01/09) à la toute fin de la série de
+chantiers de tests, arrivée à son terme. `docs/explicationtest.md`
+rédigé en partant de zéro (aucun prérequis supposé) : vocabulaire
+Vitest, les 5 familles de tests du projet (fonctions pures, middleware,
+composants React, contextes, pages complètes état/affichage/API,
+intégration base de données), les bugs réels trouvés en écrivant des
+tests (récap transversal), le mécanisme et les chiffres de couverture
+de code à jour (31,38% serveur, 44,21% client). Recherche préparatoire
+déléguée à 4 sous-agents en parallèle (un par famille de fichiers de
+test) pour préserver le contexte. Export PDF demandé par Nicolas — pas
+d'outil de conversion disponible directement : Chromium/Puppeteer
+bloqué par des bibliothèques système manquantes dans WSL (`libnspr4`
+etc., pas d'accès `sudo`), contournement final via `marked`
+(conversion markdown→HTML pure JS) + Microsoft Edge en mode headless
+(déjà installé sur Windows, `--print-to-pdf`) — `docs/explicationtest.pdf`
+généré avec succès par cette voie détournée.
+
+## 2026-09-03/04 — Découpage des 3 god components (point 236) et une leçon sur la remise en question
+
+Nicolas a demandé d'enchaîner directement sur le découpage lui-même,
+une page à la fois ("très doucement"), chacune en mode planification.
+Même règle partout : découpage structurel pur, zéro changement de
+comportement, filet de sécurité = les fichiers `.render.test.jsx`/
+`.test.js` qui doivent passer sans modification de leur logique.
+
+- **`AppelsDeFonds.jsx`** (03-04/09, point 301) : 720 → 473 lignes
+  (-34%). 3 fichiers créés (`AppelsDeFonds.exports.js`,
+  `LigneAppelDeFonds.jsx`, `RecapitulatifAppelsParLot.jsx`).
+- **`Tma.jsx`** (04/09, point 302) : 926 → 638 lignes (-31%). 2 fichiers
+  créés (`Tma.exports.js`, `LigneTma.jsx`). Nicolas a demandé de
+  vérifier que le plan n'était pas un copier-coller mécanique du
+  précédent — vérification qui a révélé 2 comportements réellement
+  différents (le crayon bascule ouverture/fermeture au lieu d'ouvrir
+  seulement, `reattribuerClient` prend l'objet TMA complet plutôt qu'un
+  id) préservés à l'identique. En creusant pourquoi ce n'était pas déjà
+  testé automatiquement : **trou trouvé dans `Tma.render.test.jsx`**
+  (chantier 16) — un clic de fermeture testé sans assertion derrière,
+  aurait laissé passer un bascule cassé sans que personne ne le voie.
+  Corrigé. Par précaution, `AppelsDeFonds.render.test.jsx` relu
+  intégralement aussi : même famille de trou trouvée ailleurs (bouton
+  "Voir/Masquer le récapitulatif par lot"), corrigée également.
+- **`Lots.jsx`** (04/09, point 304) : 1054 → 710 lignes (-33%). 4
+  fichiers créés (`Lots.exports.js`, `LigneTableauLots.jsx`,
+  `HistoriqueVentesAnnulees.jsx`, `HistoriqueModificationsPrix.jsx`) —
+  le plus gros écart avec les 2 découpages précédents (12 fonctions
+  pures partagées au lieu d'1-2), résolu en distinguant 2 règles : un
+  composant qui fait sa propre boucle sur tout un tableau reçoit des
+  fonctions en paramètre, un composant "une seule ligne" reçoit des
+  valeurs déjà précalculées par le parent. Incohérence entre ces deux
+  règles trouvée et corrigée dans le PLAN lui-même avant d'écrire le
+  code, suite à une remise en question demandée par Nicolas. Le trou de
+  test analogue (bascule Détail/Masquer de l'historique) trouvé et
+  corrigé **en amont** cette fois, vérifié 16/16 sur le code d'origine
+  avant tout changement.
+
+**Leçon retenue** : 3 fois de suite, une remise en question un peu
+poussée (demandée explicitement par Nicolas) a révélé une vraie faille
+— pas un hasard isolé. Point 303 ouvert (revue complète des 238 tests
+du projet, pas encore commencée) et nouvelle mémoire persistante
+enregistrée : prendre du recul avant chaque réponse, pas seulement sur
+demande.
+
+Suite complète client 183/183 après chaque étape, `oxlint` 0 erreur à
+chaque fois, `git diff --stat` conforme au plan à chaque fois.
+**Chantier de découpage des 3 god components terminé** (point 236) —
+reste éventuellement l'extraction en hooks `useXxx()` par page, pas
+planifiée.
+
+## 2026-09-04 — Outil de pilotage navigateur pour l'IA : décision de ne pas l'installer maintenant
+
+Question de Nicolas suite aux 3 découpages, où les vérifications
+visuelles ont dû lui être déléguées faute d'outil. Solution identifiée
+(serveur MCP `@playwright/mcp`, config `.mcp.json` lancée via WSL) mais
+**décision explicite de ne pas l'installer maintenant** : le filet de
+tests automatisés (238 tests) + les vérifications manuelles de Nicolas
+ont suffi sur ce chantier ; un navigateur réel n'aurait aidé que sur des
+régressions visuelles/CSS, pas rencontrées ici. Noté point 305, à
+reconsidérer si un futur chantier implique beaucoup de changements
+visuels. Risques identifiés pour ce jour-là : code tiers exécuté à
+chaque lancement (`npx`), risque théorique d'injection de prompt via une
+page web chargée par l'IA (faible ici, usage strictement local).
+
+Deux nouvelles demandes ajoutées au backlog : TMA — créer un tableau au
+niveau des données entreprises (point 306, actuellement en liste/
+formulaire dans `DetailEntreprisesTma.jsx`) ; l'esthétique générale de
+l'application était déjà suivie (point 139), pas dupliquée.

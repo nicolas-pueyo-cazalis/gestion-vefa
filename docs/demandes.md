@@ -2281,6 +2281,43 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+305. ⏳ **Outil de pilotage navigateur pour l'IA (serveur MCP Playwright)**
+     (04/09/2026) : question de Nicolas suite au découpage des 3 god
+     components, où les vérifications visuelles ont dû lui être déléguées
+     faute d'outil. Faisable via un `.mcp.json` à la racine du projet
+     (`npx @playwright/mcp@latest`, lancé via `wsl -e bash -lic "..."`
+     comme les hooks existants — Node/npm n'existent que dans WSL sur
+     cette machine), plus `npx playwright install chromium` dans WSL (a
+     déjà buté une fois ce soir sur des bibliothèques système manquantes,
+     `libnspr4`/`libnss3`, en tentant un export PDF — nécessiterait
+     probablement `sudo apt-get install`, mot de passe que Nicolas doit
+     saisir lui-même). **Décision explicite de Nicolas : pas nécessaire
+     pour l'instant** — le filet de tests automatisés (238 tests) + ses
+     propres vérifications manuelles ont suffi sur ce chantier ; un
+     navigateur réel n'aurait aidé que sur des régressions purement
+     visuelles/CSS (que jsdom ne peut pas détecter), pas rencontrées ici.
+     Noté pour reconsidérer si un futur chantier implique beaucoup de
+     changements visuels/CSS où le contrôle manuel répété deviendrait
+     pénible. Risques à garder en tête le jour où ce sera fait :
+     `npx @playwright/mcp@latest` exécute du code tiers téléchargé à
+     chaque lancement (Microsoft officiel, mais un maillon de la chaîne
+     d'approvisionnement à surveiller) ; un navigateur piloté par l'IA
+     qui chargerait une page contenant du texte malveillant pourrait
+     théoriquement être manipulé (prompt injection via contenu web) —
+     risque faible ici, l'app tourne en local sur localhost, pas sur le
+     web ouvert.
+
+---
+
+306. ⏳ **TMA : créer un tableau au niveau des données entreprises**
+     (demande de Nicolas, 04/09/2026) — actuellement, le détail des
+     entreprises d'une TMA (`DetailEntreprisesTma.jsx`) s'affiche en
+     liste/formulaire, pas sous forme de tableau. À préciser avec
+     Nicolas avant de s'y mettre (quelles colonnes, remplace la liste
+     actuelle ou vient en plus).
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

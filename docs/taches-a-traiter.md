@@ -122,6 +122,10 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   sous-parties à remplir à la suite dans le même panneau). *(point 299)*
 - **Repenser l'esthétique générale de l'application** (thème sombre actuel
   validé, améliorations à proposer). *(point 139)*
+- **TMA : créer un tableau au niveau des données entreprises** — le
+  détail des entreprises d'une TMA (`DetailEntreprisesTma.jsx`) s'affiche
+  actuellement en liste/formulaire, pas en tableau. À préciser avec
+  Nicolas (colonnes, remplace ou complète l'existant). *(point 306)*
 - **Rendre l'application responsive** (toutes tailles d'écran). *(point 144)*
 - **Carte "Taux de commercialisation"** (logements Actés+Réservés / total,
   en %) — emplacement et arrondis pas encore décidés. *(points 158, 166)*
@@ -204,6 +208,11 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   nécessaire dès que des données d'acquéreurs tiers transiteraient par
   l'outil pour un client réel ; question juridique, pas technique, mais
   bloquante pour une commercialisation. *(point 279)*
+- **Outil de pilotage navigateur pour l'IA** (serveur MCP Playwright) —
+  décision explicite de Nicolas : pas nécessaire pour l'instant (le
+  filet de tests automatisés + ses vérifications manuelles ont suffi sur
+  le découpage des 3 god components). À reconsidérer si un futur
+  chantier implique beaucoup de changements visuels/CSS. *(point 305)*
 
 ## E. Documents à réaliser / compléter
 

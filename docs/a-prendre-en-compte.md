@@ -63,7 +63,14 @@ courte de réflexes concrets, complétée au fur et à mesure par Nicolas.
    avant qu'elle ne s'exécute. Sur ce projet, tout hook lançant du
    JS/npm doit passer par `wsl -e bash -lic "..."` (pas de Node.js hors
    WSL sur cette machine).
-10. **Checklist des pièges à garder en tête en permanence**
+10. **Après un chantier significatif** (fonctionnalité, correction de
+   bug, chantier de tests, refactor/découpage...) : mettre à jour
+   `docs/journal.md` avec un résumé narratif (contexte, ce qui a été
+   fait, ce qui a été découvert), sans attendre qu'on le demande — même
+   réflexe que le point 2 pour `docs/taches-a-traiter.md`. Distinct de
+   `docs/demandes.md` (liste numérotée par demande) : `journal.md`
+   raconte le fil des sessions, pas juste le résultat final.
+11. **Checklist des pièges à garder en tête en permanence**
    (`docs/protocole-ia-vefa.md`) : ne jamais modifier un fichier non
    demandé sans le signaler ; ne jamais affirmer un succès sans un test
    réel de ma part ; ne jamais faire "passer" un test en trichant plutôt

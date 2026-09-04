@@ -254,6 +254,10 @@ describe('Tma — panneau "Modifier"', () => {
     fireEvent.click(screen.getAllByLabelText('Modifier')[0])
     expect(screen.getByText('Date envoi entreprises')).toBeInTheDocument()
     fireEvent.click(screen.getAllByLabelText('Modifier')[0]) // referme
+    // Le crayon BASCULE (contrairement à AppelsDeFonds.jsx où il ouvre
+    // seulement) : un 2e clic sur la même ligne doit refermer son propre
+    // panneau, pas simplement laisser la place à un autre.
+    expect(screen.queryByText('Date envoi entreprises')).not.toBeInTheDocument()
 
     // t3 (valide, sur B01, 4ᵉ ligne : t1/t2/t4 sur A01 puis t3/t5 sur B01) : dates masquées.
     fireEvent.click(screen.getAllByLabelText('Modifier')[3])

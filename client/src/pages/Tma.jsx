@@ -1,27 +1,23 @@
-import { Fragment, useEffect, useState } from 'react'
-import {
-  STATUTS_TMA,
-  STATUTS_EN_COURS,
-  STATUTS_VALIDE,
-  TRANSITIONS_AUTORISEES,
-  STATUTS_NON_RECALCULABLES,
-} from '../data/tma.js'
+import { useEffect, useState } from 'react'
+import { STATUTS_TMA, STATUTS_EN_COURS, STATUTS_VALIDE } from '../data/tma.js'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
 import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatMontant } from '../utils/formatMontant.js'
 import { estEntrepriseEnRetard, formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
-import Badge from '../components/Badge.jsx'
-import FormulaireDatesTma from '../components/FormulaireDatesTma.jsx'
-import DetailEntreprisesTma from '../components/DetailEntreprisesTma.jsx'
 import FormulaireCreationTma from '../components/FormulaireCreationTma.jsx'
-import FormulaireInfosTma from '../components/FormulaireInfosTma.jsx'
 import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
 import FenetreExport from '../components/FenetreExport.jsx'
+import LigneTma from '../components/LigneTma.jsx'
 import { exporterPDF } from '../utils/export.js'
 import { nomAcquereur } from '../utils/acquereur.js'
+import {
+  donneesExportStatistiques,
+  donneesExportDemandesClients,
+  donneesExportDetailEntreprises,
+} from './Tma.exports.js'
 
 const NB_COLONNES = 14
 
@@ -335,53 +331,12 @@ function Tma() {
   // Montant TTC client), respectant le statut/la recherche actifs comme le
   // reste du tableau (même principe que Lots) — différent des totaux
   // "validées" ci-dessus, qui ne portent que sur les TMA validées quel que
-  // soit le filtre affiché.
+  // soit le filtre affiché. Réutilisées telles quelles dans le tfoot du
+  // tableau ET dans l'export "Demandes clients" (Tma.exports.js).
   const tauxTva = programme.parametres.tauxTva
   const totalEntreprisesTTC = tmaFiltrees.reduce((s, t) => s + (t.montantEntreprises ?? 0), 0)
   const totalClientTTC = tmaFiltrees.reduce((s, t) => s + (t.montantClient ?? 0), 0)
 
-  // "N° demande" ajoutée (21/07/2026, remarque de Nicolas) : juste après
-  // "Lot", partagée avec le tableau à l'écran.
-  const ENTETES_TABLEAU = [
-    'Lot',
-    'N° demande',
-    'Client',
-    'Date de la demande',
-    'Localisation',
-    'Description',
-    'Date envoi entreprise',
-    'Montant TTC entreprises',
-    'Montant TTC client',
-    'Facture envoyée le',
-    'Facture validée le',
-    'Statut',
-    'Commentaire',
-  ]
-
-  // Mêmes valeurs que les cellules affichées à l'écran (colonne Action
-  // exclue, point 190) — utilisé à la fois par l'export et, plus bas, par
-  // l'export détaillé avec les entreprises.
-  function ligneTableau(tma) {
-    return [
-      tma.lot?.reference ?? '—',
-      String(numeroDemandePourTma(tma)),
-      tmaObsolete(tma) ? '—' : nomAcquereur(tma.acquereur),
-      formatDate(tma.dateDemande),
-      tma.localisation,
-      tma.description,
-      formatDate(tma.dateEnvoiEntreprises),
-      tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises),
-      formatMontant(tma.montantClient ?? 0),
-      formatDate(tma.dateEnvoiFactureClient),
-      formatDate(tma.dateRetourClient),
-      STATUTS_TMA[tma.statut],
-      tma.commentaire || '—',
-    ]
-  }
-
-  // Les 3 lignes de total (TTC/TVA/HT), réutilisées à l'écran (tfoot du
-  // tableau) ET dans l'export "Demandes clients" — même principe que le
-  // récapitulatif détaillé par phase des appels de fonds.
   function ligneTotalTableau(libelle, entreprisesTTC, clientTTC) {
     return [
       libelle,
@@ -410,127 +365,6 @@ function Tma() {
     totalEntreprisesTTC - totalEntreprisesTTC / (1 + tauxTva),
     totalClientTTC - totalClientTTC / (1 + tauxTva),
   )
-
-  // Export "Statistiques" (21/07/2026) : les deux lignes de cartes du haut.
-  function donneesExportStatistiques() {
-    return {
-      nomFichier: `tma-statistiques-${programme.nom}`,
-      titre: `Statistiques des TMA — ${programme.nom}`,
-      entetes: ['Indicateur', 'Valeur'],
-      lignes: [
-        ['TMA au total', String(tmaList.length)],
-        ['Validées', String(validees)],
-        ['En cours', String(enCours)],
-        ['Refusées', String(refusees)],
-        ['Montant TTC validé (entreprises)', formatMontant(montantValideEntreprises)],
-        ['Montant TTC validé (clients)', formatMontant(montantValideClient)],
-        ['Marge', formatMontant(marge)],
-      ],
-    }
-  }
-
-  // Export "Demandes clients" (21/07/2026) : le tableau tel qu'affiché à
-  // l'écran (respecte statut + recherche, comme les autres exports),
-  // colonne Action exclue, avec les 3 lignes de total.
-  function donneesExportDemandesClients() {
-    return {
-      nomFichier: `tma-demandes-clients-${programme.nom}`,
-      titre: `Demandes clients (TMA) — ${programme.nom}`,
-      entetes: ENTETES_TABLEAU,
-      lignes: tmaFiltrees.map(ligneTableau),
-      lignesTotal: [ligneTotalTTC, ligneTotalTVA, ligneTotalHT],
-      // Tient sur une seule page PDF (21/07/2026, même remarque que le
-      // récap détaillé par phase des appels de fonds) : Client (2),
-      // Description (5) et Commentaire (12) peuvent revenir à la ligne
-      // (plafonnées), le reste est figé à sa largeur exacte.
-      pageUnique: true,
-      largeursMax: { 2: 40, 5: 45, 12: 40 },
-    }
-  }
-
-  // Export "Détail entreprises" (21/07/2026, remarque de Nicolas — maquette
-  // fournie, revue une 2e fois : la 1ère version mélangeait libellé et
-  // valeur dans chaque cellule, ce n'était pas ça). Structure finale, sous
-  // chaque ligne "demande" (en gras) : UNE ligne de titres (en italique,
-  // une seule fois, pas par entreprise), puis UNE ligne de valeurs PAR
-  // entreprise (sans libellé répété) — réutilise les colonnes du tableau
-  // (colonne "N° demande" laissée vide sur ces lignes, elle ne concerne que
-  // la ligne "demande").
-  const LIGNE_TITRES_ENTREPRISES = [
-    'Lot de travaux',
-    '',
-    "Corps d'état",
-    "Nom de l'entreprise",
-    '',
-    'Description',
-    'Date envoi entreprise',
-    'Montant TTC devis',
-    'Reçu le',
-    '',
-    '',
-    '',
-    '',
-  ]
-
-  function ligneValeursEntreprise(ligne) {
-    const delai = programme.parametres.delaiRetourEntrepriseTmaJours
-    // "En retard" (21/07/2026, précision de Nicolas) : remplace le montant
-    // tant que l'entreprise n'a pas répondu et que le délai est dépassé —
-    // même règle que le message affiché sur la ligne TMA elle-même
-    // (estEntrepriseEnRetard, utils/statuts.js).
-    const montantOuRetard = estEntrepriseEnRetard(ligne, delai)
-      ? 'En retard'
-      : ligne.montantDevis == null
-        ? '—'
-        : formatMontant(ligne.montantDevis)
-    return [
-      ligne.entreprise?.numeroLot ?? '—',
-      '',
-      ligne.corpsDeTravaux ?? '—',
-      ligne.entreprise?.nom ?? '—',
-      '',
-      ligne.description || '—',
-      formatDate(ligne.dateEnvoi),
-      montantOuRetard,
-      formatDate(ligne.dateRetour),
-      '',
-      '',
-      '',
-      '',
-    ]
-  }
-
-  function donneesExportDetailEntreprises() {
-    const lignes = []
-    const stylesLignes = []
-    for (const tma of tmaFiltrees) {
-      lignes.push(ligneTableau(tma))
-      stylesLignes.push('gras')
-      const lignesEntreprisesTma = tmaEntreprises.filter((l) => l.tma?._id === tma._id)
-      // La ligne de titres n'a de sens que s'il y a au moins une entreprise
-      // à lister en dessous — pas de ligne orpheline sinon.
-      if (lignesEntreprisesTma.length > 0) {
-        lignes.push(LIGNE_TITRES_ENTREPRISES)
-        stylesLignes.push('italique')
-        for (const ligne of lignesEntreprisesTma) {
-          lignes.push(ligneValeursEntreprise(ligne))
-          stylesLignes.push(undefined)
-        }
-      }
-    }
-    // Titre "Montant TTC client" retiré du grand en-tête noir (21/07/2026,
-    // remarque de Nicolas) : cette colonne affiche "Reçu le" sur la ligne de
-    // titres entreprises, garder le titre d'origine (qui ne vaut que pour
-    // la ligne demande, en gras) porterait à confusion.
-    const entetes = ENTETES_TABLEAU.map((entete, i) => (i === 8 ? '' : entete))
-    return {
-      nomFichier: `tma-detail-entreprises-${programme.nom}`,
-      titre: `Détail entreprises par TMA — ${programme.nom}`,
-      entetes,
-      lignes,
-      stylesLignes,
-    }
-  }
 
   // Export "Générer devis client" (21/07/2026, remarque de Nicolas, modèle
   // PDF fourni, revu le jour même) : choix en deux temps dans la fenêtre
@@ -594,6 +428,10 @@ function Tma() {
       })),
       tauxTva,
     })
+  }
+
+  function fermerPanneau() {
+    setIdPanneauOuvert(null)
   }
 
   return (
@@ -662,17 +500,43 @@ function Tma() {
             {
               valeur: 'statistiques',
               libelle: 'Statistiques (cartes)',
-              donnees: donneesExportStatistiques,
+              donnees: () =>
+                donneesExportStatistiques({
+                  tmaList,
+                  validees,
+                  enCours,
+                  refusees,
+                  montantValideEntreprises,
+                  montantValideClient,
+                  marge,
+                  programme,
+                }),
             },
             {
               valeur: 'demandes-clients',
               libelle: 'Demandes clients',
-              donnees: donneesExportDemandesClients,
+              donnees: () =>
+                donneesExportDemandesClients({
+                  tmaFiltrees,
+                  numeroDemandePourTma,
+                  tmaObsolete,
+                  ligneTotalTTC,
+                  ligneTotalTVA,
+                  ligneTotalHT,
+                  programme,
+                }),
             },
             {
               valeur: 'detail-entreprises',
               libelle: 'Détail entreprises',
-              donnees: donneesExportDetailEntreprises,
+              donnees: () =>
+                donneesExportDetailEntreprises({
+                  tmaFiltrees,
+                  tmaEntreprises,
+                  numeroDemandePourTma,
+                  tmaObsolete,
+                  programme,
+                }),
             },
             {
               valeur: 'devis-client',
@@ -726,181 +590,29 @@ function Tma() {
           </thead>
           <tbody>
             {tmaFiltrees.map((tma) => (
-              <Fragment key={tma._id}>
-                <tr>
-                  <td>{tma.lot?.reference ?? '—'}</td>
-                  <td>{numeroDemandePourTma(tma)}</td>
-                  <td>
-                    {/* Client d'origine obsolète (13/07/2026, point 133) : la
-                      vente qui a donné lieu à cette TMA a été annulée (et
-                      éventuellement remplacée par une nouvelle) depuis — le
-                      client d'origine n'a plus rien à voir avec le logement,
-                      donc son nom ne s'affiche plus. La TMA elle-même reste
-                      (à garder si le nouveau client la reprend — bouton
-                      ci-dessous — ou à supprimer soi-même, voir point 128),
-                      simplement signalée tant qu'elle n'a pas été réattribuée. */}
-                    <span className="nom-client">
-                      {tmaObsolete(tma) ? '—' : nomAcquereur(tma.acquereur)}
-                    </span>
-                    {tmaObsolete(tma) && (
-                      <>
-                        <div className="avertissement-cellule">
-                          Attention, ce logement a été annulé
-                        </div>
-                        {tma.lot?.acquereur && (
-                          <button type="button" onClick={() => reattribuerClient(tma)}>
-                            Réattribuer à {nomAcquereur(tma.lot.acquereur)}
-                          </button>
-                        )}
-                      </>
-                    )}
-                    {/* 13/07/2026, point 127 : une TMA peut être créée dès
-                      Option/Réservé, pas seulement Acté (voir
-                      FormulaireCreationTma.jsx) — simple rappel visuel tant
-                      que la vente n'est pas encore signée. */}
-                    {!tmaObsolete(tma) && tma.lot?.statut && tma.lot.statut !== 'acte' && (
-                      <div className="avertissement-cellule">Ce logement n'est pas encore acté</div>
-                    )}
-                  </td>
-                  <td>{formatDate(tma.dateDemande)}</td>
-                  <td>{tma.localisation}</td>
-                  <td>
-                    <span className="description-cellule">{tma.description}</span>
-                  </td>
-                  <td>{formatDate(tma.dateEnvoiEntreprises)}</td>
-                  {/* "==" (pas "===") : capture aussi bien `null` que
-                    `undefined` — un montant absent du document (jamais
-                    renseigné) n'est pas forcément `null` à la lettre, et
-                    formatMontant(undefined) affiche "NaN €". */}
-                  <td className="colonne-montant">
-                    {tma.montantEntreprises == null ? '—' : formatMontant(tma.montantEntreprises)}
-                  </td>
-                  <td className="colonne-montant">{formatMontant(tma.montantClient ?? 0)}</td>
-                  <td>{formatDate(tma.dateEnvoiFactureClient)}</td>
-                  <td>{formatDate(tma.dateRetourClient)}</td>
-                  <td>
-                    <Badge statut={tma.statut} texte={STATUTS_TMA[tma.statut]} />
-                    {tma.statut === 'etude' && entrepriseEnRetardPourTma(tma) && (
-                      <div className="avertissement-cellule">Retard entreprise</div>
-                    )}
-                  </td>
-                  <td>
-                    <span className="commentaire-cellule">{tma.commentaire || '—'}</span>
-                  </td>
-                  <td className="actions">
-                    <button
-                      type="button"
-                      className="bouton-icone"
-                      title="Modifier"
-                      aria-label="Modifier"
-                      onClick={() =>
-                        setIdPanneauOuvert(idPanneauOuvert === tma._id ? null : tma._id)
-                      }
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-                {idPanneauOuvert === tma._id && (
-                  <>
-                    <FormulaireInfosTma
-                      tma={tma}
-                      colonnes={NB_COLONNES}
-                      montantClientSaisiManuellement={
-                        programme.parametres.montantClientSaisiManuellement
-                      }
-                      onEnregistrer={enregistrerInfos}
-                      onFermer={() => setIdPanneauOuvert(null)}
-                    />
-                    {/* "valide" exclu en plus de STATUTS_NON_RECALCULABLES
-                      (21/07/2026, audit "fidélité code/doc") : sans ça, ce
-                      panneau restait modifiable même une fois la TMA
-                      validée — effacer "Date de retour client" après coup
-                      faisait redescendre le statut vers "facture", à
-                      l'encontre de la règle "pas de retour en arrière une
-                      fois validé" (déjà respectée pour le bouton
-                      "Refuser"). Même principe que le montant client,
-                      déjà verrouillé une fois "Validé" (point 182). */}
-                    {!STATUTS_NON_RECALCULABLES.includes(tma.statut) && tma.statut !== 'valide' && (
-                      <FormulaireDatesTma
-                        tma={tma}
-                        colonnes={NB_COLONNES}
-                        onEnregistrer={enregistrerDates}
-                        onFermer={() => setIdPanneauOuvert(null)}
-                      />
-                    )}
-                    <DetailEntreprisesTma
-                      tma={tma}
-                      colonnes={NB_COLONNES}
-                      delaiRetourEntrepriseTmaJours={
-                        programme.parametres.delaiRetourEntrepriseTmaJours
-                      }
-                      onChangement={chargerTmaEtEntreprises}
-                      onFermer={() => setIdPanneauOuvert(null)}
-                    />
-                    <tr className="formulaire-dates">
-                      <td colSpan={NB_COLONNES}>
-                        <div className="boutons-panneau-tma">
-                          {TRANSITIONS_AUTORISEES[tma.statut].includes('termine') && (
-                            <button
-                              type="button"
-                              className="bouton-fonce"
-                              onClick={() => changerStatut(tma._id, 'termine')}
-                            >
-                              Marquer les travaux comme terminés
-                            </button>
-                          )}
-                          {tma.statut === 'termine' && (
-                            <button
-                              type="button"
-                              className="bouton-fonce"
-                              onClick={() => annulerTermine(tma._id)}
-                            >
-                              Annuler la fin des travaux
-                            </button>
-                          )}
-                          {TRANSITIONS_AUTORISEES[tma.statut].includes('refuse') && (
-                            <button type="button" onClick={() => changerStatut(tma._id, 'refuse')}>
-                              Refuser la TMA
-                            </button>
-                          )}
-                          {tma.statut === 'refuse' && (
-                            <button type="button" onClick={() => annulerRefus(tma._id)}>
-                              Annuler le refus
-                            </button>
-                          )}
-                          {TRANSITIONS_AUTORISEES[tma.statut].includes('annule') && (
-                            <button
-                              type="button"
-                              className="bouton-danger"
-                              onClick={() => changerStatut(tma._id, 'annule')}
-                            >
-                              Annuler la TMA
-                            </button>
-                          )}
-                          {tma.statut === 'annule' && (
-                            <button type="button" onClick={() => annulerAnnulation(tma._id)}>
-                              Annuler l'annulation
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  </>
-                )}
-              </Fragment>
+              <LigneTma
+                key={tma._id}
+                tma={tma}
+                numeroDemande={numeroDemandePourTma(tma)}
+                estObsolete={tmaObsolete(tma)}
+                entrepriseEnRetard={entrepriseEnRetardPourTma(tma)}
+                colonnes={NB_COLONNES}
+                montantClientSaisiManuellement={programme.parametres.montantClientSaisiManuellement}
+                delaiRetourEntrepriseTmaJours={programme.parametres.delaiRetourEntrepriseTmaJours}
+                panneauOuvert={idPanneauOuvert === tma._id}
+                onBasculerPanneau={() =>
+                  setIdPanneauOuvert(idPanneauOuvert === tma._id ? null : tma._id)
+                }
+                onFermerPanneau={fermerPanneau}
+                onReattribuer={reattribuerClient}
+                onEnregistrerInfos={enregistrerInfos}
+                onEnregistrerDates={enregistrerDates}
+                onChangementEntreprises={chargerTmaEtEntreprises}
+                onChangerStatut={changerStatut}
+                onAnnulerRefus={annulerRefus}
+                onAnnulerAnnulation={annulerAnnulation}
+                onAnnulerTermine={annulerTermine}
+              />
             ))}
           </tbody>
           {tmaFiltrees.length > 0 && (

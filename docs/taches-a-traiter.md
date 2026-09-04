@@ -49,8 +49,14 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   `LigneAppelDeFonds.jsx`, le récapitulatif par lot dans
   `RecapitulatifAppelsParLot.jsx` ; état/chargement/handlers volontairement
   laissés dans la page, extraction en hook `useAppelsDeFonds()` repoussée
-  à une session ultérieure). Restent `Tma.jsx` et `Lots.jsx`, même
-  méthode, une page à la fois ("très doucement"). *(point 236)*
+  à une session ultérieure). 2/3 faite (`Tma.jsx`, 04/09/2026, point 302
+  — 926 → 638 lignes ; les 3 fonctions d'export extraites dans
+  `Tma.exports.js`, une ligne de tableau extraite dans `LigneTma.jsx` ;
+  2 comportements distincts d'`AppelsDeFonds.jsx` identifiés et préservés
+  à l'identique : le crayon bascule ouverture/fermeture au lieu d'ouvrir
+  seulement, et `reattribuerClient` prend l'objet TMA complet plutôt
+  qu'un id). Reste `Lots.jsx`, même méthode ("très doucement").
+  *(point 236)*
 - **5 trouvailles concrètes du check-up "développeur confirmé"** (fait le
   01/09/2026, note 66/100) : aucun rate-limiting sur la connexion, aucune
   couche de validation explicite des entrées aux frontières des routes,

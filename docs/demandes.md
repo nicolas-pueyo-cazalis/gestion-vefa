@@ -2157,6 +2157,41 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+302. ✅ **Découpage de `Tma.jsx` fait (04/09/2026)**, 2ᵉ des 3 pages (point
+     236), mode planification. 926 → 638 lignes, zéro changement de
+     comportement. 2 fichiers créés : `Tma.exports.js` (les 3 fonctions
+     de construction des exports, transformées en fonctions pures — les
+     3 lignes de total TTC/TVA/HT restent dans la page, aussi affichées
+     dans le tfoot du tableau à l'écran, pas seulement à l'export),
+     `components/LigneTma.jsx` (une ligne du tableau principal, même
+     patron que `LigneAppelDeFonds.jsx`). **Nicolas a explicitement
+     demandé de vérifier que le plan n'était pas un copier-coller
+     mécanique du découpage précédent** — vérification faite, 2
+     différences de comportement réelles identifiées et préservées à
+     l'identique : le bouton crayon BASCULE ouverture/fermeture (contrairement
+     au crayon d'`AppelsDeFonds.jsx` qui ouvre seulement) ; `reattribuerClient`
+     prend l'objet TMA complet en paramètre (pas juste un id, contrairement
+     aux autres handlers). **Filet de sécurité** : `Tma.render.test.jsx`
+     (20 tests) et `Tma.test.js` (5 tests) passent sans la moindre
+     modification — suite complète client 183/183, `oxlint` 0 erreur (3
+     avertissements préexistants, non liés au découpage). `git diff
+     --stat` : uniquement `Tma.jsx` modifié + les 2 nouveaux fichiers.
+     Vérification manuelle du double-clic sur le crayon **faite par
+     Nicolas, confirmée bonne**. En creusant pourquoi ce point précis
+     n'était pas déjà couvert automatiquement, **trou trouvé dans
+     `Tma.render.test.jsx`** (chantier 16, avant ce découpage) : le test
+     "panneau 'Modifier les dates' masqué pour une TMA validée" cliquait
+     bien 2 fois de suite sur le même crayon (commentaire `// referme`)
+     mais n'avait jamais d'assertion après ce 2e clic — le test passait
+     même si le bascule était cassé, car l'ouverture d'une autre ligne
+     juste après masquait le problème. Assertion manquante ajoutée
+     (`expect(screen.queryByText('Date envoi entreprises')).not.toBeInTheDocument()`),
+     20/20 toujours vert — preuve désormais réelle, pas supposée, que le
+     bascule fonctionne. Suite complète client 183/183. Reste `Lots.jsx`,
+     dernière page, même méthode.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

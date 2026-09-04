@@ -55,8 +55,14 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   2 comportements distincts d'`AppelsDeFonds.jsx` identifiés et préservés
   à l'identique : le crayon bascule ouverture/fermeture au lieu d'ouvrir
   seulement, et `reattribuerClient` prend l'objet TMA complet plutôt
-  qu'un id). Reste `Lots.jsx`, même méthode ("très doucement").
-  *(point 236)*
+  qu'un id). **3/3 faite (`Lots.jsx`, 04/09/2026, point 304 — 1054 → 710
+  lignes)** : les 3 pages "god components" sont maintenant découpées.
+  Les 4 fonctions d'export extraites dans `Lots.exports.js`, une ligne de
+  tableau dans `LigneTableauLots.jsx`, l'historique fusionné éclaté en
+  `HistoriqueVentesAnnulees.jsx` (bascule Détail/Masquer préservée) et
+  `HistoriqueModificationsPrix.jsx`. Chantier 236 terminé pour les 3
+  pages — reste éventuellement les hooks `useXxx()` par page (pas
+  planifié). *(point 236)*
 - **5 trouvailles concrètes du check-up "développeur confirmé"** (fait le
   01/09/2026, note 66/100) : aucun rate-limiting sur la connexion, aucune
   couche de validation explicite des entrées aux frontières des routes,
@@ -208,6 +214,15 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   *(points 245, 249)*
 - **Test : sujet à approfondir** — à préciser avec Nicolas avant de s'y
   mettre. *(point 246)*
+- **Revue complète des 238 tests automatisés du projet** — à chaque
+  remise en question un peu poussée d'un fichier de test pendant le
+  découpage des 3 god components, un vrai trou a été trouvé (bascule
+  ouvert/fermé jamais testée en sens inverse) : 3 fois de suite
+  (`Tma.render.test.jsx`, `AppelsDeFonds.render.test.jsx`, préventivement
+  `Lots.render.test.jsx`). Relire systématiquement les 20 fichiers de
+  test client + 6 serveur, en particulier tout bouton à bascule, pour
+  vérifier qu'il est testé dans les deux sens. Pas encore commencé.
+  *(point 303)*
 - **Compléter `docs/regles-a-confirmer-client.md`** (une seule entrée pour
   l'instant, à alimenter au fil de l'eau). *(point 247)*
 - **Compléter `docs/a-prendre-en-compte.md`** (8 entrées pour l'instant, à

@@ -317,6 +317,13 @@ describe('Lots — historique', () => {
     // annulations) — seul le bouton est un rôle "button".
     fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
     expect(screen.getByText('Acquisition avec fonds personnels.')).toBeInTheDocument()
+
+    // Vrai bascule (setIdAnnulationOuverte(id === entree._id ? null : id)) :
+    // un 2e clic sur le même bouton (devenu "Masquer") doit refermer le
+    // détail — pas seulement l'ouvrir (trou trouvé sur Tma.jsx/
+    // AppelsDeFonds.jsx, corrigé ici en amont).
+    fireEvent.click(screen.getByRole('button', { name: 'Masquer' }))
+    expect(screen.queryByText('Acquisition avec fonds personnels.')).not.toBeInTheDocument()
   })
 })
 

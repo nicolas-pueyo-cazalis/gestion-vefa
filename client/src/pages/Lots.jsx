@@ -1,21 +1,26 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { STATUTS_LOT } from '../data/lots.js'
-import { STATUTS_TMA } from '../data/tma.js'
 import { API_URL } from '../config.js'
 import { apiFetch } from '../utils/api.js'
 import { useProgramme } from '../context/ProgrammeContext.jsx'
 import { formatMontant } from '../utils/formatMontant.js'
 import { formatDate } from '../utils/statuts.js'
 import StatCard from '../components/StatCard.jsx'
-import Badge from '../components/Badge.jsx'
 import FiltreStatuts from '../components/FiltreStatuts.jsx'
 import BarreRecherche from '../components/BarreRecherche.jsx'
 import { correspondRecherche } from '../utils/recherche.js'
 import { nomAcquereur } from '../utils/acquereur.js'
 import FenetreExport from '../components/FenetreExport.jsx'
-import FormulaireEditionLot from '../components/FormulaireEditionLot.jsx'
 import FormulaireVenteAnnexe from '../components/FormulaireVenteAnnexe.jsx'
-import BoutonContact from '../components/BoutonContact.jsx'
+import LigneTableauLots from '../components/LigneTableauLots.jsx'
+import HistoriqueVentesAnnulees from '../components/HistoriqueVentesAnnulees.jsx'
+import HistoriqueModificationsPrix from '../components/HistoriqueModificationsPrix.jsx'
+import {
+  donneesExportTableau,
+  donneesExportCartes,
+  donneesExportHistorique,
+  donneesExportAnnexesALaVente,
+} from './Lots.exports.js'
 
 // Lot, Étage, Type, Orientation, SHAB, Annexes, Prix TTC, Prix/m², Statut,
 // Date, Client, Commentaire, Action (13/07/2026, point 156 : Terrasse(s),
@@ -349,6 +354,10 @@ function Lots() {
     setVenteAnnexeOuverte(false)
   }
 
+  function basculerAnnulation(id) {
+    setIdAnnulationOuverte(idAnnulationOuverte === id ? null : id)
+  }
+
   if (chargement) return <p>Chargement des lots...</p>
   if (erreur) return <p>Erreur : {erreur}</p>
 
@@ -394,177 +403,6 @@ function Lots() {
   // de chaque lot, comme calculé jusqu'ici).
   const totalSurface = lotsFiltres.reduce((somme, lot) => somme + (lot.surfaceHabitable ?? 0), 0)
   const moyennePrixM2 = totalSurface > 0 ? totalTTC / totalSurface : null
-
-  // Export #1 (20/07/2026, point 192) : tableau récapitulatif des lots,
-  // respecte les filtres actifs (statut + recherche, déjà appliqués à
-  // `lotsFiltres`), sans la colonne Action, avec les mêmes totaux qu'à
-  // l'écran. Mêmes fonctions d'affichage que le rendu du tableau, pour
-  // que l'export corresponde exactement à ce qui est lu à l'écran.
-  function donneesExportTableau() {
-    const entetes = [
-      'Lot',
-      'Étage',
-      'Type',
-      'Orientation',
-      'Surface SHAB',
-      ...(afficherColonneSousPlafondBas ? ['Surface < 1,80m'] : []),
-      'Annexes',
-      'Prix TTC',
-      'Prix TTC/m² SHAB',
-      'Statut',
-      'Date',
-      'Client',
-      'Commentaire',
-    ]
-    const lignes = lotsFiltres.map((lot) => [
-      lot.estAnnexeSeule ? '—' : lot.reference,
-      lot.etage ?? '',
-      lot.type ?? '',
-      lot.orientation ?? '',
-      afficheSurface(lot.surfaceHabitable),
-      ...(afficherColonneSousPlafondBas ? [afficheSurface(lot.surfaceSousPlafondBas)] : []),
-      afficheAnnexes(lot).join('\n') || '—',
-      formatMontant(lot.prixTTC, 0),
-      prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—',
-      STATUTS_LOT[lot.statut],
-      dateActuelle(lot),
-      nomAcquereur(lot.acquereur),
-      lot.commentaire || '—',
-    ])
-    const totaux = [
-      ['SHAB totale', afficheSurface(totalSurface)],
-      ['Total TTC', formatMontant(totalTTC)],
-      [`TVA (${Math.round(tauxTva * 100)}%)`, formatMontant(totalTVA)],
-      ['Total HT', formatMontant(totalHT)],
-      ['Prix moyen TTC/m²', moyennePrixM2 !== null ? formatMontant(moyennePrixM2, 0) : '—'],
-    ]
-    return {
-      nomFichier: `lots-${programme.nom}`,
-      titre: `Lots — ${programme.nom}`,
-      entetes,
-      lignes,
-      totaux,
-    }
-  }
-
-  // Export #2 (20/07/2026, point 193) : les cartes de statistiques
-  // (Commercialisation, Chiffre d'affaires, Prix moyen TTC/m²) — mêmes
-  // valeurs et pourcentages qu'à l'écran, réunies dans un tableau à deux
-  // colonnes plutôt que sous forme de cartes (peu adapté à Excel/PDF).
-  function donneesExportCartes() {
-    const entetes = ['Indicateur', 'Valeur']
-    const lignes = [
-      ['Prix moyen TTC/m²', moyennePrixM2 !== null ? formatMontant(moyennePrixM2, 0) : '—'],
-      ['Commercialisation — Lots au total', String(lots.length)],
-      [
-        'Commercialisation — Actés',
-        `${parStatut.acte} (${pourcentage(parStatut.acte, lots.length)}% du programme)`,
-      ],
-      [
-        'Commercialisation — Réservés',
-        `${parStatut.reserve} (${pourcentage(parStatut.reserve, lots.length)}% du programme)`,
-      ],
-      [
-        'Commercialisation — Options',
-        `${parStatut.option} (${pourcentage(parStatut.option, lots.length)}% du programme)`,
-      ],
-      [
-        'Commercialisation — Libres',
-        `${parStatut.libre} (${pourcentage(parStatut.libre, lots.length)}% du programme)`,
-      ],
-      [
-        "Chiffre d'affaires — CA acté",
-        `${formatMontant(caParStatut.acte, 0)} (${pourcentage(caParStatut.acte, totalCA)}% du CA total)`,
-      ],
-      [
-        "Chiffre d'affaires — CA réservé",
-        `${formatMontant(caParStatut.reserve, 0)} (${pourcentage(caParStatut.reserve, totalCA)}% du CA total)`,
-      ],
-      [
-        "Chiffre d'affaires — CA options",
-        `${formatMontant(caParStatut.option, 0)} (${pourcentage(caParStatut.option, totalCA)}% du CA total)`,
-      ],
-      [
-        "Chiffre d'affaires — CA libre",
-        `${formatMontant(caParStatut.libre, 0)} (${pourcentage(caParStatut.libre, totalCA)}% du CA total)`,
-      ],
-    ]
-    return {
-      nomFichier: `lots-statistiques-${programme.nom}`,
-      titre: `Statistiques — ${programme.nom}`,
-      entetes,
-      lignes,
-    }
-  }
-
-  // Export #3 (20/07/2026, point 194) : l'historique — deux tableaux
-  // (ventes annulées, modifications de prix) dans un même fichier, sans
-  // la colonne "Détail" (équivalent d'une colonne Action ici, point 190).
-  function donneesExportHistorique() {
-    return {
-      nomFichier: `lots-historique-${programme.nom}`,
-      titre: `Historique — ${programme.nom}`,
-      sections: [
-        {
-          sousTitre: 'Ventes annulées',
-          entetes: [
-            'Logement',
-            'Statut avant annulation',
-            'Date',
-            'Client',
-            'Commentaire',
-            'Annulé le',
-          ],
-          lignes: historiqueAnnulations.map((entree) => [
-            entree.referenceLot,
-            STATUTS_LOT[entree.statutAvantAnnulation],
-            derniereDateAnnulation(entree),
-            nomClient(entree),
-            entree.commentaire || '—',
-            formatDate(entree.dateAnnulation),
-          ]),
-        },
-        {
-          sousTitre: 'Modifications de prix',
-          entetes: ['Logement', 'Ancien prix', 'Nouveau prix', 'Motif', 'Date'],
-          lignes: historiqueModificationsPrix.map((entree) => [
-            entree.referenceLot,
-            formatMontant(entree.ancienPrix),
-            formatMontant(entree.nouveauPrix),
-            entree.motif,
-            formatDate(entree.createdAt),
-          ]),
-        },
-      ],
-    }
-  }
-
-  // Export #4 (20/07/2026, point 195) : les annexes encore disponibles à
-  // la vente (pas encore attribuées à un lot) — même liste que celle
-  // proposée dans le panneau "Vendre une annexe".
-  function donneesExportAnnexesALaVente() {
-    const libellesType = {
-      parking_ext: 'Parking extérieur',
-      parking_int: 'Parking intérieur',
-      cave: 'Cave',
-      cellier: 'Cellier',
-    }
-    const disponibles = annexes.filter((a) => !a.lot)
-    const entetes = ['Type', 'N°', 'Prix']
-    const lignes = disponibles.map((a) => [
-      libellesType[a.type] ?? a.type,
-      String(a.numero),
-      formatMontant(a.prix),
-    ])
-    const totaux = [['Total', formatMontant(disponibles.reduce((somme, a) => somme + a.prix, 0))]]
-    return {
-      nomFichier: `lots-annexes-a-la-vente-${programme.nom}`,
-      titre: `Annexes à la vente — ${programme.nom}`,
-      entetes,
-      lignes,
-      totaux,
-    }
-  }
 
   return (
     <>
@@ -692,88 +530,27 @@ function Lots() {
             </tr>
           </thead>
           <tbody>
-            {lotsFiltres.map((lot) => {
-              const lignesAnnexes = afficheAnnexes(lot)
-              return (
-                <Fragment key={lot._id}>
-                  <tr>
-                    {/* Annexe vendue à part (17/07/2026, remarque de
-                        Nicolas) : sa référence ne s'affiche pas ici, déjà
-                        présente dans la colonne "Annexes" ci-dessous. */}
-                    <td>{lot.estAnnexeSeule ? '—' : lot.reference}</td>
-                    <td>{lot.etage}</td>
-                    <td>{lot.type}</td>
-                    <td>{lot.orientation}</td>
-                    <td>{afficheSurface(lot.surfaceHabitable)}</td>
-                    {afficherColonneSousPlafondBas && (
-                      <td>{afficheSurface(lot.surfaceSousPlafondBas)}</td>
-                    )}
-                    <td>
-                      {lignesAnnexes.length > 0 ? (
-                        <div className="annexes-cellule">
-                          {lignesAnnexes.map((ligne, i) => (
-                            <div key={i}>{ligne}</div>
-                          ))}
-                        </div>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="colonne-montant">{formatMontant(lot.prixTTC, 0)}</td>
-                    <td className="colonne-montant">
-                      {prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}
-                    </td>
-                    <td>
-                      <Badge statut={lot.statut} texte={STATUTS_LOT[lot.statut]} />
-                      {offrePretManquante(lot) && (
-                        <div className="avertissement-cellule">Offre de prêt non reçue</div>
-                      )}
-                    </td>
-                    <td>{dateActuelle(lot)}</td>
-                    <td>
-                      <span className="nom-client">{nomAcquereur(lot.acquereur)}</span>
-                    </td>
-                    <td>
-                      <span className="commentaire-cellule">{lot.commentaire || '—'}</span>
-                    </td>
-                    <td className="actions">
-                      <button
-                        type="button"
-                        className="bouton-icone"
-                        title="Modifier"
-                        aria-label="Modifier"
-                        onClick={() => setIdEnEdition(lot._id)}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                  {idEnEdition === lot._id && (
-                    <FormulaireEditionLot
-                      lot={lot}
-                      acquereurs={acquereurs}
-                      colonnes={NB_COLONNES}
-                      onEnregistrer={enregistrerLot}
-                      onAnnulerVente={annulerVenteLot}
-                      onEnregistrerPrix={enregistrerPrixLot}
-                      onFermer={() => setIdEnEdition(null)}
-                    />
-                  )}
-                </Fragment>
-              )
-            })}
+            {lotsFiltres.map((lot) => (
+              <LigneTableauLots
+                key={lot._id}
+                lot={lot}
+                colonnes={NB_COLONNES}
+                afficherColonneSousPlafondBas={afficherColonneSousPlafondBas}
+                surfaceHabitableAffichee={afficheSurface(lot.surfaceHabitable)}
+                surfaceSousPlafondBasAffichee={afficheSurface(lot.surfaceSousPlafondBas)}
+                lignesAnnexes={afficheAnnexes(lot)}
+                prixParM2Affiche={prixParM2(lot) !== null ? formatMontant(prixParM2(lot), 0) : '—'}
+                dateAffichee={dateActuelle(lot)}
+                pretManquant={offrePretManquante(lot)}
+                acquereurs={acquereurs}
+                enEdition={idEnEdition === lot._id}
+                onModifier={setIdEnEdition}
+                onFermerModifier={() => setIdEnEdition(null)}
+                onEnregistrer={enregistrerLot}
+                onAnnulerVente={annulerVenteLot}
+                onEnregistrerPrix={enregistrerPrixLot}
+              />
+            ))}
           </tbody>
         </table>
 
@@ -856,171 +633,15 @@ function Lots() {
 
       {historiqueOuvert && (
         <div className="bloc-historique">
-          <h3>Ventes annulées</h3>
-          <div className="tableau-scroll tableau-scroll--marge">
-            <table className="tableau-lots">
-              <thead>
-                <tr>
-                  <th>Logement</th>
-                  <th>Statut avant annulation</th>
-                  <th>Date</th>
-                  <th>Client</th>
-                  <th>Commentaire</th>
-                  <th>Annulé le</th>
-                  <th>Détail</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historiqueAnnulations.length === 0 && (
-                  <tr>
-                    <td colSpan={7}>Aucune vente annulée pour l'instant.</td>
-                  </tr>
-                )}
-                {historiqueAnnulations.map((entree) => {
-                  const tmaDuLot = tmaList.filter((tma) => tma.lot?._id === entree.lot)
-                  return (
-                    <Fragment key={entree._id}>
-                      <tr>
-                        <td>{entree.referenceLot}</td>
-                        <td>
-                          <Badge
-                            statut={entree.statutAvantAnnulation}
-                            texte={STATUTS_LOT[entree.statutAvantAnnulation]}
-                          />
-                        </td>
-                        <td>{derniereDateAnnulation(entree)}</td>
-                        <td>
-                          <span className="nom-client">{nomClient(entree)}</span>
-                        </td>
-                        <td>
-                          <span className="commentaire-cellule">{entree.commentaire || '—'}</span>
-                        </td>
-                        <td>{formatDate(entree.dateAnnulation)}</td>
-                        <td className="actions">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setIdAnnulationOuverte(
-                                idAnnulationOuverte === entree._id ? null : entree._id,
-                              )
-                            }
-                          >
-                            {idAnnulationOuverte === entree._id ? 'Masquer' : 'Détail'}
-                          </button>
-                        </td>
-                      </tr>
-                      {idAnnulationOuverte === entree._id && (
-                        <tr className="formulaire-dates">
-                          <td colSpan={7}>
-                            <div className="detail-annulation">
-                              <div className="detail-annulation-bloc">
-                                <h3>Prêt</h3>
-                                {entree.sansPret ? (
-                                  <p>Acquisition avec fonds personnels.</p>
-                                ) : (
-                                  <ul>
-                                    <li>
-                                      Banque :{' '}
-                                      <BoutonContact titre="Banque" contact={entree.banque} />
-                                    </li>
-                                    <li>
-                                      Courtier :{' '}
-                                      <BoutonContact titre="Courtier" contact={entree.courtier} />
-                                    </li>
-                                    <li>
-                                      Offre reçue le : {formatDate(entree.dateOffrePretRecue)}
-                                    </li>
-                                  </ul>
-                                )}
-                              </div>
-                              <div className="detail-annulation-bloc">
-                                <h3>Acte</h3>
-                                <ul>
-                                  <li>
-                                    Notaire :{' '}
-                                    <BoutonContact titre="Notaire" contact={entree.notaire} />
-                                  </li>
-                                  <li>Date de l'acte : {formatDate(entree.dateActe)}</li>
-                                </ul>
-                              </div>
-                              <div className="detail-annulation-bloc">
-                                <h3>Appels de fonds ({entree.appelsDeFonds.length})</h3>
-                                {entree.appelsDeFonds.length === 0 ? (
-                                  <p>Aucun appel de fonds généré.</p>
-                                ) : (
-                                  <ul>
-                                    {entree.appelsDeFonds.map((appel, i) => (
-                                      <li key={i}>
-                                        {appel.phase.nom} — {formatMontant(appel.montant)}
-                                        {appel.dateReglement
-                                          ? ` — réglé le ${formatDate(appel.dateReglement)}`
-                                          : ' — non réglé'}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                              <div className="detail-annulation-bloc">
-                                <h3>TMA ({tmaDuLot.length})</h3>
-                                {tmaDuLot.length === 0 ? (
-                                  <p>Aucune TMA liée à ce logement.</p>
-                                ) : (
-                                  <ul>
-                                    {tmaDuLot.map((tma) => (
-                                      <li key={tma._id}>
-                                        {tma.description} —{' '}
-                                        <Badge
-                                          statut={tma.statut}
-                                          texte={STATUTS_TMA[tma.statut]}
-                                        />
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <h3>Modifications de prix</h3>
-          <div className="tableau-scroll tableau-scroll--marge">
-            <table className="tableau-lots">
-              <thead>
-                <tr>
-                  <th>Logement</th>
-                  <th className="colonne-montant">Ancien prix</th>
-                  <th className="colonne-montant">Nouveau prix</th>
-                  <th>Motif</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historiqueModificationsPrix.length === 0 && (
-                  <tr>
-                    <td colSpan={5}>Aucune modification de prix pour l'instant.</td>
-                  </tr>
-                )}
-                {historiqueModificationsPrix.map((entree) => (
-                  <tr key={entree._id}>
-                    <td>{entree.referenceLot}</td>
-                    <td className="colonne-montant">{formatMontant(entree.ancienPrix)}</td>
-                    <td className="colonne-montant">{formatMontant(entree.nouveauPrix)}</td>
-                    <td>
-                      <span className="commentaire-cellule">{entree.motif}</span>
-                    </td>
-                    <td>{formatDate(entree.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <HistoriqueVentesAnnulees
+            historiqueAnnulations={historiqueAnnulations}
+            tmaList={tmaList}
+            idAnnulationOuverte={idAnnulationOuverte}
+            onBasculerAnnulation={basculerAnnulation}
+            derniereDateAnnulation={derniereDateAnnulation}
+            nomClient={nomClient}
+          />
+          <HistoriqueModificationsPrix historiqueModificationsPrix={historiqueModificationsPrix} />
         </div>
       )}
 
@@ -1030,18 +651,53 @@ function Lots() {
             {
               valeur: 'tableau',
               libelle: 'Tableau récapitulatif des lots',
-              donnees: donneesExportTableau,
+              donnees: () =>
+                donneesExportTableau({
+                  lotsFiltres,
+                  afficherColonneSousPlafondBas,
+                  totalSurface,
+                  totalTTC,
+                  totalTVA,
+                  totalHT,
+                  moyennePrixM2,
+                  tauxTva,
+                  programme,
+                  afficheSurface,
+                  afficheAnnexes,
+                  prixParM2,
+                  dateActuelle,
+                }),
             },
-            { valeur: 'cartes', libelle: 'Statistiques (cartes)', donnees: donneesExportCartes },
+            {
+              valeur: 'cartes',
+              libelle: 'Statistiques (cartes)',
+              donnees: () =>
+                donneesExportCartes({
+                  lots,
+                  parStatut,
+                  caParStatut,
+                  totalCA,
+                  moyennePrixM2,
+                  programme,
+                  pourcentage,
+                }),
+            },
             {
               valeur: 'historique',
               libelle: 'Historique (annulations, modifications de prix)',
-              donnees: donneesExportHistorique,
+              donnees: () =>
+                donneesExportHistorique({
+                  historiqueAnnulations,
+                  historiqueModificationsPrix,
+                  programme,
+                  derniereDateAnnulation,
+                  nomClient,
+                }),
             },
             {
               valeur: 'annexes',
               libelle: 'Annexes à la vente',
-              donnees: donneesExportAnnexesALaVente,
+              donnees: () => donneesExportAnnexesALaVente({ annexes, programme }),
             },
           ]}
           onFermer={() => setExportOuvert(false)}

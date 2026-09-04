@@ -2207,6 +2207,80 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+303. ⏳ **Revue complète de l'ensemble des 238 tests automatisés du
+     projet** (demande explicite de Nicolas, 04/09/2026) : constat fait
+     pendant le découpage de `Tma.jsx`/`AppelsDeFonds.jsx` — à chaque
+     remise en question un peu poussée d'un fichier de test, un vrai
+     trou de couverture a été trouvé (un clic sur une bascule
+     ouvert/fermé jamais suivi de l'assertion de fermeture), 3 fois de
+     suite (`Tma.render.test.jsx`, `AppelsDeFonds.render.test.jsx`, et
+     préventivement sur `Lots.render.test.jsx` avant même d'y toucher).
+     Rien ne garantit que d'autres trous du même genre n'existent pas
+     ailleurs dans la suite — pages non concernées par le découpage des 3
+     god components, composants, tests serveur. Objectif : relire
+     systématiquement les 20 fichiers de test côté client et les 6 côté
+     serveur, en particulier tout `fireEvent.click` sur un bouton à
+     bascule (ouvre/ferme, affiche/masque), pour vérifier que chaque
+     bascule est testée DANS LES DEUX SENS, pas seulement à l'ouverture.
+     Pas encore commencé — à planifier comme chantier à part une fois le
+     découpage des 3 pages terminé (`Lots.jsx` en cours).
+
+---
+
+304. ✅ **Découpage de `Lots.jsx` fait (04/09/2026)**, 3ᵉ et dernière page
+     (point 236), mode planification (2 remises en question demandées
+     par Nicolas avant exécution, voir ci-dessous). 1054 → 710 lignes,
+     zéro changement de comportement. **Le chantier de découpage des 3
+     god components est maintenant terminé.**
+
+     Structure différente des 2 découpages précédents : `Lots.jsx` a 12
+     fonctions pures partagées (chantier 13, testées par `Lots.test.js`),
+     contre 1-2 pour les autres pages — toutes restées en place, transmises
+     en paramètre explicite aux 4 fonctions d'export (`Lots.exports.js`)
+     et au composant de ligne (`LigneTableauLots.jsx`) qui en ont besoin,
+     pour éviter un import circulaire.
+
+     **1ʳᵉ remise en question (avant le plan final)** : le brouillon
+     initial faisait passer des FONCTIONS (`afficheSurface`,
+     `afficheAnnexes`, `prixParM2`, `dateActuelle`, `offrePretManquante`)
+     en props à `LigneTableauLots.jsx` — incohérent avec la règle déjà
+     établie sur `Tma.jsx`/`AppelsDeFonds.jsx` (précalculer des valeurs
+     primitives dans la boucle du parent, jamais de fonction en prop pour
+     un composant "une ligne"). Corrigé avant d'écrire le code : le
+     composant reçoit maintenant des valeurs déjà calculées
+     (`prixParM2Affiche`, `dateAffichee`, `pretManquant`...). Règle
+     clarifiée : un composant qui fait sa PROPRE boucle sur tout un
+     tableau (`Lots.exports.js`, `HistoriqueVentesAnnulees.jsx`) reçoit
+     légitimement des fonctions ; un composant "une seule ligne" reçoit
+     des valeurs déjà calculées.
+
+     **2ᵉ remise en question** : Nicolas a demandé de noter qu'à chaque
+     fois qu'une remise en question un peu poussée a été faite sur ce
+     chantier, un vrai trou de test a été trouvé (3 fois de suite) — noté
+     comme nouveau chantier à part entière, point 303 ci-dessus. Sauvegardé
+     aussi en mémoire persistante : prendre du recul avant CHAQUE réponse,
+     pas seulement quand demandé.
+
+     Trou de test trouvé ET corrigé cette fois-ci EN AMONT (pas après
+     coup) : `Lots.render.test.jsx` testait l'ouverture du détail d'une
+     annulation ("Détail") mais jamais sa fermeture ("Masquer" sur la
+     même ligne) — assertion ajoutée et vérifiée AVANT le découpage
+     (16/16 sur le code d'origine), pour isoler la preuve du reste.
+
+     **Filet de sécurité** : `Lots.render.test.jsx` (16 tests, avec la
+     nouvelle assertion) et `Lots.test.js` (25 tests) passent sans
+     modification de leur LOGIQUE (seul l'ajout ci-dessus, fait et vérifié
+     avant de toucher au code source) — suite complète client 183/183,
+     `oxlint` 0 erreur (13 avertissements préexistants). `git diff --stat`
+     conforme au plan : `Lots.jsx` modifié + 4 fichiers créés
+     (`Lots.exports.js`, `LigneTableauLots.jsx`, `HistoriqueVentesAnnulees.jsx`
+     avec bascule Détail/Masquer préservée à l'identique,
+     `HistoriqueModificationsPrix.jsx`). Vérification manuelle dans le
+     navigateur non faite par l'IA (pas d'outil de pilotage navigateur) —
+     à confirmer par Nicolas.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

@@ -12,29 +12,40 @@ import SectionLots from '../components/parametres/SectionLots.jsx'
 import SectionUtilisateurs from '../components/parametres/SectionUtilisateurs.jsx'
 import SectionAlertes from '../components/parametres/SectionAlertes.jsx'
 import SectionAnnexes from '../components/parametres/SectionAnnexes.jsx'
+import SectionBanque from '../components/parametres/SectionBanque.jsx'
 
-// Onglets groupés par thème (04/09/2026, point 277) : les 9 sections
-// n'étaient jusqu'ici qu'empilées verticalement (long scroll pénible à
-// parcourir régulièrement). Regroupées en 3 catégories, chacune avec ses
-// propres sous-onglets — une seule section montée à la fois. "Utilisateurs"
-// (admin uniquement) filtrée à l'affichage des sous-onglets, pas ici (la
-// liste ci-dessous reste statique, valable pour tous les rôles).
+// Onglets groupés par thème (04/09/2026, points 277 et 308) : les 9
+// sections n'étaient jusqu'ici qu'empilées verticalement (long scroll
+// pénible à parcourir régulièrement). Regroupées en 4 catégories,
+// chacune avec ses propres sous-onglets — une seule section montée à la
+// fois. "Entreprises" n'a volontairement qu'une seule section (clic
+// direct sur le contenu, pas de barre de sous-onglets à un seul élément
+// — voir le calcul de `sousOngletsVisibles` plus bas, règle générale
+// plutôt qu'un cas spécial). "Utilisateurs" (admin uniquement) filtrée à
+// l'affichage des sous-onglets, pas ici (la liste ci-dessous reste
+// statique, valable pour tous les rôles).
 const CATEGORIES = [
-  { cle: 'programme', nom: 'Programme', sections: ['infos', 'delais', 'alertes', 'bareme'] },
-  { cle: 'catalogue', nom: 'Catalogue', sections: ['etages', 'annexes', 'lots'] },
-  { cle: 'equipe', nom: 'Équipe', sections: ['entreprises', 'utilisateurs'] },
+  {
+    cle: 'programme',
+    nom: 'Programme',
+    sections: ['infos', 'etages', 'delais', 'bareme', 'banque'],
+  },
+  { cle: 'inventaire', nom: 'Inventaire', sections: ['lots', 'annexes'] },
+  { cle: 'entreprises', nom: 'Entreprises', sections: ['entreprises'] },
+  { cle: 'administration', nom: 'Administration', sections: ['alertes', 'utilisateurs'] },
 ]
 
 const LIBELLES_SECTIONS = {
   infos: 'Informations',
   delais: 'Délais et taux',
   alertes: 'Alertes',
-  bareme: 'Barème',
+  bareme: 'Échéancier',
   etages: 'Étages',
   annexes: 'Annexes',
   lots: 'Lots',
   entreprises: 'Entreprises',
   utilisateurs: 'Utilisateurs',
+  banque: 'Banque',
 }
 
 function Parametres() {
@@ -119,11 +130,28 @@ function Parametres() {
     function marquerModifie() {
       setEstModifie(true)
     }
+    // Molette de la souris au-dessus d'un champ number ayant le focus
+    // (04/09/2026, signalé par Nicolas : la confirmation apparaissait
+    // "sans avoir rien touché") : Chrome/Edge modifient la valeur d'un
+    // <input type="number"> focalisé au simple passage de la molette,
+    // et déclenchent un vrai `input` — perçu à tort comme une saisie
+    // volontaire par la détection générique ci-dessus. `preventDefault()`
+    // sur cet évènement précis neutralise ce comportement du navigateur
+    // (le défilement normal de la page n'est pas affecté, seul le
+    // changement de valeur au survol l'est) — écouteur volontairement
+    // NON passif, `preventDefault()` serait ignoré sinon.
+    function neutraliserMoletteNombre(e) {
+      if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
+        e.preventDefault()
+      }
+    }
     conteneur.addEventListener('input', marquerModifie)
     conteneur.addEventListener('change', marquerModifie)
+    conteneur.addEventListener('wheel', neutraliserMoletteNombre)
     return () => {
       conteneur.removeEventListener('input', marquerModifie)
       conteneur.removeEventListener('change', marquerModifie)
+      conteneur.removeEventListener('wheel', neutraliserMoletteNombre)
     }
   }, [sectionActive])
 
@@ -169,7 +197,12 @@ function Parametres() {
 
   if (chargement) return <p>Chargement des paramètres...</p>
 
-  const sousOnglets = categorieActive.sections.filter(
+  // Barre de sous-onglets masquée si la catégorie active n'a plus qu'un
+  // seul élément visible (après filtrage du rôle) — s'applique
+  // naturellement à "Entreprises" (toujours 1 élément) sans cas
+  // spécial, et à "Administration" pour un non-admin (Alertes + Banque,
+  // sous-onglets affichés quand même puisqu'il en reste 2).
+  const sousOngletsVisibles = categorieActive.sections.filter(
     (cle) => cle !== 'utilisateurs' || utilisateur?.role === 'admin',
   )
 
@@ -204,6 +237,8 @@ function Parametres() {
         return utilisateur?.role === 'admin' ? (
           <SectionUtilisateurs utilisateurs={utilisateurs} onChangement={chargerUtilisateurs} />
         ) : null
+      case 'banque':
+        return <SectionBanque programme={programme} onEnregistrer={enregistrer} />
       default:
         return null
     }
@@ -226,18 +261,20 @@ function Parametres() {
         ))}
       </div>
 
-      <div className="sous-onglets-parametres">
-        {sousOnglets.map((cle) => (
-          <button
-            key={cle}
-            type="button"
-            className={cle === sectionActive ? 'actif' : ''}
-            onClick={() => tenterAllerA(cle)}
-          >
-            {LIBELLES_SECTIONS[cle]}
-          </button>
-        ))}
-      </div>
+      {sousOngletsVisibles.length > 1 && (
+        <div className="sous-onglets-parametres">
+          {sousOngletsVisibles.map((cle) => (
+            <button
+              key={cle}
+              type="button"
+              className={cle === sectionActive ? 'actif' : ''}
+              onClick={() => tenterAllerA(cle)}
+            >
+              {LIBELLES_SECTIONS[cle]}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div ref={refPanneauActif}>{renderSectionActive()}</div>
     </>

@@ -36,26 +36,54 @@ function SectionAlertes({ programme, onEnregistrer }) {
   return (
     <section className="section-parametres">
       <h2>Fenêtre d'alertes</h2>
-      <form onSubmit={soumettre}>
-        <label className="champ-case-a-cocher">
-          <input
-            type="checkbox"
-            checked={alertesActivees}
-            onChange={(e) => setAlertesActivees(e.target.checked)}
-          />
-          Afficher la fenêtre d'alertes au démarrage
-        </label>
-        {TYPES_ALERTES.map(({ cle, libelle }) => (
-          <label className="champ-case-a-cocher" key={cle}>
+      <form onSubmit={soumettre} className="formulaire-alertes">
+        {/* Bannière + grille compacte (04/09/2026, point 308, maquette
+            retenue par Nicolas parmi 3 propositions) : l'interrupteur
+            maître devient une bannière bien visible, les 5 types passent
+            en grille 2 colonnes plutôt qu'une longue liste verticale. */}
+        <div className="banniere-alertes-maitre">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9ZM13.7 21a2 2 0 0 1-3.4 0" />
+          </svg>
+          <div className="texte-banniere-alertes">
+            <span className="titre-banniere-alertes">Fenêtre d'alertes au démarrage</span>
+            <span className="sous-titre-banniere-alertes">Active les 5 réglages ci-dessous</span>
+          </div>
+          <label className="interrupteur">
             <input
               type="checkbox"
-              checked={alertesActivesParType[cle]}
-              onChange={() => basculerType(cle)}
-              disabled={!alertesActivees}
+              checked={alertesActivees}
+              onChange={(e) => setAlertesActivees(e.target.checked)}
             />
-            {libelle}
+            <span className="glissiere" />
           </label>
-        ))}
+        </div>
+        <div className="grille-types-alertes">
+          {TYPES_ALERTES.map(({ cle, libelle }) => (
+            <label
+              key={cle}
+              className={`case-type-alerte${alertesActivesParType[cle] ? '' : ' desactive'}`}
+            >
+              <span>{libelle}</span>
+              <span className="interrupteur">
+                <input
+                  type="checkbox"
+                  checked={alertesActivesParType[cle]}
+                  onChange={() => basculerType(cle)}
+                  disabled={!alertesActivees}
+                />
+                <span className="glissiere" />
+              </span>
+            </label>
+          ))}
+        </div>
         <button type="submit">Enregistrer</button>
       </form>
     </section>

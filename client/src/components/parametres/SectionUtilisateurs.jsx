@@ -79,13 +79,27 @@ function SectionUtilisateurs({ utilisateurs, onChangement }) {
         ))}
       </ul>
       <form onSubmit={ajouter}>
+        {/* autoComplete (04/09/2026, signalé par Nicolas : confirmation de
+            saisie non enregistrée déclenchée sans avoir rien touché,
+            seulement sur cet onglet) : ce formulaire crée un NOUVEAU
+            compte, ce n'est pas une connexion — sans "new-password", les
+            gestionnaires de mots de passe du navigateur peuvent injecter
+            une suggestion dès l'affichage, ce qui déclenche un vrai
+            évènement input/change perçu à tort comme une saisie
+            volontaire par Parametres.jsx. */}
         <label>
           Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="off"
+            required
+          />
         </label>
         <label>
           Nom
-          <input value={nom} onChange={(e) => setNom(e.target.value)} />
+          <input value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="off" />
         </label>
         <label>
           Mot de passe
@@ -93,6 +107,7 @@ function SectionUtilisateurs({ utilisateurs, onChangement }) {
             type="password"
             value={motDePasse}
             onChange={(e) => setMotDePasse(e.target.value)}
+            autoComplete="new-password"
             required
             minLength={8}
           />

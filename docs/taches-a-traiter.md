@@ -106,18 +106,6 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   `Parametres.jsx`, `SuiviPret.jsx`, `SignatureActe.jsx`) — à faire après
   les 4 points UX ci-dessus, pas avant (précision de Nicolas). Pas
   encore commencé. *(point 307)*
-- **Réorganisation des onglets Paramètres** (retours de Nicolas juste
-  après la 1ère version, à faire lors d'une prochaine session) :
-  nouvelle catégorie de 1er niveau (nom à confirmer — Administration /
-  Organisation / Compte) regroupant Alertes + Utilisateurs + une
-  nouvelle sous-section "Banque" (IBAN/BIC, à extraire d'Informations) ;
-  renommer Équipe → Entreprises et Catalogue → Inventaire ; déplacer
-  Étages dans Programme ; mettre plus en évidence la fenêtre d'alertes
-  (formulation à clarifier) ; renommer Barème → Échéancier ; réordonner
-  Lots avant Annexes. **Tension à résoudre à ce moment-là** : la
-  catégorie "Entreprises" ne contiendrait plus qu'un seul sous-onglet
-  une fois Utilisateurs sorti — à reconsidérer, pas à appliquer
-  mécaniquement. *(point 308)*
 
 ## B. Fonctionnalités et UX à faire
 

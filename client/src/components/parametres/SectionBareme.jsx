@@ -46,7 +46,7 @@ function SectionBareme({ programme, onEnregistrer }) {
 
   return (
     <section className="section-parametres">
-      <h2>Barème des phases de travaux</h2>
+      <h2>Échéancier par phase de travaux</h2>
       <form onSubmit={soumettre}>
         {phases.map((phase, index) => (
           // "index" comme clé : acceptable ici car la liste est modifiée

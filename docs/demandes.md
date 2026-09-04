@@ -2350,38 +2350,83 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
-308. ⏳ **Réorganisation des onglets Paramètres**, retours de Nicolas
-     juste après la 1ère version (04/09/2026) — **à faire lors d'une
-     prochaine session, PAS incluse dans le commit qui fige la 1ère
-     version** ("on reprendra dans l'ordre plus tard") :
-     a. **Nouvelle catégorie de 1er niveau, nom à confirmer** —
-        3 propositions faites : *Administration*, *Organisation*,
-        *Compte*. Regroupera : Alertes (sortie de Programme),
-        Utilisateurs (sortie d'Équipe), et une nouvelle sous-section
-        **"Banque"** avec IBAN/BIC (aujourd'hui des champs de
-        `SectionInfosProgramme.jsx`, à en extraire dans un composant
-        dédié).
-     b. Renommer la catégorie "Équipe" → **"Entreprises"**.
-     c. Renommer la catégorie "Catalogue" → **"Inventaire"**.
-     d. Déplacer "Étages" dans la catégorie "Programme", à côté
-        d'"Informations".
-     e. **Mettre plus en évidence l'affichage de la fenêtre
-        d'alertes** — formulation encore imprécise, à clarifier avec
-        Nicolas avant d'implémenter (vise-t-il `SectionAlertes.jsx`, le
-        paramétrage, ou `AlerteRetards.jsx`, la fenêtre affichée au
-        démarrage ?).
-     f. Renommer "Barème" → **"Échéancier"**.
-     g. Réordonner : "Lots" avant "Annexes" dans Inventaire.
+308. ✅ **Réorganisation des onglets Paramètres faite (04/09/2026)** —
+     mode planification, 3 questions résolues avant le plan final
+     (`AskUserQuestion`) :
+     - Nom de la nouvelle catégorie : **Administration** (parmi
+       Administration/Organisation/Compte).
+     - Catégorie "Entreprises" (ex-Équipe, une fois Utilisateurs sorti) :
+       **gardée à part, sans barre de sous-onglets** — règle générale
+       adoptée plutôt qu'un cas spécial (la barre de sous-onglets ne
+       s'affiche que si la catégorie active a plus d'un élément visible
+       après filtrage du rôle).
+     - "Mettre plus en évidence la fenêtre d'alertes" : confirmé —
+       visait la case "Afficher la fenêtre d'alertes au démarrage"
+       (`SectionAlertes.jsx`), pas `AlerteRetards.jsx`.
 
-     **Tension à résoudre au moment de l'implémentation** (pas
-     tranchée maintenant) : une fois Utilisateurs sorti (a) et le
-     renommage fait (b), la catégorie "Entreprises" ne contiendrait
-     plus qu'UNE seule sous-section (elle-même nommée "Entreprises") —
-     une catégorie à un seul sous-onglet interroge l'intérêt du 2ᵉ
-     niveau à cet endroit. À reconsidérer à ce moment-là (fusionner
-     dans Inventaire ? dans la nouvelle catégorie admin ? sans
-     sous-onglet visible puisqu'il n'y en a qu'un ?) plutôt que
-     d'appliquer les 7 points mécaniquement sans revoir l'ensemble.
+     **4 catégories finales** : Programme (Informations, Étages, Délais
+     et taux, Échéancier, **Banque**) ; Inventaire, ex-Catalogue (Lots,
+     Annexes) ; Entreprises, ex-Équipe (seule, sans sous-onglets) ;
+     Administration, nouvelle (Alertes, Utilisateurs — admin). "Banque"
+     déplacée de la catégorie Administration vers Programme après coup,
+     sur demande de Nicolas. "Barème" renommé "Échéancier" (libellé
+     d'onglet ET titre du panneau, "Échéancier par phase de travaux" —
+     le fichier reste `SectionBareme.jsx` en interne ; confirmé avec
+     Nicolas de ne PAS renommer aussi le fichier, pour limiter le
+     changement au texte affiché). Nouveau composant `SectionBanque.jsx`
+     (IBAN/BIC extraits de `SectionInfosProgramme.jsx` — vérifié que le
+     PATCH serveur fait un `Object.assign` partiel, scinder
+     l'enregistrement en 2 formulaires est sans risque).
+
+     **Onglet Alertes, refait une 2ᵉ fois** : 1ère version (case
+     maîtresse en gras + séparateur) jugée insuffisante par Nicolas
+     ("ça ne va pas du tout, esthétiquement") — 3 nouvelles maquettes
+     visuelles publiées en artifact, Nicolas retient la n°3 "bannière +
+     grille compacte" (bannière sombre pour l'interrupteur maître,
+     5 types en grille 2 colonnes avec de vrais interrupteurs à bascule
+     plutôt que des cases à cocher). Implémentée dans `SectionAlertes.jsx`
+     + nouveau composant CSS réutilisable `.interrupteur`/`.glissiere`
+     (1er interrupteur à bascule du projet).
+
+     **3 bugs réels trouvés et corrigés pendant la vérification** (tous
+     via des captures d'écran envoyées par Nicolas, pas trouvés par
+     l'IA seule) :
+     - Grand vide sous "Fenêtre d'alertes" (1ère version) :
+       `.separateur-ajout` était conçu pour un usage HORS `<form>`
+       flex (`SectionLots.jsx`) — utilisé à tort À L'INTÉRIEUR d'un
+       `<form>` flex ici, sa marge propre s'additionnait au `gap` du
+       flex. Corrigé en restructurant sans `<hr>` dans ce contexte
+       (obsolète depuis le passage au style bannière).
+     - Confirmation de saisie non enregistrée déclenchée sans avoir
+       rien touché, systématiquement sur l'onglet "Utilisateurs" — seul
+       onglet avec un champ mot de passe : le gestionnaire de mots de
+       passe du navigateur y injecte une suggestion au chargement,
+       déclenchant un vrai évènement `input`/`change`. Corrigé avec
+       `autoComplete="new-password"`/`"off"` dans
+       `SectionUtilisateurs.jsx`.
+     - Même confirmation déclenchée "sans rien toucher" plus
+       généralement : la molette de souris au-dessus d'un
+       `<input type="number">` ayant le focus modifie sa valeur dans
+       Chrome/Edge (piège navigateur connu) — neutralisé par un
+       `preventDefault()` ciblé sur l'évènement `wheel`, dans
+       `Parametres.jsx` (aucun des `Section*.jsx` à modifier).
+     - Texte chevauchant l'interrupteur sur certaines cases de la
+       grille (ex: "Signature d'acte en retard" affiché "Signature en
+       retard", un mot disparu au milieu — capture d'écran de Nicolas) :
+       piège flexbox classique, un enfant flex ne rétrécit jamais sous
+       sa largeur naturelle par défaut (`min-width: auto` implicite) —
+       corrigé avec `min-width: 0` sur le texte, à côté de l'interrupteur
+       à largeur fixe.
+
+     **Filet de sécurité (drapeau `estModifie`/confirmation de perte de
+     saisie, ajouté au chantier précédent)** : fonctionne à l'identique
+     sans adaptation pour la réorganisation des catégories, la détection
+     étant générique (écoute DOM) — a nécessité 2 correctifs ciblés pour
+     les faux positifs ci-dessus. Suite complète client 183/183
+     inchangés (page à 0% de couverture), `oxlint` 0 erreur. `git diff
+     --stat` final : `Parametres.jsx`, 4 `Section*.jsx` modifiés
+     (`Alertes`, `Bareme`, `InfosProgramme`, `Utilisateurs`),
+     `SectionBanque.jsx` créé, `main.scss`.
 
 309. ⏳ **Format des numéros de téléphone** (04/09/2026) — actuellement
      affichés en `+33...` partout ; à corriger : `06...`/`07...` (format

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import FenetreConfirmation from './FenetreConfirmation.jsx'
 
 // Localisation/description/montant client modifiables après création
 // (13/07/2026, à la demande de Nicolas) — le montant client normalement
@@ -27,16 +28,13 @@ function FormulaireInfosTma({
   // Plus de négociation possible une fois validée (20/07/2026, point 182) :
   // même principe que le prix d'un lot, figé une fois Acté.
   const montantVerrouille = ['valide', 'termine'].includes(tma.statut)
+  // Confirmation de montant modifié à la main (05/09/2026, point 277) :
+  // vraie modale React à la place de window.confirm() — plus de valeur
+  // de retour synchrone, la soumission mise en attente ici est reprise
+  // depuis onConfirmer si l'utilisateur confirme.
+  const [confirmationMontantOuverte, setConfirmationMontantOuverte] = useState(false)
 
-  function soumettre(evenement) {
-    evenement.preventDefault()
-    const nouveauMontant = montantClient === '' ? null : Number(montantClient)
-    if (!montantClientSaisiManuellement && nouveauMontant !== (tma.montantClient ?? null)) {
-      const confirme = window.confirm(
-        'Ce montant client va être modifié à la main : il ne sera plus jamais recalculé automatiquement à partir des devis entreprises. Continuer ?',
-      )
-      if (!confirme) return
-    }
+  function enregistrer(nouveauMontant) {
     onEnregistrer(tma._id, {
       localisation,
       description,
@@ -45,6 +43,21 @@ function FormulaireInfosTma({
       nombreEntreprisesConcernees:
         nombreEntreprisesConcernees === '' ? null : Number(nombreEntreprisesConcernees),
     })
+  }
+
+  function soumettre(evenement) {
+    evenement.preventDefault()
+    const nouveauMontant = montantClient === '' ? null : Number(montantClient)
+    if (!montantClientSaisiManuellement && nouveauMontant !== (tma.montantClient ?? null)) {
+      setConfirmationMontantOuverte(true)
+      return
+    }
+    enregistrer(nouveauMontant)
+  }
+
+  function confirmerEtEnregistrer() {
+    setConfirmationMontantOuverte(false)
+    enregistrer(montantClient === '' ? null : Number(montantClient))
   }
 
   return (
@@ -96,6 +109,15 @@ function FormulaireInfosTma({
             </p>
           )}
         </form>
+        {confirmationMontantOuverte && (
+          <FenetreConfirmation
+            titre="Montant client modifié à la main"
+            message="Ce montant client va être modifié à la main : il ne sera plus jamais recalculé automatiquement à partir des devis entreprises. Continuer ?"
+            libelleConfirmer="Continuer"
+            onConfirmer={confirmerEtEnregistrer}
+            onFermer={() => setConfirmationMontantOuverte(false)}
+          />
+        )}
       </td>
     </tr>
   )

@@ -97,11 +97,13 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   indication contraire explicite de Nicolas). *(point 253)*
 - **4 points UX découverts lors de la revue visuelle du code** : ✅ page
   Paramètres sans onglets — fait (04/09/2026, onglets groupés par thème
-  Programme/Catalogue/Équipe + confirmation si saisie non enregistrée).
-  Restent : confirmations natives du navigateur à remplacer par une
-  vraie modale, absence de page d'accueil/tableau de bord transversal,
-  écrans de connexion/choix de programme trop nus (rejoint le logo
-  client, point 267). *(point 277)*
+  Programme/Catalogue/Équipe + confirmation si saisie non enregistrée). ✅
+  3 vraies confirmations `window.confirm()` → modale React
+  `FenetreConfirmation.jsx` — fait (05/09/2026), vérification manuelle
+  par Nicolas à faire. Restent : absence de page d'accueil/tableau de
+  bord transversal, écrans de connexion/choix de programme trop nus
+  (rejoint le logo client, point 267). *(point 277)* — les ~35 `alert()`
+  restants forment un chantier à part, plus gros, non planifié.
 - **Tests des 5 pages jamais couvertes** (`Clients.jsx`, `Connexion.jsx`,
   `Parametres.jsx`, `SuiviPret.jsx`, `SignatureActe.jsx`) — à faire après
   les 4 points UX ci-dessus, pas avant (précision de Nicolas). Pas
@@ -143,6 +145,9 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   création de compte, pour plus tard. *(point 311)*
 - **SIRET/SIREN et informations en pied de page des courriers** (appels
   de fonds, devis TMA) — à voir si besoin, pour plus tard. *(point 312)*
+- **Indicateur visuel de champ incomplet sur les onglets Paramètres** —
+  si un champ n'est pas complété (n'importe où), ça doit se voir depuis
+  les onglets eux-mêmes, pas seulement en ouvrant la section. *(point 313)*
 - **TMA : créer un tableau au niveau des données entreprises** — le
   détail des entreprises d'une TMA (`DetailEntreprisesTma.jsx`) s'affiche
   actuellement en liste/formulaire, pas en tableau. À préciser avec

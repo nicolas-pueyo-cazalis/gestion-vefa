@@ -1446,6 +1446,19 @@ table.tableau-lots {
     margin: 0 0 1rem;
   }
 
+  // FenetreConfirmation.jsx (05/09/2026, point 277, remplace
+  // window.confirm()) : message au-dessus des 2 boutons, alignés à
+  // droite comme les boîtes de dialogue natives.
+  p {
+    margin: 0 0 1.25rem;
+  }
+
+  .boutons-confirmation {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
   dl {
     display: grid;
     grid-template-columns: auto 1fr;

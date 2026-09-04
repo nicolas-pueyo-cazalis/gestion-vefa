@@ -13,6 +13,7 @@ import SectionUtilisateurs from '../components/parametres/SectionUtilisateurs.js
 import SectionAlertes from '../components/parametres/SectionAlertes.jsx'
 import SectionAnnexes from '../components/parametres/SectionAnnexes.jsx'
 import SectionBanque from '../components/parametres/SectionBanque.jsx'
+import FenetreConfirmation from '../components/FenetreConfirmation.jsx'
 
 // Onglets groupés par thème (04/09/2026, points 277 et 308) : les 9
 // sections n'étaient jusqu'ici qu'empilées verticalement (long scroll
@@ -69,6 +70,11 @@ function Parametres() {
   // y cohabitent, remettre le drapeau à zéro sur l'un aurait pu masquer
   // une saisie non liée encore en cours ailleurs dans la même section.
   const [estModifie, setEstModifie] = useState(false)
+  // Confirmation de perte de saisie (05/09/2026, point 277) : vraie
+  // modale React à la place de window.confirm() — la section cible est
+  // retenue le temps de la confirmation, appliquée depuis onConfirmer.
+  const [confirmationChangementOuverte, setConfirmationChangementOuverte] = useState(false)
+  const [sectionEnAttente, setSectionEnAttente] = useState(null)
   const refPanneauActif = useRef(null)
 
   const categorieActive = CATEGORIES.find((cat) => cat.sections.includes(sectionActive))
@@ -176,18 +182,19 @@ function Parametres() {
 
   // Avant tout changement de section (sous-onglet OU changement de
   // catégorie, qui bascule aussi la section) : prévient si une saisie
-  // non enregistrée serait perdue. window.confirm() natif — cohérent
-  // avec le reste de l'appli aujourd'hui (ex: "Annuler la vente") ; son
-  // remplacement par une vraie modale est un autre point de la même
-  // liste UX (point 277), pas encore commencé.
+  // non enregistrée serait perdue.
   function tenterAllerA(cle) {
-    if (
-      estModifie &&
-      !window.confirm('Des modifications non enregistrées seront perdues. Continuer ?')
-    ) {
+    if (estModifie) {
+      setSectionEnAttente(cle)
+      setConfirmationChangementOuverte(true)
       return
     }
     setSectionActive(cle)
+  }
+
+  function confirmerChangement() {
+    setConfirmationChangementOuverte(false)
+    setSectionActive(sectionEnAttente)
   }
 
   function cliquerCategorie(categorie) {
@@ -277,6 +284,16 @@ function Parametres() {
       )}
 
       <div ref={refPanneauActif}>{renderSectionActive()}</div>
+
+      {confirmationChangementOuverte && (
+        <FenetreConfirmation
+          titre="Modifications non enregistrées"
+          message="Des modifications non enregistrées seront perdues. Continuer ?"
+          libelleConfirmer="Continuer"
+          onConfirmer={confirmerChangement}
+          onFermer={() => setConfirmationChangementOuverte(false)}
+        />
+      )}
     </>
   )
 }

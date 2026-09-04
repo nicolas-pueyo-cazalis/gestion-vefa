@@ -249,13 +249,20 @@ describe('Lots — panneau "Modifier"', () => {
     expect(screen.getByText('Date option')).toBeInTheDocument()
   })
 
-  it('"Annuler la vente" demande confirmation puis annule', async () => {
+  it('"Annuler la vente" demande confirmation (vraie modale) puis annule', async () => {
     render(<Lots />)
     await screen.findByRole('table')
     fireEvent.click(screen.getAllByLabelText('Modifier')[0]) // A01, statut != libre
 
+    // Depuis le point 277 (04-05/09/2026) : window.confirm() natif
+    // remplacé par une vraie modale React (FenetreConfirmation.jsx) — le
+    // bouton déclencheur ET le bouton de confirmation partagent le même
+    // texte "Annuler la vente", d'où le scope sur le dialogue.
     fireEvent.click(screen.getByText('Annuler la vente'))
-    expect(globalThis.confirm).toHaveBeenCalled()
+    const dialogue = screen.getByRole('dialog')
+    expect(within(dialogue).getByText(/repassera "Libre"/)).toBeInTheDocument()
+
+    fireEvent.click(within(dialogue).getByRole('button', { name: 'Annuler la vente' }))
     await waitFor(() =>
       expect(mockApiFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/lots/lotA/annuler'),

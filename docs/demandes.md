@@ -1771,10 +1771,35 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        183/183 inchangés (page à 0% de couverture, aucun test existant à
        casser), `oxlint` 0 erreur, `git diff --stat` conforme au plan
        (`Parametres.jsx` + `main.scss` seulement, aucun des 9 `Section*`
-       touché). Vérification manuelle par Nicolas à faire.
-     - Confirmations natives du navigateur (`window.confirm()`/`alert()`)
-       sur des actions importantes (annuler une vente, barème ≠ 100%) — à
-       remplacer par une vraie modale stylée, cohérente avec le reste.
+       touché). Plusieurs allers-retours ensuite (déplacement de Banque,
+       nouveau style de l'onglet Alertes, 6 bugs CSS/comportement réels
+       trouvés via des captures d'écran de Nicolas et tous corrigés —
+       détail complet point 308). **Confirmé bon par Nicolas
+       (05/09/2026).**
+     - ✅ **3 vraies confirmations faites (05/09/2026)** : les
+       `window.confirm()` (2 boutons Annuler/Confirmer) remplacés par une
+       vraie modale React réutilisable, `FenetreConfirmation.jsx` (même
+       patron que `FenetreContact.jsx` : `.fenetre-fond`/`.fenetre-contenu`
+       déjà existants, `useFermerAvecEchap`, `role="dialog"
+       aria-modal`). 3 sites migrés : annuler une vente
+       (`FormulaireEditionLot.jsx`, action directe, bouton `dangereux`),
+       montant client TMA modifié à la main (`FormulaireInfosTma.jsx`,
+       confirmation conditionnelle DANS `onSubmit` — soumission mise en
+       attente puis reprise depuis `onConfirmer`), et la confirmation de
+       perte de saisie ajoutée au point précédent dans Paramètres (dernier
+       `window.confirm()` restant, converti au passage). En exploitant le
+       sujet : 17 fichiers/~38 appels au total, mais ~35 sont des
+       `alert()` (1 seul bouton OK, patron `if (!reponse.ok) { alert(...);
+       return }` quasi identique partout) — périmètre bien plus gros,
+       explicitement laissé de côté pour un chantier futur dédié, à faire
+       "très doucement". Suite complète client 183/183 (1 test mis à jour
+       dans `Lots.render.test.jsx` — le `window.confirm()` remplacé par
+       une vraie modale, l'assertion passe par `within(getByRole('dialog'))`
+       plutôt que `globalThis.confirm`), `oxlint` 0 erreur, `git diff
+       --stat` conforme au plan. Vérification manuelle par Nicolas à
+       faire.
+     - ⏳ Les ~35 `alert()` restants (voir ci-dessus) — chantier à part,
+       plus gros, session(s) future(s).
      - Aucune page d'accueil/tableau de bord transversal après le choix du
        programme (on atterrit direct sur Lots) — pas de vue "ce qui
        demande attention aujourd'hui" au-delà de la fenêtre d'alertes.
@@ -2507,6 +2532,16 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      informations mériteraient de figurer en pied de page des courriers
      d'appel de fonds et des devis TMA. Pas de détail supplémentaire
      pour l'instant.
+
+---
+
+313. ⏳ **Pour plus tard — Indicateur visuel de champ incomplet sur les
+     onglets Paramètres** (05/09/2026, demande de Nicolas) — si un champ
+     n'est pas complété, n'importe où dans une section, ça doit se voir
+     depuis les onglets eux-mêmes (catégorie et/ou sous-onglet), pas
+     seulement en ouvrant la section concernée. Pas de détail
+     supplémentaire pour l'instant (quels champs comptent comme
+     "incomplets" à définir avec Nicolas avant de s'y mettre).
 
 ---
 

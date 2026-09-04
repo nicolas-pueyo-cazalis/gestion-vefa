@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { STATUTS_LOT, ORDRE_STATUTS } from '../data/lots.js'
 import FormulairePrixLot from './FormulairePrixLot.jsx'
+import FenetreConfirmation from './FenetreConfirmation.jsx'
 
 // Même conversion que pour les TMA : MongoDB renvoie "2026-07-01T00:00:00.000Z",
 // <input type="date"> attend juste "2026-07-01".
@@ -24,6 +25,10 @@ function FormulaireEditionLot({
   // paramétrage initial), et seulement avant l'Acté (plus de négociation
   // possible après, voir server/routes/lots.js).
   const [prixOuvert, setPrixOuvert] = useState(false)
+  // Confirmation d'annulation de vente (05/09/2026, point 277) : vraie
+  // modale React à la place de window.confirm() — plus de valeur de
+  // retour synchrone, l'action est déclenchée depuis onConfirmer.
+  const [confirmationAnnulationOuverte, setConfirmationAnnulationOuverte] = useState(false)
   const [statut, setStatut] = useState(lot.statut)
   const [dateOption, setDateOption] = useState(versDateInput(lot.dateOption))
   const [dateReservation, setDateReservation] = useState(versDateInput(lot.dateReservation))
@@ -94,13 +99,8 @@ function FormulaireEditionLot({
   // simplement le formulaire sans rien modifier (juste "revenir en
   // arrière" sur l'édition en cours, sans toucher au logement).
   function annulerVente() {
-    if (
-      window.confirm(
-        `Annuler la vente du logement ${lot.reference} ? Il repassera "Libre" (de nouveau à la vente) ; le statut, les dates, le client et le commentaire actuels seront conservés dans l'historique des annulations.`,
-      )
-    ) {
-      onAnnulerVente(lot._id)
-    }
+    onAnnulerVente(lot._id)
+    setConfirmationAnnulationOuverte(false)
   }
 
   return (
@@ -184,9 +184,23 @@ function FormulaireEditionLot({
             Annuler
           </button>
           {statut !== 'libre' && (
-            <button type="button" className="bouton-danger" onClick={annulerVente}>
+            <button
+              type="button"
+              className="bouton-danger"
+              onClick={() => setConfirmationAnnulationOuverte(true)}
+            >
               Annuler la vente
             </button>
+          )}
+          {confirmationAnnulationOuverte && (
+            <FenetreConfirmation
+              titre="Annuler la vente"
+              message={`Annuler la vente du logement ${lot.reference} ? Il repassera "Libre" (de nouveau à la vente) ; le statut, les dates, le client et le commentaire actuels seront conservés dans l'historique des annulations.`}
+              libelleConfirmer="Annuler la vente"
+              dangereux
+              onConfirmer={annulerVente}
+              onFermer={() => setConfirmationAnnulationOuverte(false)}
+            />
           )}
           {lot.statut !== 'acte' && !prixOuvert && (
             <button type="button" onClick={() => setPrixOuvert(true)}>

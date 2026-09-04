@@ -1747,8 +1747,31 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      confirmations).
 277. ⏳ **4 points UX découverts lors de la revue visuelle (point 276)**,
      jamais trackés jusqu'ici :
-     - Page Paramètres : 9 sections empilées sans onglets, un seul long
-       scroll — pénible pour y retourner régulièrement.
+     - ✅ **Page Paramètres faite (04/09/2026)** : 9 sections empilées
+       (long scroll) → onglets groupés par thème (Programme / Catalogue /
+       Équipe), une seule section montée à la fois. Choix du style fait
+       après comparaison visuelle de 10 maquettes cliquables publiées en
+       artifact (5 initiales + 5 supplémentaires demandées par Nicolas) —
+       "barre latérale" et "grille de cartes" présélectionnées, puis
+       "onglets groupés par thème" retenu au final. Confirmation ajoutée
+       si une saisie non enregistrée serait perdue en changeant d'onglet
+       (`window.confirm()` natif, pas encore la vraie modale — voir
+       point suivant) : détection générique par écoute d'événements DOM
+       sur la section active, **sans modifier aucun des 9 composants
+       `Section*.jsx`**. Distinction trouvée en se relisant avant de
+       proposer le plan (pas dans la 1ère version) entre les 5 sections
+       "un seul formulaire" (remise à zéro du drapeau sur enregistrement
+       réussi, sans ambiguïté) et les 4 sections "liste" — Annexes/Lots/
+       Entreprises/Utilisateurs, plusieurs sous-formulaires indépendants
+       chacune — où remettre le drapeau à zéro sur un enregistrement
+       aurait pu masquer une saisie non liée encore en cours ailleurs
+       dans la même section (faux négatif) : drapeau volontairement
+       jamais remis à zéro automatiquement pour ces 4-là, sur-prudent
+       plutôt qu'un risque de perte silencieuse. Suite complète client
+       183/183 inchangés (page à 0% de couverture, aucun test existant à
+       casser), `oxlint` 0 erreur, `git diff --stat` conforme au plan
+       (`Parametres.jsx` + `main.scss` seulement, aucun des 9 `Section*`
+       touché). Vérification manuelle par Nicolas à faire.
      - Confirmations natives du navigateur (`window.confirm()`/`alert()`)
        sur des actions importantes (annuler une vente, barème ≠ 100%) — à
        remplacer par une vraie modale stylée, cohérente avec le reste.
@@ -2315,6 +2338,79 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      liste/formulaire, pas sous forme de tableau. À préciser avec
      Nicolas avant de s'y mettre (quelles colonnes, remplace la liste
      actuelle ou vient en plus).
+
+---
+
+307. ⏳ **Tests des 5 pages jamais couvertes** (`Clients.jsx`,
+     `Connexion.jsx`, `Parametres.jsx`, `SuiviPret.jsx`,
+     `SignatureActe.jsx` — 0% de couverture) — demandé par Nicolas le
+     04/09/2026, à faire **après les 4 points UX du point 277** (pas
+     juste après le premier, précision de Nicolas le même jour). Pas
+     encore commencé.
+
+---
+
+308. ⏳ **Réorganisation des onglets Paramètres**, retours de Nicolas
+     juste après la 1ère version (04/09/2026) — **à faire lors d'une
+     prochaine session, PAS incluse dans le commit qui fige la 1ère
+     version** ("on reprendra dans l'ordre plus tard") :
+     a. **Nouvelle catégorie de 1er niveau, nom à confirmer** —
+        3 propositions faites : *Administration*, *Organisation*,
+        *Compte*. Regroupera : Alertes (sortie de Programme),
+        Utilisateurs (sortie d'Équipe), et une nouvelle sous-section
+        **"Banque"** avec IBAN/BIC (aujourd'hui des champs de
+        `SectionInfosProgramme.jsx`, à en extraire dans un composant
+        dédié).
+     b. Renommer la catégorie "Équipe" → **"Entreprises"**.
+     c. Renommer la catégorie "Catalogue" → **"Inventaire"**.
+     d. Déplacer "Étages" dans la catégorie "Programme", à côté
+        d'"Informations".
+     e. **Mettre plus en évidence l'affichage de la fenêtre
+        d'alertes** — formulation encore imprécise, à clarifier avec
+        Nicolas avant d'implémenter (vise-t-il `SectionAlertes.jsx`, le
+        paramétrage, ou `AlerteRetards.jsx`, la fenêtre affichée au
+        démarrage ?).
+     f. Renommer "Barème" → **"Échéancier"**.
+     g. Réordonner : "Lots" avant "Annexes" dans Inventaire.
+
+     **Tension à résoudre au moment de l'implémentation** (pas
+     tranchée maintenant) : une fois Utilisateurs sorti (a) et le
+     renommage fait (b), la catégorie "Entreprises" ne contiendrait
+     plus qu'UNE seule sous-section (elle-même nommée "Entreprises") —
+     une catégorie à un seul sous-onglet interroge l'intérêt du 2ᵉ
+     niveau à cet endroit. À reconsidérer à ce moment-là (fusionner
+     dans Inventaire ? dans la nouvelle catégorie admin ? sans
+     sous-onglet visible puisqu'il n'y en a qu'un ?) plutôt que
+     d'appliquer les 7 points mécaniquement sans revoir l'ensemble.
+
+309. ⏳ **Format des numéros de téléphone** (04/09/2026) — actuellement
+     affichés en `+33...` partout ; à corriger : `06...`/`07...` (format
+     français) quand le numéro est français, `+XX...` seulement pour un
+     numéro étranger. À vérifier sur tous les endroits où un numéro de
+     téléphone est affiché ou saisi, pas seulement Entreprises — repérés
+     par recherche rapide : `TelephoneInput.jsx` (saisie),
+     `ChampsContact.jsx`, `FenetreContact.jsx`,
+     `FormulaireEditionClient.jsx`, `FormulaireSuiviPret.jsx`,
+     `components/parametres/SectionEntreprises.jsx`, `pages/Clients.jsx`.
+     Pas encore investigué en détail (juste repéré les fichiers
+     concernés, pas lu leur logique de formatage).
+
+310. ⏳ **Pour plus tard — Esthétique des informations affichées dans
+     Annexes, Entreprises et Lots à revoir** (04/09/2026, demande de
+     Nicolas). Pas de détail supplémentaire pour l'instant.
+
+311. ⏳ **Pour plus tard — Refaire un point sur la création d'accès
+     utilisateur : qui peut faire quoi ?** (04/09/2026, demande de
+     Nicolas) — revue des permissions par rôle (admin/gestionnaire/
+     lecture) et du processus de création de compte. Pas de détail
+     supplémentaire pour l'instant.
+
+312. ⏳ **Pour plus tard — SIRET/SIREN et informations en pied de page
+     des courriers** (04/09/2026, demande de Nicolas) — voir s'il faut
+     ajouter SIRET/SIREN du promoteur, et plus largement quelles
+     informations mériteraient de figurer en pied de page des courriers
+     d'appel de fonds et des devis TMA. Pas de détail supplémentaire
+     pour l'instant.
 
 ---
 

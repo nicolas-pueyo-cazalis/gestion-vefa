@@ -1533,10 +1533,64 @@ table.tableau-lots {
   }
 }
 
+// Onglets groupés par thème de la page Paramètres (04/09/2026, point 277) :
+// 3 catégories (boutons pleins) puis les sous-onglets de la catégorie
+// active (soulignement), pour remplacer les 9 sections empilées d'un
+// seul long scroll.
+.categories-parametres {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  button {
+    border: 1px solid $couleur-bordure;
+    background: $couleur-carte;
+    color: $couleur-texte;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.actif {
+      background: $couleur-texte;
+      color: white;
+      border-color: $couleur-texte;
+    }
+  }
+}
+
+.sous-onglets-parametres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  margin-top: 0.9rem;
+  padding-bottom: 0;
+  border-bottom: 1px solid $couleur-bordure;
+
+  button {
+    background: none;
+    border: none;
+    color: #616e7c;
+    font-size: 0.87rem;
+    padding: 0 0 0.65rem;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+
+    &.actif {
+      color: $couleur-texte;
+      font-weight: 600;
+      border-bottom-color: $couleur-texte;
+    }
+  }
+}
+
 .section-parametres {
   background: $couleur-carte;
   border: 1px solid $couleur-bordure;
   border-radius: 8px;
+  margin-top: 1.3rem;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.5rem;
 

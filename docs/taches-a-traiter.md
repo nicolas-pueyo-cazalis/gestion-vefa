@@ -95,11 +95,29 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 - **Passe de revue sur l'ensemble des docs** : liens entre eux, cohérence,
   s'assurer que la mise à jour de chacun est bien automatique (sauf
   indication contraire explicite de Nicolas). *(point 253)*
-- **4 points UX découverts lors de la revue visuelle du code** : page
-  Paramètres sans onglets (long scroll), confirmations natives du
-  navigateur à remplacer par une vraie modale, absence de page d'accueil/
-  tableau de bord transversal, écrans de connexion/choix de programme trop
-  nus (rejoint le logo client, point 267). *(point 277)*
+- **4 points UX découverts lors de la revue visuelle du code** : ✅ page
+  Paramètres sans onglets — fait (04/09/2026, onglets groupés par thème
+  Programme/Catalogue/Équipe + confirmation si saisie non enregistrée).
+  Restent : confirmations natives du navigateur à remplacer par une
+  vraie modale, absence de page d'accueil/tableau de bord transversal,
+  écrans de connexion/choix de programme trop nus (rejoint le logo
+  client, point 267). *(point 277)*
+- **Tests des 5 pages jamais couvertes** (`Clients.jsx`, `Connexion.jsx`,
+  `Parametres.jsx`, `SuiviPret.jsx`, `SignatureActe.jsx`) — à faire après
+  les 4 points UX ci-dessus, pas avant (précision de Nicolas). Pas
+  encore commencé. *(point 307)*
+- **Réorganisation des onglets Paramètres** (retours de Nicolas juste
+  après la 1ère version, à faire lors d'une prochaine session) :
+  nouvelle catégorie de 1er niveau (nom à confirmer — Administration /
+  Organisation / Compte) regroupant Alertes + Utilisateurs + une
+  nouvelle sous-section "Banque" (IBAN/BIC, à extraire d'Informations) ;
+  renommer Équipe → Entreprises et Catalogue → Inventaire ; déplacer
+  Étages dans Programme ; mettre plus en évidence la fenêtre d'alertes
+  (formulation à clarifier) ; renommer Barème → Échéancier ; réordonner
+  Lots avant Annexes. **Tension à résoudre à ce moment-là** : la
+  catégorie "Entreprises" ne contiendrait plus qu'un seul sous-onglet
+  une fois Utilisateurs sorti — à reconsidérer, pas à appliquer
+  mécaniquement. *(point 308)*
 
 ## B. Fonctionnalités et UX à faire
 
@@ -122,6 +140,21 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   sous-parties à remplir à la suite dans le même panneau). *(point 299)*
 - **Repenser l'esthétique générale de l'application** (thème sombre actuel
   validé, améliorations à proposer). *(point 139)*
+- **Esthétique des informations affichées dans Annexes, Entreprises et
+  Lots à revoir** — pour plus tard, pas de détail supplémentaire pour
+  l'instant. *(point 310)*
+- **Format des numéros de téléphone** : affichés en `+33...` partout,
+  à corriger en `06.../07...` pour un numéro français, `+XX...`
+  seulement pour un numéro étranger — à vérifier partout où un numéro
+  est affiché/saisi (`TelephoneInput.jsx`, `ChampsContact.jsx`,
+  `FenetreContact.jsx`, `FormulaireEditionClient.jsx`,
+  `FormulaireSuiviPret.jsx`, `SectionEntreprises.jsx`, `Clients.jsx`).
+  *(point 309)*
+- **Refaire un point sur la création d'accès utilisateur : qui peut
+  faire quoi ?** — revue des permissions par rôle et du processus de
+  création de compte, pour plus tard. *(point 311)*
+- **SIRET/SIREN et informations en pied de page des courriers** (appels
+  de fonds, devis TMA) — à voir si besoin, pour plus tard. *(point 312)*
 - **TMA : créer un tableau au niveau des données entreprises** — le
   détail des entreprises d'une TMA (`DetailEntreprisesTma.jsx`) s'affiche
   actuellement en liste/formulaire, pas en tableau. À préciser avec

@@ -2422,10 +2422,13 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        `min-width: auto` implicite, mais au niveau de la grille CSS,
        pas seulement du flexbox à l'intérieur) — le premier correctif ne
        suffisait pas seul. `overflow-wrap: break-word` ajouté en
-       sécurité supplémentaire. Non revérifié visuellement par l'IA
-       (pas d'outil navigateur) — à confirmer par Nicolas après un
-       rechargement forcé de la page (Ctrl+Maj+R), au cas où du code
-       mis en cache par le navigateur ait aussi joué un rôle.
+       sécurité supplémentaire. **Confirmé corrigé par Nicolas** (capture
+       d'écran après le 2ᵉ correctif) : les 5 libellés s'affichent
+       intégralement, sans chevauchement ni troncature.
+
+     **Chantier "Réorganisation des onglets Paramètres" (point 308)
+     définitivement clos** — les 3 bugs réels trouvés en cours de route
+     sont tous confirmés corrigés.
 
      **Filet de sécurité (drapeau `estModifie`/confirmation de perte de
      saisie, ajouté au chantier précédent)** : fonctionne à l'identique

@@ -1683,6 +1683,16 @@ table.tableau-lots {
   .formulaire-alertes {
     display: flex;
     flex-direction: column;
+    // Même piège que .case-type-alerte plus bas, une 3ᵉ fois : la règle
+    // générique `.section-parametres form { align-items: start; ... }`
+    // plus haut s'applique à CE <form> aussi (sélecteur par balise) —
+    // sans "stretch" explicite ici, elle gagnait silencieusement sur
+    // cette seule propriété. Conséquence : la bannière et la grille ne
+    // s'étiraient pas sur toute la largeur du formulaire, seulement sur
+    // celle de leur propre contenu — constaté par Nicolas (bannière pas
+    // assez large, ne rejoignait pas le bord droit de la grille).
+    align-items: stretch;
+    flex-wrap: nowrap;
     gap: 1rem;
   }
 
@@ -1717,11 +1727,20 @@ table.tableau-lots {
       background: rgba(255, 255, 255, 0.3);
     }
 
-    input:checked + .glissiere {
+    // `.interrupteur` répété ici (redondant avec le nesting, mais
+    // volontaire) : sans lui, cette règle et la règle générique
+    // `.interrupteur input:checked + .glissiere` plus bas ont EXACTEMENT
+    // la même spécificité — c'est alors l'ordre d'apparition dans le
+    // fichier qui trancherait, fragile et invisible à la lecture. Ici,
+    // la règle générique (définie après) gagnait silencieusement et
+    // repassait la piste en foncé même sur ce fond sombre — piste
+    // "noire sur noire", invisible (constaté par Nicolas). Un sélecteur
+    // plus spécifique gagne pour de bon, sans dépendre de l'ordre.
+    .interrupteur input:checked + .glissiere {
       background: white;
     }
 
-    input:checked + .glissiere::before {
+    .interrupteur input:checked + .glissiere::before {
       background: $couleur-texte;
     }
   }
@@ -1762,10 +1781,23 @@ table.tableau-lots {
     border-radius: 7px;
     padding: 0.7rem 0.8rem;
     display: flex;
+    // Nécessaire : `.case-type-alerte` habille un <label>, et la règle
+    // générique `label { flex-direction: column }` plus haut s'applique
+    // à TOUS les <label> de la page — sans cette ligne, elle gagne
+    // silencieusement sur cette seule propriété (aucune règle plus
+    // spécifique ne la contestait), empilant texte et interrupteur au
+    // lieu de les mettre côte à côte (constaté par Nicolas : "les
+    // boutons sont en dessous [du texte]").
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
     font-size: 0.82rem;
+    // La règle générique `label` colore le texte en gris (#52606d,
+    // pensé pour un simple libellé de champ) — remis en texte foncé
+    // standard ici, plus lisible pour ce qui est en fait un vrai
+    // réglage, pas juste une étiquette de formulaire.
+    color: $couleur-texte;
     cursor: pointer;
 
     // Sans ça, le texte (libellé long, ex: "Entreprises TMA n'ayant pas

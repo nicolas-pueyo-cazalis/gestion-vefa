@@ -2426,9 +2426,48 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        d'écran après le 2ᵉ correctif) : les 5 libellés s'affichent
        intégralement, sans chevauchement ni troncature.
 
-     **Chantier "Réorganisation des onglets Paramètres" (point 308)
-     définitivement clos** — les 3 bugs réels trouvés en cours de route
-     sont tous confirmés corrigés.
+     **3 bugs CSS de plus trouvés juste après** (chantier déclaré clos
+     trop tôt — Nicolas a immédiatement signalé que ce n'était toujours
+     pas bon) : **même famille de piège CSS, répétée 3 fois** — une
+     règle générique déjà existante (`.section-parametres label { ... }`
+     ou `.section-parametres form { ... }`, valable pour TOUS les
+     labels/formulaires de la page) définit une propriété que ma
+     nouvelle règle plus spécifique ne redéfinissait pas explicitement ;
+     en CSS, la spécificité se calcule PROPRIÉTÉ PAR PROPRIÉTÉ, pas
+     "règle gagnante prend tout" — la règle générique continue donc de
+     s'appliquer sur cette seule propriété, silencieusement, même si ma
+     règle est par ailleurs plus spécifique sur d'autres propriétés :
+     - Boutons affichés SOUS le texte au lieu d'à côté : `label {
+       flex-direction: column }` (générique) jamais contestée par
+       `.case-type-alerte` — corrigé en ajoutant `flex-direction: row`
+       explicitement.
+     - Interrupteur maître invisible ("noir sur noir") : ma règle
+       "piste blanche sur fond sombre" et la règle générique "piste
+       foncée si coché" avaient EXACTEMENT la même spécificité — c'est
+       alors l'ordre d'apparition dans le fichier qui tranche, et la
+       règle générique (définie après) gagnait. Corrigé en rendant mon
+       sélecteur plus spécifique (`.banniere-alertes-maitre .interrupteur
+       input:checked + .glissiere`), qui gagne pour de bon, sans
+       dépendre de l'ordre du fichier.
+     - Bannière pas assez large (devait aller du bord gauche de la 1ère
+       carte au bord droit de la 2ᵉ) : `form { align-items: start }`
+       (générique) jamais contestée par `.formulaire-alertes` —
+       empêchait la bannière et la grille de s'étirer sur toute la
+       largeur du formulaire. Corrigé avec `align-items: stretch`
+       explicite.
+     - **Audit préventif fait dans la foulée** (plutôt que d'attendre un
+       4ᵉ signalement) : `color` sur `.case-type-alerte` héritait aussi
+       du gris générique des libellés de champ — corrigé en texte foncé
+       standard, plus adapté à un vrai réglage qu'à une étiquette.
+
+     **Leçon retenue, à appliquer systématiquement pour toute nouvelle
+     classe CSS appliquée à un `<label>`/`<form>`/élément déjà couvert
+     par une règle générique dans ce projet** : lister explicitement
+     TOUTES les propriétés de la règle générique concernée et vérifier
+     une par une si la nouvelle règle les recouvre — ne jamais supposer
+     qu'une règle plus spécifique sur CERTAINES propriétés protège
+     aussi les autres. Vérification manuelle par Nicolas encore à
+     refaire après ce nouveau tour de correctifs.
 
      **Filet de sécurité (drapeau `estModifie`/confirmation de perte de
      saisie, ajouté au chantier précédent)** : fonctionne à l'identique

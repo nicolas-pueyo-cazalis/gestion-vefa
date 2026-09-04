@@ -2131,6 +2131,32 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+301. ✅ **Découpage de `AppelsDeFonds.jsx` fait (03-04/09/2026)**, 1ʳᵉ des 3
+     pages "god components" (point 236), passée en mode planification
+     avant exécution (plan approuvé par Nicolas). 720 → 473 lignes
+     (-34%), zéro changement de comportement — pur déplacement de code.
+     3 fichiers créés : `AppelsDeFonds.exports.js` (les 4 fonctions de
+     construction des exports, transformées en fonctions pures à
+     paramètres explicites plutôt qu'en fermetures sur l'état du
+     composant), `components/LigneAppelDeFonds.jsx` (une ligne du
+     tableau principal, même patron que `LigneLot.jsx`/`LigneEntreprise.jsx`),
+     `components/RecapitulatifAppelsParLot.jsx` (le tableau du
+     récapitulatif par lot). L'état, le chargement et les handlers
+     d'écriture restent volontairement dans la page (extraction en hook
+     `useAppelsDeFonds()` jugée plus invasive, repoussée à une session
+     ultérieure). **Filet de sécurité** : `AppelsDeFonds.render.test.jsx`
+     (17 tests) et `AppelsDeFonds.test.js` (2 tests) passent sans la
+     moindre modification — suite complète client 183/183, `oxlint` 0
+     erreur (2 avertissements préexistants, non liés au découpage).
+     `git diff --stat` : uniquement `AppelsDeFonds.jsx` modifié + les 3
+     nouveaux fichiers. Vérification manuelle dans le navigateur non
+     faite par l'IA (pas d'outil de pilotage navigateur disponible dans
+     cette session) — à confirmer par Nicolas. Restent `Tma.jsx` et
+     `Lots.jsx`, même méthode, chacun dans sa propre session ("très
+     doucement").
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

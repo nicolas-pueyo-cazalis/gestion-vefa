@@ -42,7 +42,15 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   correction) : `versDateInput()` dupliquée dans 8 composants, 3 "god
   components" (Tma.jsx/Lots.jsx/AppelsDeFonds.jsx) à découper.
   `nomAcquereur()` dupliquée dans 3 pages → **réglé** (chantier 13, point
-  291, extraite dans `client/src/utils/acquereur.js`). *(point 236)*
+  291, extraite dans `client/src/utils/acquereur.js`). Découpage : 1/3
+  pages faite (`AppelsDeFonds.jsx`, 03-04/09/2026, point 301 — 720 → 473
+  lignes ; les 4 fonctions d'export extraites dans
+  `AppelsDeFonds.exports.js`, une ligne de tableau extraite dans
+  `LigneAppelDeFonds.jsx`, le récapitulatif par lot dans
+  `RecapitulatifAppelsParLot.jsx` ; état/chargement/handlers volontairement
+  laissés dans la page, extraction en hook `useAppelsDeFonds()` repoussée
+  à une session ultérieure). Restent `Tma.jsx` et `Lots.jsx`, même
+  méthode, une page à la fois ("très doucement"). *(point 236)*
 - **5 trouvailles concrètes du check-up "développeur confirmé"** (fait le
   01/09/2026, note 66/100) : aucun rate-limiting sur la connexion, aucune
   couche de validation explicite des entrées aux frontières des routes,

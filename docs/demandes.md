@@ -2410,13 +2410,22 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        Chrome/Edge (piège navigateur connu) — neutralisé par un
        `preventDefault()` ciblé sur l'évènement `wheel`, dans
        `Parametres.jsx` (aucun des `Section*.jsx` à modifier).
-     - Texte chevauchant l'interrupteur sur certaines cases de la
-       grille (ex: "Signature d'acte en retard" affiché "Signature en
-       retard", un mot disparu au milieu — capture d'écran de Nicolas) :
-       piège flexbox classique, un enfant flex ne rétrécit jamais sous
-       sa largeur naturelle par défaut (`min-width: auto` implicite) —
-       corrigé avec `min-width: 0` sur le texte, à côté de l'interrupteur
-       à largeur fixe.
+     - Texte tronqué/chevauchant sur certaines cases de la grille (ex:
+       "Signature d'acte en retard" affiché "Signature en retard",
+       "Prêt non reçu à temps" affiché "Prêt non reçu" — 2 captures
+       d'écran de Nicolas, 1er correctif insuffisant). **2 correctifs
+       superposés, même famille de piège CSS à 2 niveaux** : `min-width: 0`
+       sur le texte lui-même (un enfant flex ne rétrécit jamais sous sa
+       largeur naturelle par défaut) ET sur la cellule de grille
+       `.case-type-alerte` elle-même (`minmax(0, 1fr)` sur les colonnes
+       de `.grille-types-alertes` plutôt que `1fr` seul — même piège
+       `min-width: auto` implicite, mais au niveau de la grille CSS,
+       pas seulement du flexbox à l'intérieur) — le premier correctif ne
+       suffisait pas seul. `overflow-wrap: break-word` ajouté en
+       sécurité supplémentaire. Non revérifié visuellement par l'IA
+       (pas d'outil navigateur) — à confirmer par Nicolas après un
+       rechargement forcé de la page (Ctrl+Maj+R), au cas où du code
+       mis en cache par le navigateur ait aussi joué un rôle.
 
      **Filet de sécurité (drapeau `estModifie`/confirmation de perte de
      saisie, ajouté au chantier précédent)** : fonctionne à l'identique

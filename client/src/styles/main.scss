@@ -1744,11 +1744,20 @@ table.tableau-lots {
 
   .grille-types-alertes {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.6rem;
   }
 
   .case-type-alerte {
+    // "minmax(0, 1fr)" ci-dessus, pas juste "1fr" (même piège que le
+    // texte à l'intérieur, voir plus bas, mais au niveau de la cellule
+    // de grille cette fois) : une colonne "1fr" seule reste soumise à
+    // une largeur minimale implicite basée sur le contenu le plus
+    // large — un libellé long peut alors faire déborder la cellule
+    // plutôt que forcer son texte à passer à la ligne, d'où le texte
+    // tronqué constaté (capture d'écran de Nicolas, le correctif
+    // précédent sur le texte seul ne suffisait pas).
+    min-width: 0;
     border: 1px solid $couleur-bordure;
     border-radius: 7px;
     padding: 0.7rem 0.8rem;
@@ -1768,6 +1777,7 @@ table.tableau-lots {
     span:first-child {
       flex: 1 1 auto;
       min-width: 0;
+      overflow-wrap: break-word;
     }
 
     &.desactive {

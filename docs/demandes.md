@@ -1796,13 +1796,29 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
        dans `Lots.render.test.jsx` — le `window.confirm()` remplacé par
        une vraie modale, l'assertion passe par `within(getByRole('dialog'))`
        plutôt que `globalThis.confirm`), `oxlint` 0 erreur, `git diff
-       --stat` conforme au plan. Vérification manuelle par Nicolas à
-       faire.
+       --stat` conforme au plan. **Confirmé bon par Nicolas (05/09/2026)**,
+       les 3 confirmations testées une à une.
      - ⏳ Les ~35 `alert()` restants (voir ci-dessus) — chantier à part,
        plus gros, session(s) future(s).
-     - Aucune page d'accueil/tableau de bord transversal après le choix du
-       programme (on atterrit direct sur Lots) — pas de vue "ce qui
-       demande attention aujourd'hui" au-delà de la fenêtre d'alertes.
+     - ✅ **Tableau de bord fait (06/09/2026)** : devient la nouvelle page
+       d'accueil (route `/`), Lots déplacé vers `/lots` avec son propre
+       lien de menu. 3 maquettes visuelles publiées en artifact avant le
+       code (comme pour les onglets Paramètres) — Nicolas a choisi la
+       proposition "B" (compteurs à gauche, colonne "À traiter" fixe à
+       droite), avec une retouche esthétique notée pour plus tard (voir
+       point 314). Contenu : compteurs (`StatCard`) lots par statut,
+       progression financière (total prix TTC vs réglé), TMA par statut ;
+       colonne "À traiter" reprenant les 5 catégories de retard de la
+       fenêtre d'alertes au lancement. Calcul extrait dans un nouveau
+       hook partagé `client/src/hooks/useRetards.js` (fetch + filtre des
+       5 catégories, déplacé tel quel depuis `AlerteRetards.jsx`, qui
+       l'utilise maintenant aussi) — évite de dupliquer la logique de
+       retard entre la fenêtre au lancement et le tableau de bord, et
+       les listes brutes qu'il retourne (lots/appels/tmaList) servent
+       aussi aux compteurs, sans requête supplémentaire. Suite complète
+       client 183/183 inchangés, `oxlint` 0 erreur, build (`vite build`)
+       OK, `git diff --stat` conforme au plan. Vérification manuelle par
+       Nicolas à faire.
      - Écrans de connexion et de choix de programme très nus (aucun logo,
        carte blanche isolée) — rejoint le point 267 (logo client).
 278. ⏳🔶 **Tests automatisés — chantiers 1 et 2 faits (01/09/2026),
@@ -2542,6 +2558,14 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
      seulement en ouvrant la section concernée. Pas de détail
      supplémentaire pour l'instant (quels champs comptent comme
      "incomplets" à définir avec Nicolas avant de s'y mettre).
+
+---
+
+314. ⏳ **Pour plus tard — Esthétique du tableau de bord à revoir**
+     (06/09/2026, demande de Nicolas) — la proposition "B" (compteurs à
+     gauche, colonne "À traiter" fixe à droite) a été retenue pour
+     avancer, mais Nicolas veut qu'on revienne dessus visuellement plus
+     tard. Pas de détail supplémentaire pour l'instant.
 
 ---
 

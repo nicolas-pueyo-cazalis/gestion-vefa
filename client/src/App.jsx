@@ -4,6 +4,7 @@ import RouteProtegee from './components/RouteProtegee.jsx'
 import RouteProgramme from './components/RouteProgramme.jsx'
 import Connexion from './pages/Connexion.jsx'
 import ChoixProgramme from './pages/ChoixProgramme.jsx'
+import TableauDeBord from './pages/TableauDeBord.jsx'
 import Lots from './pages/Lots.jsx'
 import Tma from './pages/Tma.jsx'
 import Clients from './pages/Clients.jsx'
@@ -20,7 +21,8 @@ function App() {
         <Route path="programmes" element={<ChoixProgramme />} />
         <Route element={<RouteProgramme />}>
           <Route element={<Layout />}>
-            <Route index element={<Lots />} />
+            <Route index element={<TableauDeBord />} />
+            <Route path="lots" element={<Lots />} />
             <Route path="clients" element={<Clients />} />
             <Route path="tma" element={<Tma />} />
             <Route path="appels-de-fonds" element={<AppelsDeFonds />} />

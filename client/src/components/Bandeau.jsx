@@ -61,8 +61,9 @@ function Bandeau() {
 
       <nav className="nav">
         <NavLink to="/" end>
-          Lots
+          Tableau de bord
         </NavLink>
+        <NavLink to="/lots">Lots</NavLink>
         <NavLink to="/clients">Clients</NavLink>
         <NavLink to="/suivi-pret">Suivi de prêt</NavLink>
         <NavLink to="/signature-acte">Signature acte</NavLink>

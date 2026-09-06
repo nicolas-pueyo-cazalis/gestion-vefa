@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use 'variables' as *;
 
 * {
@@ -439,6 +440,97 @@ main {
     .carte--#{$statut} {
       border-left-color: $couleur;
     }
+  }
+}
+
+// Tableau de bord (05/09/2026, point 277/3) : compteurs à gauche, colonne
+// "À traiter" fixe à droite (maquette "B", choisie par Nicolas parmi 3
+// propositions visuelles — retouche esthétique prévue plus tard, voir
+// docs/demandes.md).
+.titre-bloc {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #52606d;
+  margin: 0 0 0.65rem;
+}
+
+.tableau-de-bord {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.colonnes-compteurs {
+  flex: 1;
+  min-width: 0;
+}
+
+.bloc-compteurs {
+  margin-bottom: 1.6rem;
+}
+
+.colonne-a-traiter {
+  width: 280px;
+  flex-shrink: 0;
+  background: $couleur-carte;
+  border: 1px solid $couleur-bordure;
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  position: sticky;
+  top: 1.5rem;
+
+  .rien-a-signaler {
+    color: #52606d;
+    font-size: 0.85rem;
+    margin: 0;
+  }
+}
+
+.liste-a-traiter {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    border-bottom: 1px solid $couleur-bordure;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.6rem 0;
+    color: $couleur-texte;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    &:hover .libelle-a-traiter {
+      text-decoration: underline;
+    }
+  }
+
+  .nombre-a-traiter {
+    background: map.get($couleurs-statut, retard);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 999px;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.4rem;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
   }
 }
 

@@ -99,11 +99,13 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
   Paramètres sans onglets — fait (04/09/2026, onglets groupés par thème
   Programme/Catalogue/Équipe + confirmation si saisie non enregistrée). ✅
   3 vraies confirmations `window.confirm()` → modale React
-  `FenetreConfirmation.jsx` — fait (05/09/2026), vérification manuelle
-  par Nicolas à faire. Restent : absence de page d'accueil/tableau de
-  bord transversal, écrans de connexion/choix de programme trop nus
-  (rejoint le logo client, point 267). *(point 277)* — les ~35 `alert()`
-  restants forment un chantier à part, plus gros, non planifié.
+  `FenetreConfirmation.jsx` — fait et confirmé bon par Nicolas
+  (05/09/2026). ✅ Tableau de bord — fait (06/09/2026), nouvelle page
+  d'accueil (compteurs + colonne "À traiter"), vérification manuelle par
+  Nicolas à faire ; esthétique à revoir plus tard (point 314). Reste :
+  écrans de connexion/choix de programme trop nus (rejoint le logo
+  client, point 267). *(point 277)* — les ~35 `alert()` restants forment
+  un chantier à part, plus gros, non planifié.
 - **Tests des 5 pages jamais couvertes** (`Clients.jsx`, `Connexion.jsx`,
   `Parametres.jsx`, `SuiviPret.jsx`, `SignatureActe.jsx`) — à faire après
   les 4 points UX ci-dessus, pas avant (précision de Nicolas). Pas
@@ -148,6 +150,9 @@ Compilée le 31/08/2026 à partir d'une relecture complète de
 - **Indicateur visuel de champ incomplet sur les onglets Paramètres** —
   si un champ n'est pas complété (n'importe où), ça doit se voir depuis
   les onglets eux-mêmes, pas seulement en ouvrant la section. *(point 313)*
+- **Esthétique du tableau de bord à revoir** — la mise en page retenue
+  (compteurs à gauche, colonne "À traiter" à droite) a servi à avancer,
+  mais Nicolas veut y revenir visuellement plus tard. *(point 314)*
 - **TMA : créer un tableau au niveau des données entreprises** — le
   détail des entreprises d'une TMA (`DetailEntreprisesTma.jsx`) s'affiche
   actuellement en liste/formulaire, pas en tableau. À préciser avec

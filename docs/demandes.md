@@ -2569,6 +2569,28 @@ réalisé, juste tracké ici et dans `docs/taches-a-traiter.md`.
 
 ---
 
+315. ✅ **Publication du dépôt sur GitHub — audit avant publication**
+     (17/09/2026, demande de Nicolas, en vue d'un échange avec son mentor
+     OpenClassrooms). Vérification complète (y compris tout l'historique
+     Git, pas juste l'état actuel) : aucun `.env` jamais commité, aucun
+     secret en dur dans le code, dossier `Références/` (vrais classeurs
+     Excel de l'ancien employeur) jamais tracké, données de `seed.js`
+     fictives (déjà précisé dans le README). Un point restait par
+     précaution : `docs/analyse-excel.md` documentait en détail la
+     structure/les formules des deux classeurs Excel réels ayant servi de
+     base de départ — supprimé du dépôt (suppression simple, pas de purge
+     de l'historique complet, choix de Nicolas) et ses références
+     corrigées dans `README.md` (lien retiré) et `docs/regles-metiers.md`
+     (note mise à jour) ; les mentions purement textuelles (non
+     cliquables) dans `decisions.md`/`demandes.md`/`journal.md`/
+     `schema-donnees.md` laissées telles quelles (registre historique, pas
+     des liens cassés). Découverte en cours d'audit : un dépôt GitHub
+     `nicolas-pueyo-cazalis/gestion-vefa` existe déjà (créé le 01/09/2026,
+     CI testée) et reste **privé** à ce stade (vérifié : page 404 en accès
+     non authentifié) — le dépôt local a 32 commits d'avance dessus.
+
+---
+
 ## Notes
 
 Cette liste sera tenue à jour à chaque nouvelle demande, dans le même

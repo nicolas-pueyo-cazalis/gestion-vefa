@@ -174,7 +174,6 @@ le premier jour du projet :
 - [`journal.md`](docs/journal.md) — journal de bord, une entrée par étape
 - [`decisions.md`](docs/decisions.md) — choix techniques et leur justification
 - [`glossaire.md`](docs/glossaire.md) — vocabulaire métier (VEFA, TMA, appel de fonds...)
-- [`analyse-excel.md`](docs/analyse-excel.md) — analyse des fichiers Excel de référence (historique uniquement, voir `regles-metiers.md` pour l'état actuel)
 - [`schema-donnees.md`](docs/schema-donnees.md) — conception du modèle de données
 - [`concepts-techniques.md`](docs/concepts-techniques.md) — fiche de révision des notions de code vues (vanilla, React, Mongoose...)
 - [`bugs.md`](docs/bugs.md) — bugs rencontrés (symptôme / cause / correction / leçon)

@@ -11,9 +11,11 @@ répercuter aussi dans le résumé très court de `CLAUDE.md` (racine du
 projet, anciennement `docs/contexte-projet.md`).
 
 Différence avec les autres fichiers de `docs/` :
-- `docs/analyse-excel.md` est désormais **historique uniquement** (bandeau
-  ajouté le 31/08/2026) — les règles d'origine, pas forcément celles
-  d'aujourd'hui.
+- `docs/analyse-excel.md` a été retiré du dépôt (17/09/2026, avant
+  publication publique — analyse détaillée des classeurs Excel d'un ancien
+  employeur, par précaution) — les règles qu'il documentait, pas forcément
+  celles d'aujourd'hui, restent racontées dans `docs/decisions.md`/
+  `journal.md`.
 - `docs/decisions.md`/`journal.md`/`bugs.md` racontent **quand et pourquoi**
   une règle est apparue ou a changé — pas organisés pour vérifier
   rapidement "quelles sont toutes les règles de tel domaine".
